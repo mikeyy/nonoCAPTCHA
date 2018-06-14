@@ -18,7 +18,8 @@ Python 3.6.5+
 Installation
 ------------
 
-```pip install -r requirements.txt
+```
+pip install -r requirements.txt
 ```
 
 Configuration
@@ -29,14 +30,16 @@ Please edit config.example.py and save as config.py
 Usage
 -----
 
-```python run.py
+```
+python run.py
 ```
 
 Don't forget to edit variable count for amount of threads to use!
 
 Or you can use
 
-```python app.py
+```
+python app.py
 ```
 
 And access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
