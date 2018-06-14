@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <style>
+            body {
+              height: 3000px;
+            }
+            .dot {
+              width: 2px;
+              height: 2px;
+              background-color: black;
+              position: absolute;
+            }
+        </style>
+        <title>ReCAPTCHA</title>
+        <script src="https://recaptcha.net/recaptcha/api.js" async></script>
+    </head>
+    <body>
+        <form action="?" method="POST">
+            <div class="g-recaptcha" data-sitekey="%s"></div>
+            <br>
+            <input type="submit" value="Submit">
+        </form>
+    </body>
+</html>
