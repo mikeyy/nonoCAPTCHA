@@ -48,21 +48,22 @@ answer = await client.start()
 print(answer)
 ```
 
+Or use the included multithread script.
+
+Don't forget to edit variable count for amount of threads to use!
+
 ```
 python run.py
 ```
 
-Don't forget to edit variable count for amount of threads to use!
+Or you can use and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
 
-Or you can use
+Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.
 
 ```
 python app.py
 ```
 
-And access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
-
-Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.
 
 Public
 ------
