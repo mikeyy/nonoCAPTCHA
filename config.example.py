@@ -16,17 +16,17 @@
 
 settings = {
     "api_subkey" = "", # API key for Azure Cognitive Services
-    "pageurl": "https://www.google.com/recaptcha/api2/demo",
-    "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",
+    "pageurl": "https://google.com/recaptcha/api2/demo",   # ReCAPTCHA pageurl
+    "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-", # ReCAPTCHA sitekey
     "proxy_source": 
-        "",
-    "headless": False,
-    "keyboard_traverse": False,
+        "", # Only used for app.py or run.py
+    "headless": False, # Run browser headlessly
+    "keyboard_traverse": False, # Tab/Enter clicking of buttons instead
 
     "data_files": {
-        "override_js": "data/override.js",
-        "deface_html": "data/deface.html",
-        "resolutions_json": "data/resolutions.json",
+        "override_js": "data/override.js", # Used to override navigator
+        "deface_html": "data/deface.html", # HTML code to deface page
+        "resolutions_json": "data/resolutions.json", # Monitor resolutions
     },
     "wait_timeout": {
         "load_timeout": 30,  # Seconds to wait for page to load

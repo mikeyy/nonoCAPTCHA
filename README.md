@@ -6,7 +6,7 @@ An async Python library to automate solving ReCAPTCHA v2 by audio, using Microso
 Disclaimer
 ----------
 
-This project is only for an Educational purpose. Any actions and or activities related to the material contained on this GitHub Repository is solely your responsibility. The misuse of the information in this GitHub Repository can result in criminal charges brought against the persons in question. The author will not be held responsible in the event any criminal charges be brought against any individuals misusing the information in this GitHub Repository to break the law.
+This project is for educational and research purposes only. Any actions and or activities related to the material contained on this GitHub Repository is solely your responsibility. The misuse of the information in this GitHub Repository can result in criminal charges brought against the persons in question. The author will not be held responsible in the event any criminal charges be brought against any individuals misusing the information in this GitHub Repository to break the law.
 
 Public
 ------
