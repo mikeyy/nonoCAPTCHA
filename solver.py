@@ -37,18 +37,18 @@ class Solver(object):
         self._proxy_auth = proxy_auth
         self._headless = self.options.get("headless", False)
         self._detected = False
-        self._debug = settings['debug']
+        self._debug = settings["debug"]
 
     async def start(self):
         """Start solving"""
-        
+
         start = time.time()
         try:
             self.browser = await self._get_new_browser()
             self.page = await self.browser.newPage()
             if self._proxy_auth:
                 await self.page.authenticate(self._proxy_auth)
-            
+
             with timeout(60):
                 result = await self._solve()
         except Exception as e:
@@ -57,18 +57,18 @@ class Solver(object):
             end = time.time()
             elapsed = end - start
             if self.debug:
-                print(f'Time elapsed: {elapsed}')
+                print(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
- 
+
     @property
     def debug(self):
         return self._debug
-   
+
     @property
     def detected(self):
         return self._detected
-        
+
     @detected.setter
     def detected(self, b):
         self._detected = b
@@ -79,10 +79,9 @@ class Solver(object):
         """
 
         chrome_args = [
-                        "--no-sandbox",
-                        "--disable-web-security",
-                        "--winhttp-proxy-resolver"
-                        "--timeout 5",
+            "--no-sandbox",
+            "--disable-web-security",
+            "--winhttp-proxy-resolver" "--timeout 5",
         ]
 
         if self._headless:
@@ -114,9 +113,9 @@ class Solver(object):
             settings["data_files"]["override_js"]
         )
         navigator_config = generate_navigator_js(
-            os=("linux","mac","win"), navigator=("chrome")
+            os=("linux", "mac", "win"), navigator=("chrome")
         )
-        navigator_config['webdriver'] = False;
+        navigator_config["webdriver"] = False
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
         await self.page.evaluateOnNewDocument(
@@ -172,11 +171,9 @@ class Solver(object):
         try:
             timeout = settings["wait_timeout"]["load_timeout"]
             await self.page.goto(
-                self._url,
-                timeout = timeout * 1000, 
-                waitUntil = "documentloaded"
+                self._url, timeout=timeout * 1000, waitUntil="documentloaded"
             )
-            
+
             func = await self._deface_page()
             timeout = settings["wait_timeout"]["deface_timeout"]
             await self.page.waitForFunction(func, timeout=timeout * 1000)
@@ -184,7 +181,7 @@ class Solver(object):
             if self.debug:
                 print(e)
             raise Exception(e)
-        
+
     async def _solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio 
         file
@@ -202,10 +199,10 @@ class Solver(object):
         self.image_frame = next(
             frame for frame in self.page.frames if "api2/bframe" in frame.url
         )
-        
+
         if not settings["keyboard_traverse"]:
             if self.debug:
-                print ("Clicking checkbox")
+                print("Clicking checkbox")
             checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
             await self.click_button(checkbox)
         else:
@@ -215,9 +212,7 @@ class Solver(object):
 
         try:
             timeout = settings["wait_timeout"]["success_timeout"]
-            await self._check_detection(
-                self.checkbox_frame, timeout * 1000
-            )
+            await self._check_detection(self.checkbox_frame, timeout * 1000)
         except:
             await self._click_audio_button()
             if self.detected:
@@ -255,7 +250,7 @@ class Solver(object):
             )
         except:
             if self.debug:
-                print ("Audio button missing")
+                print("Audio button missing")
             raise Exception("Audio button non-existent")
 
         if not settings["keyboard_traverse"]:
@@ -267,11 +262,11 @@ class Solver(object):
             await self.body.press("Enter")
 
         func = (
-            'typeof ' 
+            "typeof "
             'document.getElementsByClassName("rc-audiochallenge-tdownload-link'
             '")[0] !== "undefined"'
         )
-        
+
         timeout = settings["wait_timeout"]["audio_link_timeout"]
         await self._check_detection(
             self.image_frame, timeout * 1000, wants_true=func
@@ -283,30 +278,27 @@ class Solver(object):
         """
 
         answer = await self._get_audio_response()
-        if not answer: return
+        if not answer:
+            return
         response_input = await self.image_frame.J("#audio-response")
-        verify_button = await self.image_frame.J(
-            "#recaptcha-verify-button"
-        )
+        verify_button = await self.image_frame.J("#recaptcha-verify-button")
         if self.debug:
             print("Typing answer")
         length = random.uniform(70, 130)
         await response_input.type(text=answer, delay=length)
-        await asyncio.sleep(random.uniform(500, 1000)/1000)
+        await asyncio.sleep(random.uniform(500, 1000) / 1000)
         await response_input.press("Enter")
-        #if self.debug:
+        # if self.debug:
         #    print("Clicking verify")
-        #await self.click_button(verify_button)
+        # await self.click_button(verify_button)
 
         timeout = settings["wait_timeout"]["success_timeout"]
-        await self._check_detection(
-            self.checkbox_frame, timeout * 1000
-        )
+        await self._check_detection(self.checkbox_frame, timeout * 1000)
         return answer
 
     async def _get_audio_response(self):
         """Downloads audio files then sends to speech-to-text API for answer"""
-        
+
         download_element = (
             'document.getElementsByClassName("rc-audiochallenge-tdownload-link'
             '")[0]'
@@ -316,10 +308,8 @@ class Solver(object):
             f'{download_element}.getAttribute("href")'
         )
 
-        audio_data = await util.get_page(
-            audio_url, self._proxy, binary=True
-        )
-        
+        audio_data = await util.get_page(audio_url, self._proxy, binary=True)
+
         if self.debug:
             print("Downloading response")
         with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
@@ -331,36 +321,36 @@ class Solver(object):
                 return answer
             else:
                 if self.debug:
-                    print(f'No answer, reloading audio')
+                    print(f"No answer, reloading audio")
                 reload_button = await self.image_frame.J(
                     "#recaptcha-reload-button"
                 )
                 await self.click_button(reload_button)
-                await asyncio.sleep(random.uniform(1000, 2000)/1000)
+                await asyncio.sleep(random.uniform(1000, 2000) / 1000)
 
-    async def _check_detection(self, frame, timeout, wants_true=''):
+    async def _check_detection(self, frame, timeout, wants_true=""):
         """Checks if "Try again later" modal appears"""
-        
+
         # I got lazy here
         bot_header = (
-            'parent.frames[1].document.getElementsByClassName'
+            "parent.frames[1].document.getElementsByClassName"
             '("rc-doscaptcha-header-text")[0]'
         )
         try_again_header = (
-            'parent.frames[1].document.getElementsByClassName'
+            "parent.frames[1].document.getElementsByClassName"
             '("rc-audiochallenge-error-message")[0]'
         )
         checkbox = (
             'parent.frames[0].document.getElementById("recaptcha-anchor")'
         )
-        
-        if wants_true:
-            wants_true = f'if({wants_true}) return true;'
 
-        #if isinstance(wants_true, list):
+        if wants_true:
+            wants_true = f"if({wants_true}) return true;"
+
+        # if isinstance(wants_true, list):
         #    l = [f'if({i}) return true;' for i in wants_true]
         #    wants_true = '\n'.join(wants_true)
-        
+
         func = """() => {
             %s
             
@@ -389,20 +379,16 @@ class Solver(object):
             wants_true,
             bot_header,
             try_again_header,
-            checkbox
+            checkbox,
         )
         try:
-            await frame.waitForFunction(
-                func, timeout=timeout
-            )
+            await frame.waitForFunction(func, timeout=timeout)
         except Exception as e:
             if self.debug:
                 print(e)
             raise Exception(f"Element non-existent {e}")
         else:
-            if await self.page.evaluate(
-                "typeof wasdetected !== 'undefined'"
-            ):
+            if await self.page.evaluate("typeof wasdetected !== 'undefined'"):
                 if self.debug:
                     print("We were detected")
                 self.detected = True
@@ -410,8 +396,8 @@ class Solver(object):
     async def click_button(self, button):
         click_delay = random.uniform(200, 500)
         wait_delay = random.uniform(500, 2000)
-        await asyncio.sleep(wait_delay/1000)
-        await button.click(delay=click_delay/1000)
+        await asyncio.sleep(wait_delay / 1000)
+        await button.click(delay=click_delay / 1000)
 
     async def g_recaptcha_response(self):
         func = 'document.getElementById("g-recaptcha-response").value'

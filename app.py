@@ -13,50 +13,45 @@ count = 100
 app = Quart(__name__)
 sem = asyncio.Semaphore(count)
 
+
 def shuffle(i):
     random.shuffle(i)
     return i
+
 
 async def get_proxies():
     global proxies
 
     proxies = []
     while 1:
-        src = settings['proxy_source']
-        protos = ['http://','https://']
+        src = settings["proxy_source"]
+        protos = ["http://", "https://"]
         if any(p in src for p in protos):
             f = util.get_page
         else:
             f = util.load_file
-    
-        result = await f(settings['proxy_source'])
-        proxies = iter(
-                        shuffle(
-                            result.strip().split("\n")
-                        )
-                    )
-        await asyncio.sleep(10*60)
+
+        result = await f(settings["proxy_source"])
+        proxies = iter(shuffle(result.strip().split("\n")))
+        await asyncio.sleep(10 * 60)
 
 
 @backoff.on_predicate(backoff.constant, interval=1, max_time=60)
 async def work(pageurl, sitekey):
     while not proxies:
-        await asyncio.sleep(1) 
+        await asyncio.sleep(1)
 
-    options = { 'headless': True,
-                'ignoreHTTPSErrors': True,
-                'args': '--disable-web-security',}
+    options = {
+        "headless": True,
+        "ignoreHTTPSErrors": True,
+        "args": "--disable-web-security",
+    }
 
     async with sem:
         proxy = next(proxies)
         # print (f'Starting solver with proxy {proxy}')
-        
-        client = Solver(
-                        pageurl,
-                        sitekey,
-                        options=options,
-                        proxy=proxy,
-        )
+
+        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
 
         answer = await client.start()
 
@@ -64,10 +59,10 @@ async def work(pageurl, sitekey):
             return answer
 
 
-@app.route('/get', methods=['GET', 'POST'])
+@app.route("/get", methods=["GET", "POST"])
 async def get():
     if not request.args:
-        result = 'Invalid request'
+        result = "Invalid request"
     else:
         pageurl = request.args.get("pageurl")
         sitekey = request.args.get("sitekey")
@@ -77,8 +72,9 @@ async def get():
             result = await work(pageurl, sitekey)
             if not result:
                 result = "Request timed-out, please try again"
-    return Response(result, mimetype='text/plain')
+    return Response(result, mimetype="text/plain")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.ensure_future(get_proxies())
-    app.run('0.0.0.0', 5000)
+    app.run("0.0.0.0", 5000)

@@ -23,9 +23,9 @@ async def load_file(file):
         return await f.read()
 
 
-#@backoff.on_exception(
+# @backoff.on_exception(
 #    backoff.expo, aiohttp.ClientError, max_tries=HTTP_MAX_RETRIES
-#)
+# )
 async def get_page(url, proxy=None, binary=False, verify=False):
     if proxy:
         proxy = f"http://{proxy}"

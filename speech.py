@@ -16,7 +16,8 @@ from pydub import AudioSegment
 from aiomisc.thread_pool import threaded
 from config import settings
 
-SUB_KEY = settings['api_subkey']
+SUB_KEY = settings["api_subkey"]
+
 
 @threaded
 def bytes_from_file(filename, chunksize=8192):
@@ -27,6 +28,7 @@ def bytes_from_file(filename, chunksize=8192):
                 yield chunk
             else:
                 break
+
 
 @threaded
 def mp3_to_wav(mp3_filename):

@@ -13,38 +13,33 @@ from solver import Solver
 
 
 def get_proxies():
-    src = settings['proxy_source']
-    protos = ['http://','https://']
+    src = settings["proxy_source"]
+    protos = ["http://", "https://"]
     if any(p in src for p in protos):
         f = util.get_page
     else:
         f = util.load_file
 
-    future = asyncio.ensure_future(
-        f(
-            settings['proxy_source']
-        )
-    )
+    future = asyncio.ensure_future(f(settings["proxy_source"]))
     asyncio.get_event_loop().run_until_complete(future)
     result = future.result()
     return result.strip().split("\n")
 
+
 async def work():
-    options = { 'headless': settings['headless'],
-                'ignoreHTTPSErrors': True}
+    options = {"headless": settings["headless"], "ignoreHTTPSErrors": True}
 
     proxy = random.choice(proxies)
     client = Solver(
-        settings['pageurl'],
-        settings['sitekey'],
+        settings["pageurl"],
+        settings["sitekey"],
         options=options,
         proxy=proxy,
-        #proxy_auth=auth_details(),
+        # proxy_auth=auth_details(),
     )
 
     print(f"Solving with proxy {proxy}")
-    
-    
+
     start = time.time()
     answer = await client.start()
     end = time.time()
@@ -66,7 +61,7 @@ async def main():
 
 
 proxies = get_proxies()
-print(len(proxies),'Loaded')
+print(len(proxies), "Loaded")
 
 count = 1
 

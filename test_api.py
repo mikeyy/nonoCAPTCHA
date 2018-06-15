@@ -16,10 +16,11 @@ from solver import Solver
 async def work():
     async with sem:
         start = time.time()
-        pageurl = settings['pageurl']
-        sitekey = settings['sitekey']
-        result = await util.get_page(f'http://localhost:5000/get?'
-            f'pageurl={pageurl}&sitekey={sitekey}'
+        pageurl = settings["pageurl"]
+        sitekey = settings["sitekey"]
+        result = await util.get_page(
+            f"http://localhost:5000/get?"
+            f"pageurl={pageurl}&sitekey={sitekey}"
         )
         end = time.time()
         elapsed = end - start
