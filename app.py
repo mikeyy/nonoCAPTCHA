@@ -74,5 +74,10 @@ async def get():
 
 
 if __name__ == "__main__":
+    # Apparently, brew's Python 3.6.5 reacts differently to
+    # asyncio.ensure_future and expects the function to be reawaited... 
+    # If this script doesn't work for you under macOS - that's probably why
+    # No fixes as of yet...
+
     asyncio.ensure_future(get_proxies())
     app.run("0.0.0.0", 5000)
