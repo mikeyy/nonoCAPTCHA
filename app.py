@@ -29,7 +29,8 @@ def get_proxies():
     future = asyncio.ensure_future(f(src))
     asyncio.get_event_loop().run_until_complete(future)
     result = future.result()
-    return result.strip().split("\n")
+    shuff = shuffle(result.strip().split("\n"))
+    return iter(shuff)
 
 
 @backoff.on_predicate(backoff.constant, interval=1, max_time=60)
@@ -72,5 +73,5 @@ async def get():
 
 
 if __name__ == "__main__":
-    get_proxies()
+    proxies = get_proxies()
     app.run("0.0.0.0", 5000)
