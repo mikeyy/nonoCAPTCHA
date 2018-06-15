@@ -30,6 +30,23 @@ Please edit config.example.py and save as config.py
 Usage
 -----
 
+If you would like to use it in your own script
+
+```from config import settings
+from solver import Solver
+  
+client = Solver(
+    settings['pageurl'],
+    settings['sitekey'],
+    options=options,
+    proxy=proxy,
+    #proxy_auth=auth_details(),
+)
+
+answer = await client.start()
+print(answer)
+```
+
 ```
 python run.py
 ```
