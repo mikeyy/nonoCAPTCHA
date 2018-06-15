@@ -20,7 +20,7 @@ def get_proxies():
     else:
         f = util.load_file
 
-    future = asyncio.ensure_future(f(settings["proxy_source"]))
+    future = asyncio.ensure_future(f(src))
     asyncio.get_event_loop().run_until_complete(future)
     result = future.result()
     return result.strip().split("\n")
