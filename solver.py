@@ -177,11 +177,9 @@ class Solver(object):
                 waitUntil = "documentloaded"
             )
             
-            while 1: await asyncio.sleep(1)
             func = await self._deface_page()
             timeout = settings["wait_timeout"]["deface_timeout"]
             await self.page.waitForFunction(func, timeout=timeout * 1000)
-            #while 1: await asyncio.sleep(1)
         except Exception as e:
             if self.debug:
                 print(e)
