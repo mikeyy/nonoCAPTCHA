@@ -18,20 +18,18 @@ def shuffle(i):
     random.shuffle(i)
     return i
 
-proxies = []
-async def get_proxies():
-    global proxies
-    while 1:
-        src = settings["proxy_source"]
-        protos = ["http://", "https://"]
-        if any(p in src for p in protos):
-            f = util.get_page
-        else:
-            f = util.load_file
+def get_proxies():
+    src = settings["proxy_source"]
+    protos = ["http://", "https://"]
+    if any(p in src for p in protos):
+        f = util.get_page
+    else:
+        f = util.load_file
 
-        result = await f(settings["proxy_source"])
-        proxies = iter(shuffle(result.strip().split("\n")))
-        await asyncio.sleep(10 * 60)
+    future = asyncio.ensure_future(f(src))
+    asyncio.get_event_loop().run_until_complete(future)
+    result = future.result()
+    return result.strip().split("\n")
 
 
 @backoff.on_predicate(backoff.constant, interval=1, max_time=60)
@@ -74,10 +72,5 @@ async def get():
 
 
 if __name__ == "__main__":
-    # Apparently, brew's Python 3.6.5 reacts differently to
-    # asyncio.ensure_future and expects the function to be reawaited... 
-    # If this script doesn't work for you under macOS - that's probably why
-    # No fixes as of yet...
-
-    asyncio.ensure_future(get_proxies())
+    get_proxies()
     app.run("0.0.0.0", 5000)
