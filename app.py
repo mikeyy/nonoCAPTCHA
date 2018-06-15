@@ -18,11 +18,9 @@ def shuffle(i):
     random.shuffle(i)
     return i
 
-
+proxies = []
 async def get_proxies():
     global proxies
-
-    proxies = []
     while 1:
         src = settings["proxy_source"]
         protos = ["http://", "https://"]
