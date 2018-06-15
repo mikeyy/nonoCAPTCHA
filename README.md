@@ -30,6 +30,24 @@ Please edit config.example.py and save as config.py
 Usage
 -----
 
+If you would like to use this in your own script
+
+'''from config import settings
+from solver import Solver
+    
+options = {'ignoreHTTPSErrors': True}
+
+proxy = random.choice(proxies)
+client = Solver(
+                settings['pageurl'],
+                settings['sitekey'],
+                options=options,
+                proxy=proxy,
+         )
+'''
+
+To run the multi-thread example
+
 ```
 python run.py
 ```
