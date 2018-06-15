@@ -8,7 +8,7 @@ Preview
 
 Check out this presentation of the script in action!
 
-![nonoCAPTCHA preview](https://raw.githubusercontent.com/mikeyy/nonoCAPTCHA/master/presentation.gif)
+![nonoCAPTCHA preview](https://i.redd.it/8osnqnvmm6211.gif)
 
 Requirements
 ------------
