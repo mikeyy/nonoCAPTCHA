@@ -3,6 +3,11 @@ nonoCAPTCHA
 
 An async Python library to automate solving ReCAPTCHA v2 by audio, using Microsoft Azure's Speech-to-Text API.
 
+Public
+------
+
+This script was first featured on Reddit at [/r/Python](https://reddit.com/r/Python) - [see here](https://www.reddit.com/r/Python/comments/8oqp7v/hey_i_made_a_google_recaptcha_solver_bot_too/) for the thread. I've finally decided to release the script.
+
 Preview
 -------
 
@@ -56,16 +61,12 @@ Don't forget to edit variable count for amount of threads to use!
 python run.py
 ```
 
-Or you can use and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
-
-Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.
+Or you can use
 
 ```
 python app.py
 ```
 
+and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
 
-Public
-------
-
-This script was first featured on Reddit at [/r/Python](https://reddit.com/r/Python) - [see here](https://www.reddit.com/r/Python/comments/8oqp7v/hey_i_made_a_google_recaptcha_solver_bot_too/) for the thread. I've finally decided to release the script.
+Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.
