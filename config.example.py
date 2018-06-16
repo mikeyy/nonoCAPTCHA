@@ -15,13 +15,15 @@
 """
 
 settings = {
+    "debug": True, # Prints actions as they occur, in your console
+    "headless": False, # Run browser headlessly
+    "keyboard_traverse": False, # Tab/Enter clicking of buttons instead
+
     "api_subkey": "", # API key for Azure Cognitive Services
     "pageurl": "https://google.com/recaptcha/api2/demo",   # ReCAPTCHA pageurl
     "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-", # ReCAPTCHA sitekey
     "proxy_source": 
         "", # Only used for app.py or run.py
-    "headless": False, # Run browser headlessly
-    "keyboard_traverse": False, # Tab/Enter clicking of buttons instead
 
     "data_files": {
         "override_js": "data/override.js", # Used to override navigator
