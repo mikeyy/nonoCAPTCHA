@@ -20,10 +20,15 @@ Check out this presentation of the script in action!
 
 [nonoCAPTCHA preview](https://i.redd.it/8osnqnvmm6211.gif)
 
+Compatibility
+-------------
+
+Linux, macOS, and Windows!
+
 Requirements
 ------------
 
-Python 3.6.5+
+Python 3.6.5+ and FFmpeg
 
 Installation
 ------------
