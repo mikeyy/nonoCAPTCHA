@@ -13,13 +13,12 @@ from io import StringIO, BytesIO
 from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
-from aiomisc.thread_pool import threaded
 from config import settings
+
 
 SUB_KEY = settings["api_subkey"]
 
 
-@threaded
 def bytes_from_file(filename, chunksize=8192):
     with open(filename, "rb") as f:
         while True:
@@ -30,7 +29,6 @@ def bytes_from_file(filename, chunksize=8192):
                 break
 
 
-@threaded
 def mp3_to_wav(mp3_filename):
     wav_filename = mp3_filename.replace(".mp3", ".wav")
     sound = AudioSegment.from_mp3(mp3_filename)
@@ -61,13 +59,13 @@ def build_message(req_id, payload):
 
 async def send_file(websocket, filename):
     req_id = uuid4().hex
-    for payload in await bytes_from_file(filename):
+    for payload in bytes_from_file(filename):
         message = build_message(req_id, payload)
         await websocket.send(message)
 
 
 async def get_text(mp3_filename):
-    wav_filename = await mp3_to_wav(mp3_filename)
+    wav_filename = mp3_to_wav(mp3_filename)
     conn_id = uuid4().hex
     url = (
         f"wss://speech.platform.bing.com/speech/recognition/dictation/cogn"
