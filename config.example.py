@@ -15,7 +15,7 @@
 """
 
 settings = {
-    "api_subkey" = "", # API key for Azure Cognitive Services
+    "api_subkey": "", # API key for Azure Cognitive Services
     "pageurl": "https://google.com/recaptcha/api2/demo",   # ReCAPTCHA pageurl
     "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-", # ReCAPTCHA sitekey
     "proxy_source": 
