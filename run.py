@@ -3,11 +3,8 @@
 
 """Example run functions."""
 
-import concurrent.futures
 import asyncio
 import random
-import time
-
 
 import util
 from config import settings
