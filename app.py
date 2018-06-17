@@ -9,7 +9,9 @@ import util
 from solver import Solver
 from config import settings
 
-count = 100
+# Max browsers to open/threads
+count = 10
+
 app = Quart(__name__)
 sem = asyncio.Semaphore(count)
 
@@ -17,6 +19,7 @@ sem = asyncio.Semaphore(count)
 def shuffle(i):
     random.shuffle(i)
     return i
+
 
 def get_proxies():
     src = settings["proxy_source"]
@@ -38,17 +41,24 @@ async def work(pageurl, sitekey):
     while not proxies:
         await asyncio.sleep(1)
 
-    options = {
-        "headless": True,
-        "ignoreHTTPSErrors": True,
-        "args": "--disable-web-security",
+    # Chromium options and arguments
+    options = {"ignoreHTTPSErrors": True, 
+               "args": ["--timeout 5"]
     }
 
     async with sem:
         proxy = next(proxies)
-        # print (f'Starting solver with proxy {proxy}')
 
-        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+        client = Solver(
+            settings["pageurl"],
+            settings["sitekey"],
+            options=options,
+            proxy=proxy,
+            # proxy_auth=auth_details,
+        )
+        
+        if client.debug:
+             print (f'Starting solver with proxy {proxy}')
 
         answer = await client.start()
 

@@ -11,6 +11,8 @@ import util
 from config import settings
 from solver import Solver
 
+# Max browsers to open/threads
+count = 10
 
 def get_proxies():
     src = settings["proxy_source"]
@@ -27,7 +29,10 @@ def get_proxies():
 
 
 async def work():
-    options = {"headless": settings["headless"], "ignoreHTTPSErrors": True}
+    # Chromium options and arguments
+    options = {"ignoreHTTPSErrors": True, 
+               "args": ["--timeout 5"]
+    }
 
     proxy = random.choice(proxies)
     client = Solver(
@@ -35,25 +40,18 @@ async def work():
         settings["sitekey"],
         options=options,
         proxy=proxy,
-        # proxy_auth=auth_details(),
+        # proxy_auth=auth_details,
     )
 
-    print(f"Solving with proxy {proxy}")
+    if client.debug:
+        print (f'Starting solver with proxy {proxy}')
 
-    start = time.time()
     answer = await client.start()
-    end = time.time()
-    elapsed = end - start
-    return (elapsed, answer)
+    return answer
 
 
 async def main():
-    global sem
-
-    tasks = []
-    for i in range(count):
-        task = asyncio.ensure_future(work())
-        tasks.append(task)
+    tasks = [asyncio.ensure_future(work()) for i in range(count)]
 
     futures = await asyncio.gather(*tasks)
     for (i, future) in zip(range(count), futures):
@@ -62,8 +60,6 @@ async def main():
 
 proxies = get_proxies()
 print(len(proxies), "Loaded")
-
-count = 1
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

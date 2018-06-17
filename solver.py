@@ -35,8 +35,9 @@ class Solver(object):
         self._sitekey = sitekey
         self._proxy = proxy
         self._proxy_auth = proxy_auth
-        self._headless = self.options.get("headless", False)
+
         self._detected = False
+        self._headless = settings["headless"]
         self._debug = settings["debug"]
 
     async def start(self):
@@ -49,7 +50,7 @@ class Solver(object):
             if self._proxy_auth:
                 await self.page.authenticate(self._proxy_auth)
 
-            with timeout(60):
+            with timeout(120):
                 result = await self._solve()
         except Exception as e:
             return
@@ -64,6 +65,10 @@ class Solver(object):
     @property
     def debug(self):
         return self._debug
+        
+    @property
+    def headless(self):
+        return self._headless
 
     @property
     def detected(self):
@@ -80,8 +85,7 @@ class Solver(object):
 
         chrome_args = [
             "--no-sandbox",
-            "--disable-web-security",
-            "--winhttp-proxy-resolver" "--timeout 5",
+            "--disable-web-security"
         ]
 
         if self._headless:
@@ -100,12 +104,12 @@ class Solver(object):
         if self._proxy:
             chrome_args.append(f"--proxy-server=http://{self._proxy}")
 
-        self.options.update({"args": chrome_args})
+        self.options.update({"headless": self.headless, "args": chrome_args})
         browser = await launch(self.options)
         return browser
 
     async def _cloak_navigator(self):
-        """Clocks navigator values to emulate another browser and sets
+        """Cloaks navigator values to emulate another browser and sets
         webdriver false.
         """
 

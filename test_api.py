@@ -3,7 +3,6 @@
 
 """Example run functions."""
 
-import aiomisc
 import asyncio
 import random
 import time
@@ -12,6 +11,9 @@ import util
 from config import settings
 from solver import Solver
 
+count = 10
+
+sem = asyncio.Semaphore(count)
 
 async def work():
     async with sem:
@@ -28,19 +30,12 @@ async def work():
 
 
 async def main():
-    global sem
-
-    tasks = []
-    sem = asyncio.Semaphore(50)
-    for i in range(count):
-        task = asyncio.ensure_future(work())
-        tasks.append(task)
+    tasks = [asyncio.ensure_future(work()) for i in range(count)]
 
     futures = await asyncio.gather(*tasks)
     for (i, future) in zip(range(count), futures):
         print(i, future)
 
 
-count = 10
 loop = asyncio.get_event_loop()
 loop.run_until_complete(main())

@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-try:
-    from .version import __version__, version_info
-except ImportError:
-    version_info = (0, 0, 0)
-    __version__ = "{}.{}.{}".format(*version_info)
+version_info = (0, 0, 3)
+__version__ = "{}.{}.{}".format(*version_info)
 
 
 authors = (("Michael Mooney", "mikeyy@mikeyy.com"),)
 
 authors_email = ", ".join("{}".format(email) for _, email in authors)
 
-__license__ = ("GPL-3.0",)
+__license__ = ("GPL-3.0")
 __author__ = ", ".join(
     "{} <{}>".format(name, email) for name, email in authors
 )
