@@ -8,14 +8,15 @@ import asyncio
 import random
 import time
 
-from concurrent.futures import ThreadPoolExecutor
 
 import util
 from config import settings
 from solver import Solver
 
-# Max browsers to open
-count = 10
+# Browsers to open (and keep running with random proxies)
+count = 4
+loop = asyncio.get_event_loop()
+
 
 def get_proxies():
     src = settings["proxy_source"]
@@ -26,7 +27,7 @@ def get_proxies():
         f = util.load_file
 
     future = asyncio.ensure_future(f(src))
-    asyncio.get_event_loop().run_until_complete(future)
+    loop.run_until_complete(future)
     result = future.result()
     return result.strip().split("\n")
 
@@ -46,24 +47,28 @@ async def work():
     )
 
     if client.debug:
-        print (f'Starting solver with proxy {proxy}')
+        print(f'Starting solver with proxy {proxy}')
 
     answer = await client.start()
     return answer
 
 
 async def main():
-    tasks = [
-            asyncio.ensure_future(work())
-            for i in range(count)
-        ]
+    global count
 
-    futures = await asyncio.gather(*tasks)
-    for (i, future) in zip(range(count), futures):
-        print(i, future)
+    active_tasks = set()
+    while True:
+        tasks = active_tasks | set(asyncio.ensure_future(work()) for i in range(count))
+        futures = await asyncio.wait(tasks, return_when='FIRST_COMPLETED',
+                                     timeout=sum(settings['wait_timeout'].values()))
+        completed = futures[0]
+        for i, future in enumerate(completed, 1):
+            print(i, future)
+        active_tasks = set(t for t in tasks if not t.done())
+        count = len(tasks - active_tasks)  # spawns `count` new tasks
 
 
 proxies = get_proxies()
 print(len(proxies), "Loaded")
 
-asyncio.get_event_loop().run_until_complete(main())
+loop.run_until_complete(main())
