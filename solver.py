@@ -408,7 +408,7 @@ class Solver(object):
     async def is_blacklisted(self):
         blocked_page = await self.browser.newPage()
         timeout = settings["wait_timeout"]["load_timeout"]
-        await blocked_page.goto("https://www.google.com/search?q=my+ip",
+        await blocked_page.goto("https://www.google.com/search?q=my+ip&hl=en",
                                 waitUntil="documentloaded", timeout=timeout * 1000)
         detected_phrase = "Our systems have detected unusual traffic from your computer"
         page_content = await blocked_page.content()
