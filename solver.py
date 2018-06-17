@@ -130,9 +130,6 @@ class Solver(object):
 
     async def _deface_page(self):
         """This is way faster than :meth:`setContent` method.
-
-        We emit the load event to render the new widget and wait until second 
-        frame has rendered.
         
         Function x is an odd hack for multiline text, but it works.
         """
@@ -155,7 +152,6 @@ class Solver(object):
         )
         await self.page.evaluate(mockPage)
         func = """() => {
-    
     var frame = parent.document.getElementsByTagName('iframe')[1];
     if (typeof frame !== 'undefined') {
         frame.onload = function() {
@@ -290,7 +286,7 @@ class Solver(object):
             print("Typing answer")
         length = random.uniform(70, 130)
         await response_input.type(text=answer, delay=length)
-        await asyncio.sleep(random.uniform(500, 1000) / 1000)
+        await asyncio.sleep(random.uniform(300, 700) / 1000)
         await response_input.press("Enter")
         # if self.debug:
         #    print("Clicking verify")
@@ -330,7 +326,14 @@ class Solver(object):
                     "#recaptcha-reload-button"
                 )
                 await self.click_button(reload_button)
-                await asyncio.sleep(random.uniform(1000, 2000) / 1000)
+                timeout = settings["wait_timeout"]["reload_timeout"]
+                func = (
+                        f'"{audio_url}" !== '
+                        f'{download_element}.getAttribute("href")'
+                    )
+                await self._check_detection(
+                    self.image_frame, timeout * 1000, wants_true=func
+                )
 
     async def _check_detection(self, frame, timeout, wants_true=""):
         """Checks if "Try again later" modal appears"""
@@ -399,7 +402,7 @@ class Solver(object):
 
     async def click_button(self, button):
         click_delay = random.uniform(200, 500)
-        wait_delay = random.uniform(500, 2000)
+        wait_delay = random.uniform(2000, 4000)
         await asyncio.sleep(wait_delay / 1000)
         await button.click(delay=click_delay / 1000)
 

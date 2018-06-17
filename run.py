@@ -3,15 +3,18 @@
 
 """Example run functions."""
 
+import concurrent.futures
 import asyncio
 import random
 import time
+
+from concurrent.futures import ThreadPoolExecutor
 
 import util
 from config import settings
 from solver import Solver
 
-# Max browsers to open/threads
+# Max browsers to open
 count = 10
 
 def get_proxies():
@@ -50,7 +53,10 @@ async def work():
 
 
 async def main():
-    tasks = [asyncio.ensure_future(work()) for i in range(count)]
+    tasks = [
+            asyncio.ensure_future(work())
+            for i in range(count)
+        ]
 
     futures = await asyncio.gather(*tasks)
     for (i, future) in zip(range(count), futures):
@@ -60,5 +66,4 @@ async def main():
 proxies = get_proxies()
 print(len(proxies), "Loaded")
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+asyncio.get_event_loop().run_until_complete(main())
