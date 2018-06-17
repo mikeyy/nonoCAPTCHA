@@ -48,14 +48,6 @@ class Solver(object):
     def headless(self):
         return self._headless
 
-    @property
-    def detected(self):
-        return self._detected
-
-    @detected.setter
-    def detected(self, b):
-        self._detected = b
-
     async def start(self):
         """Start solving"""
 
@@ -187,6 +179,8 @@ class Solver(object):
         file
         """
 
+        await self.is_blacklisted()
+
         try:
             await self._goto_and_deface()
         except:
@@ -215,7 +209,7 @@ class Solver(object):
             await self._check_detection(self.checkbox_frame, timeout * 1000)
         except:
             await self._click_audio_button()
-            if self.detected:
+            if self._detected:
                 return
             for i in range(5):
                 try:
@@ -223,7 +217,7 @@ class Solver(object):
                 except:
                     break
                 else:
-                    if self.detected:
+                    if self._detected:
                         break
                     if result:
                         code = await self.g_recaptcha_response()
@@ -398,7 +392,7 @@ class Solver(object):
             if await self.page.evaluate("typeof wasdetected !== 'undefined'"):
                 if self.debug:
                     print("We were detected")
-                self.detected = True
+                self._detected = True
 
     async def click_button(self, button):
         click_delay = random.uniform(200, 500)
@@ -410,3 +404,16 @@ class Solver(object):
         func = 'document.getElementById("g-recaptcha-response").value'
         code = await self.page.evaluate(func)
         return code
+
+    async def is_blacklisted(self):
+        blocked_page = await self.browser.newPage()
+        timeout = settings["wait_timeout"]["load_timeout"]
+        await blocked_page.goto("https://www.google.com/search?q=my+ip",
+                                waitUntil="documentloaded", timeout=timeout * 1000)
+        detected_phrase = "Our systems have detected unusual traffic from your computer"
+        page_content = await blocked_page.content()
+        if detected_phrase in page_content:
+            self._detected = True
+            if self.debug:
+                print("IP has been blacklisted by google")
+        await blocked_page.close()
