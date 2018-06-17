@@ -40,28 +40,6 @@ class Solver(object):
         self._headless = settings["headless"]
         self._debug = settings["debug"]
 
-    async def start(self):
-        """Start solving"""
-
-        start = time.time()
-        try:
-            self.browser = await self._get_new_browser()
-            self.page = await self.browser.newPage()
-            if self._proxy_auth:
-                await self.page.authenticate(self._proxy_auth)
-
-            with timeout(120):
-                result = await self._solve()
-        except Exception as e:
-            return
-        finally:
-            end = time.time()
-            elapsed = end - start
-            if self.debug:
-                print(f"Time elapsed: {elapsed}")
-            await self.browser.close()
-        return result
-
     @property
     def debug(self):
         return self._debug
@@ -77,6 +55,28 @@ class Solver(object):
     @detected.setter
     def detected(self, b):
         self._detected = b
+
+    async def start(self):
+        """Start solving"""
+
+        start = time.time()
+        try:
+            self.browser = await self._get_new_browser()
+            self.page = await self.browser.newPage()
+            if self._proxy_auth:
+                await self.page.authenticate(self._proxy_auth)
+
+            with timeout(120):
+                result = await self._solve()
+        except Exception as e:
+            result = None
+        finally:
+            end = time.time()
+            elapsed = end - start
+            if self.debug:
+                print(f"Time elapsed: {elapsed}")
+            await self.browser.close()
+        return result
 
     async def _get_new_browser(self):
         """Get new browser, set arguments from options, proxy,
@@ -325,7 +325,7 @@ class Solver(object):
                 return answer
             else:
                 if self.debug:
-                    print(f"No answer, reloading audio")
+                    print("No answer, reloading audio")
                 reload_button = await self.image_frame.J(
                     "#recaptcha-reload-button"
                 )
