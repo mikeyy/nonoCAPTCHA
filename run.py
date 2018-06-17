@@ -3,12 +3,8 @@
 
 """Example run functions."""
 
-import concurrent.futures
 import asyncio
 import random
-import time
-
-from concurrent.futures import ThreadPoolExecutor
 
 import util
 from config import settings
