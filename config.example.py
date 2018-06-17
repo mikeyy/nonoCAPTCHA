@@ -37,5 +37,6 @@ settings = {
         "audio_button_timeout": 10,  # Seconds to wait for audio button
         "audio_link_timeout": 10,  # Seconds to wait for the audio link,
                                    # not the download!
+        "reload_timeout": 10 # Seconds to wait for audio reload
     },
 }
