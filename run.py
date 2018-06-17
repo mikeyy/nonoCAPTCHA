@@ -39,8 +39,7 @@ async def work():
         settings["pageurl"],
         settings["sitekey"],
         options=options,
-        proxy=proxy,
-        # proxy_auth=auth_details,
+        proxy=proxy
     )
 
     if client.debug:

@@ -50,11 +50,10 @@ async def work(pageurl, sitekey):
         proxy = next(proxies)
 
         client = Solver(
-            settings["pageurl"],
-            settings["sitekey"],
+            pageurl,
+            sitekey,
             options=options,
-            proxy=proxy,
-            # proxy_auth=auth_details,
+            proxy=proxy
         )
         
         if client.debug:
