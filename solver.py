@@ -98,6 +98,7 @@ class Solver(object):
             "--dns-prefetch-disable",
         ]
 
+
         if self._headless:
             aspect_ratio_list = ["3:2", "4:3", "5:3", "5:4", "16:9", "16:10"]
             aspect_ratio = random.choice(aspect_ratio_list)
@@ -113,9 +114,10 @@ class Solver(object):
 
         if self._proxy:
             chrome_args.append(f"--proxy-server=http://{self._proxy}")
-
-        self.options["args"].extend(chrome_args)
-        self.options.update({"headless": self.headless})
+        
+        args = self.options.pop("args")
+        args.extend(chrome_args)
+        self.options.update({"headless": self.headless, "args": args})
         print(self.options)
         browser = await launch(self.options)
         return browser
