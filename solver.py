@@ -459,5 +459,6 @@ class Solver(object):
             await navigation
             self._cookies = await page.cookies()
             util.serialize(self._cookies, cookie_path)
+            await page.close()
         else:
             self._cookies = util.deserialize(cookie_path)
