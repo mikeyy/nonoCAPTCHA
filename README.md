@@ -18,7 +18,7 @@ Preview
 
 Check out this presentation of the script in action!
 
-![nonoCAPTCHA preview](https://raw.githubusercontent.com/mikeyy/nonoCAPTCHA/presentation/presentation_new.gif)
+![nonoCAPTCHA preview](https://raw.githubusercontent.com/mikeyy/nonoCAPTCHA/presentation/2018-06-18%2001.26.25.gif)
 
 Compatibility
 -------------
