@@ -64,6 +64,7 @@ async def main():
         active_tasks = set(t for t in tasks if not t.done())
         count = len(tasks - active_tasks)  # spawns `count` new tasks
 
+loop = asyncio.get_event_loop()
 
 proxies = get_proxies()
 print(len(proxies), "Loaded")

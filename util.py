@@ -3,13 +3,11 @@
 
 """Utility functions."""
 
-import backoff
 import aiohttp
 import aiofiles
+from async_timeout import timeout as async_timeout
 
 __all__ = ["save_file", "load_file", "get_page"]
-
-HTTP_MAX_RETRIES = 3
 
 
 async def save_file(file, data, binary=False):
@@ -23,17 +21,15 @@ async def load_file(file):
         return await f.read()
 
 
-# @backoff.on_exception(
-#    backoff.expo, aiohttp.ClientError, max_tries=HTTP_MAX_RETRIES
-# )
-async def get_page(url, proxy=None, binary=False, verify=False):
+async def get_page(url, proxy=None, binary=False, verify=False, timeout=60):
     if proxy:
         proxy = f"http://{proxy}"
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(
-            url, proxy=proxy, verify_ssl=verify
-        ) as response:
-            if binary:
-                return await response.read()
-            return await response.text()
+        async with async_timeout(timeout):
+            async with session.get(
+                url, proxy=proxy, verify_ssl=verify
+            ) as response:
+                if binary:
+                    return await response.read()
+                return await response.text()

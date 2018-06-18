@@ -11,7 +11,7 @@ import tempfile
 
 from pyppeteer import launch
 from pyppeteer.util import merge_dict
-from async_timeout import timeout
+from async_timeout import timeout as async_timeout
 
 import util
 from config import settings
@@ -47,11 +47,11 @@ class Solver(object):
     @property
     def headless(self):
         return self._headless
-
+        
     @property
     def detected(self):
         return self._detected
-
+        
     @detected.setter
     def detected(self, b):
         self._detected = b
@@ -66,7 +66,7 @@ class Solver(object):
             if self._proxy_auth:
                 await self.page.authenticate(self._proxy_auth)
 
-            with timeout(120):
+            with async_timeout(120):
                 result = await self._solve()
         except Exception as e:
             result = None
@@ -187,6 +187,10 @@ class Solver(object):
         """Clicks checkbox, on failure it will attempt to solve the audio 
         file
         """
+        
+        if settings["check_blacklist"]:
+            if await self.is_blacklisted():
+                return
 
         try:
             await self._goto_and_deface()
@@ -216,7 +220,7 @@ class Solver(object):
             await self._check_detection(self.checkbox_frame, timeout * 1000)
         except:
             await self._click_audio_button()
-            if self.detected:
+            if self._detected:
                 return
             for i in range(5):
                 try:
@@ -224,7 +228,7 @@ class Solver(object):
                 except:
                     break
                 else:
-                    if self.detected:
+                    if self._detected:
                         break
                     if result:
                         code = await self.g_recaptcha_response()
@@ -411,3 +415,20 @@ class Solver(object):
         func = 'document.getElementById("g-recaptcha-response").value'
         code = await self.page.evaluate(func)
         return code
+
+    async def is_blacklisted(self):
+        try:
+            timeout = settings["wait_timeout"]["load_timeout"]
+            url = "https://www.google.com/search?q=my+ip&hl=en"
+            response = await util.get_page(url,
+                                           proxy=self._proxy,
+                                           timeout=timeout * 1000
+            )
+            detected_phrase = ("Our systems have detected unusual traffic "
+                               "from your computer")
+            if detected_phrase in response:
+                if self.debug:
+                    print("IP has been blacklisted by Google")
+                return True
+        except:
+            return

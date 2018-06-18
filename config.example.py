@@ -18,6 +18,8 @@ settings = {
     "debug": True, # Prints actions as they occur, in your console
     "headless": False, # Run browser headlessly
     "keyboard_traverse": False, # Tab/Enter clicking of buttons instead
+    "check_blacklist": False, # Check Google search page for unusual traffic 
+                              # text and close on true before solving
 
     "api_subkey": "", # API key for Azure Cognitive Services
     "pageurl": "https://google.com/recaptcha/api2/demo",   # ReCAPTCHA pageurl
