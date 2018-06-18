@@ -20,6 +20,8 @@ settings = {
     "keyboard_traverse": False, # Tab/Enter clicking of buttons instead
     "check_blacklist": False, # Check Google search page for unusual traffic 
                               # text and close on true before solving
+    "gmail": "",  # leave blank to ignore
+    "gmail_password": "",  # signing into google increases probability of success
 
     "api_subkey": "", # API key for Azure Cognitive Services
     "pageurl": "https://google.com/recaptcha/api2/demo",   # ReCAPTCHA pageurl

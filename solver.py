@@ -65,11 +65,13 @@ class Solver(object):
         try:
             self.browser = await self._get_new_browser()
             self.page = await self.browser.newPage()
-            await self.sign_in_to_google()
-            for c in self._cookies:
-                await self.page.setCookie(c)
             if self._proxy_auth:
                 await self.page.authenticate(self._proxy_auth)
+
+            if settings['gmail']:
+                await self.sign_in_to_google()
+                for c in self._cookies:
+                    await self.page.setCookie(c)
 
             with async_timeout(120):
                 result = await self._solve()
