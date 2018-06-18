@@ -13,6 +13,7 @@ from solver import Solver
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+
 # Max browsers to open
 threads = 10
 
@@ -89,12 +90,11 @@ async def work():
 
 
 async def main():
-    signaled = False
     tasks = [asyncio.ensure_future(work()) for i in range(threads)]
     completed, pending = await asyncio.wait(
         tasks, return_when=asyncio.FIRST_COMPLETED
     )
-    while not signaled:
+    while 1:
         for task in completed:
             result = task.result()
             if result:
