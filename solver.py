@@ -43,15 +43,15 @@ class Solver(object):
     @property
     def debug(self):
         return self._debug
-        
+
     @property
     def headless(self):
         return self._headless
-        
+
     @property
     def detected(self):
         return self._detected
-        
+
     @detected.setter
     def detected(self, b):
         self._detected = b
@@ -85,7 +85,17 @@ class Solver(object):
 
         chrome_args = [
             "--no-sandbox",
-            "--disable-web-security"
+            "--disable-web-security",
+            '--cryptauth-http-host ""',
+            "--disable-affiliation-based-matching",
+            "--disable-answers-in-suggest",
+            "--disable-background-networking",
+            "--disable-breakpad",
+            "--disable-demo-mode",
+            "--disable-device-discovery-notifications",
+            "--disable-java",
+            "--disable-preconnect",
+            "--dns-prefetch-disable",
         ]
 
         if self._headless:
@@ -104,8 +114,9 @@ class Solver(object):
         if self._proxy:
             chrome_args.append(f"--proxy-server=http://{self._proxy}")
 
-        self.options['args'].extend(chrome_args)
+        self.options["args"].extend(chrome_args)
         self.options.update({"headless": self.headless})
+        print(self.options)
         browser = await launch(self.options)
         return browser
 
@@ -187,7 +198,7 @@ class Solver(object):
         """Clicks checkbox, on failure it will attempt to solve the audio 
         file
         """
-        
+
         if settings["check_blacklist"]:
             if await self.is_blacklisted():
                 return
@@ -331,11 +342,12 @@ class Solver(object):
                     "#recaptcha-reload-button"
                 )
                 await self.click_button(reload_button)
-                timeout = settings["wait_timeout"]["reload_timeout"]
                 func = (
-                        f'"{audio_url}" !== '
-                        f'{download_element}.getAttribute("href")'
-                    )
+                    f'"{audio_url}" !== '
+                    f'{download_element}.getAttribute("href")'
+                )
+                print(func)
+                timeout = settings["wait_timeout"]["reload_timeout"]
                 await self._check_detection(
                     self.image_frame, timeout * 1000, wants_true=func
                 )
@@ -369,16 +381,15 @@ class Solver(object):
             var elem_bot = %s;
             if(typeof elem_bot !== 'undefined'){
                 if(elem_bot.innerText === 'Try again later'){
-                    parent.wasdetected = true;
+                    window.wasdetected = true;
                     return true;
                 }
             }
 
             var elem_try = %s;
             if(typeof elem_try !== 'undefined'){
-                if(elem_try.innerText
-                    === 
-                   'Multiple correct solutions required - please solve more.'){
+                if(elem_try.innerText.indexOf('please solve more.') >= 0){
+                    alert('solve more!')
                     return true;
                 }
             }
@@ -400,13 +411,14 @@ class Solver(object):
                 print(e)
             raise Exception(f"Element non-existent {e}")
         else:
-            if await self.page.evaluate("typeof wasdetected !== 'undefined'"):
+            eval = "typeof wasdetected !== 'undefined'"
+            if await self.image_frame.evaluate(eval):
                 if self.debug:
                     print("We were detected")
                 self.detected = True
 
     async def click_button(self, button):
-        click_delay = random.uniform(200, 500)
+        click_delay = random.uniform(70, 130)
         wait_delay = random.uniform(2000, 4000)
         await asyncio.sleep(wait_delay / 1000)
         await button.click(delay=click_delay / 1000)
@@ -420,12 +432,13 @@ class Solver(object):
         try:
             timeout = settings["wait_timeout"]["load_timeout"]
             url = "https://www.google.com/search?q=my+ip&hl=en"
-            response = await util.get_page(url,
-                                           proxy=self._proxy,
-                                           timeout=timeout * 1000
+            response = await util.get_page(
+                url, proxy=self._proxy, timeout=timeout * 1000
             )
-            detected_phrase = ("Our systems have detected unusual traffic "
-                               "from your computer")
+            detected_phrase = (
+                "Our systems have detected unusual traffic "
+                "from your computer"
+            )
             if detected_phrase in response:
                 if self.debug:
                     print("IP has been blacklisted by Google")
