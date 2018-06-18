@@ -3,7 +3,6 @@
 
 """Example run functions."""
 
-import sys
 import asyncio
 import random
 
@@ -11,11 +10,14 @@ import util
 from config import settings
 from solver import Solver
 
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
 # Max browsers to open
 threads = 10
 
 
-sort_position = False
+sort_position = True
 if sort_position:
     """Use only if you know what you are doing, haven't yet automated avialable
     screen space!
@@ -87,6 +89,7 @@ async def work():
 
 
 async def main():
+    signaled = False
     tasks = [asyncio.ensure_future(work()) for i in range(threads)]
     completed, pending = await asyncio.wait(
         tasks, return_when=asyncio.FIRST_COMPLETED
@@ -102,16 +105,9 @@ async def main():
         )
 
 
-signaled = False
 loop = asyncio.get_event_loop()
 
 proxies = get_proxies()
 print(len(proxies), "Loaded")
 
-try:
-    loop.run_until_complete(main())
-except KeyboardInterrupt:
-    signaled = True
-    loop.stop()
-    loop.close()
-    raise
+loop.run_until_complete(main())
