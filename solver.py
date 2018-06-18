@@ -8,6 +8,7 @@ import asyncio
 import time
 import json
 import tempfile
+import pathlib
 
 from pyppeteer import launch
 from pyppeteer.util import merge_dict
@@ -39,6 +40,7 @@ class Solver(object):
         self._detected = False
         self._headless = settings["headless"]
         self._debug = settings["debug"]
+        self._cookies = []
 
     @property
     def debug(self):
@@ -63,6 +65,9 @@ class Solver(object):
         try:
             self.browser = await self._get_new_browser()
             self.page = await self.browser.newPage()
+            await self.sign_in_to_google()
+            for c in self._cookies:
+                await self.page.setCookie(c)
             if self._proxy_auth:
                 await self.page.authenticate(self._proxy_auth)
 
@@ -104,6 +109,7 @@ class Solver(object):
         if self._proxy:
             chrome_args.append(f"--proxy-server=http://{self._proxy}")
 
+        self.options['args'] = []
         self.options['args'].extend(chrome_args)
         self.options.update({"headless": self.headless})
         browser = await launch(self.options)
@@ -432,3 +438,25 @@ class Solver(object):
                 return True
         except:
             return
+
+    async def sign_in_to_google(self):
+        cookie_path = settings['data_files']['cookies'] + '/google_account'
+        if not pathlib.Path(cookie_path).exists():
+            url = "https://accounts.google.com/Login"
+            page = await self.browser.newPage()
+            await page.goto(url, waitUntil="documentloaded")
+            username = await page.querySelector('#identifierId')
+            await username.type(settings['gmail'])
+            button = await page.querySelector('#identifierNext')
+            await button.click()
+            await asyncio.sleep(2) # better way to do this...
+            navigation = page.waitForNavigation()
+            password = await page.querySelector('#password')
+            await password.type(settings['gmail_password'])
+            button = await page.querySelector('#passwordNext')
+            await button.click()
+            await navigation
+            self._cookies = await page.cookies()
+            util.serialize(self._cookies, cookie_path)
+        else:
+            self._cookies = util.deserialize(cookie_path)

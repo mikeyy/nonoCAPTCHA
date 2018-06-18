@@ -6,6 +6,7 @@
 import aiohttp
 import aiofiles
 from async_timeout import timeout as async_timeout
+import pickle
 
 __all__ = ["save_file", "load_file", "get_page"]
 
@@ -33,3 +34,13 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=60):
                 if binary:
                     return await response.read()
                 return await response.text()
+
+
+def serialize(obj, p):
+    with open(p, 'wb') as f:
+        pickle.dump(obj, f)
+
+
+def deserialize(p):
+    with open(p, 'rb') as f:
+        return pickle.load(f)
