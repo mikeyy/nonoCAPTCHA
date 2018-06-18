@@ -118,7 +118,6 @@ class Solver(object):
         args = self.options.pop("args")
         args.extend(chrome_args)
         self.options.update({"headless": self.headless, "args": args})
-        print(self.options)
         browser = await launch(self.options)
         return browser
 
