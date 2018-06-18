@@ -18,7 +18,7 @@ Preview
 
 Check out this presentation of the script in action!
 
-![nonoCAPTCHA preview](http://mikeyy.com/nonocaptcha/presentation.gif)
+[nonoCAPTCHA preview](http://mikeyy.com/nonocaptcha/presentation.gif)
 
 Compatibility
 -------------
