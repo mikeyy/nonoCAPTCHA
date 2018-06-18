@@ -89,7 +89,7 @@ class Solver(object):
             '--cryptauth-http-host ""',
             "--disable-affiliation-based-matching",
             "--disable-answers-in-suggest",
-            "--disable-background-networking",
+            #"--disable-background-networking", Possibly increases detection..
             "--disable-breakpad",
             "--disable-demo-mode",
             "--disable-device-discovery-notifications",
@@ -97,7 +97,6 @@ class Solver(object):
             "--disable-preconnect",
             "--dns-prefetch-disable",
         ]
-
 
         if self._headless:
             aspect_ratio_list = ["3:2", "4:3", "5:3", "5:4", "16:9", "16:10"]
@@ -348,7 +347,6 @@ class Solver(object):
                     f'"{audio_url}" !== '
                     f'{download_element}.getAttribute("href")'
                 )
-                print(func)
                 timeout = settings["wait_timeout"]["reload_timeout"]
                 await self._check_detection(
                     self.image_frame, timeout * 1000, wants_true=func
@@ -409,8 +407,6 @@ class Solver(object):
         try:
             await frame.waitForFunction(func, timeout=timeout)
         except Exception as e:
-            if self.debug:
-                print(e)
             raise Exception(f"Element non-existent {e}")
         else:
             eval = "typeof wasdetected !== 'undefined'"
