@@ -20,8 +20,8 @@ if sort_position:
     """Use only if you know what you are doing, haven't yet automated avialable
     screen space!
     """
-    screen_width, screen_height = (1300, 1050)
-    threads = int(1 + screen_width / 400 + 2 + screen_height / 400)
+    screen_width, screen_height = (1400, 1050)
+    threads = int(1 + screen_width / 400 + 1 + screen_height / 400)
 
     position_x = 20
     position_y = 20
