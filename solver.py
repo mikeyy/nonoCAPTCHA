@@ -86,6 +86,8 @@ class Solver(object):
         chrome_args = [
             "--no-sandbox",
             "--disable-web-security",
+            "--disable-gpu",
+            "--disable-reading-from-canvas",
             '--cryptauth-http-host ""',
             "--disable-affiliation-based-matching",
             "--disable-answers-in-suggest",
@@ -95,7 +97,7 @@ class Solver(object):
             "--disable-device-discovery-notifications",
             "--disable-java",
             "--disable-preconnect",
-            "--dns-prefetch-disable",
+            #"--dns-prefetch-disable", # Discernably slower load-times
         ]
 
         if self._headless:
@@ -186,7 +188,6 @@ class Solver(object):
             await self.page.goto(
                 self._url, timeout=timeout * 1000, waitUntil="documentloaded"
             )
-
             func = await self._deface_page()
             timeout = settings["wait_timeout"]["deface_timeout"]
             await self.page.waitForFunction(func, timeout=timeout * 1000)
@@ -389,7 +390,6 @@ class Solver(object):
             var elem_try = %s;
             if(typeof elem_try !== 'undefined'){
                 if(elem_try.innerText.indexOf('please solve more.') >= 0){
-                    alert('solve more!')
                     return true;
                 }
             }
