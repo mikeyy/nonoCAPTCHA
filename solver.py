@@ -111,7 +111,6 @@ class Solver(object):
         if self._proxy:
             chrome_args.append(f"--proxy-server=http://{self._proxy}")
 
-        self.options['args'] = []
         self.options['args'].extend(chrome_args)
         self.options.update({"headless": self.headless})
         browser = await launch(self.options)

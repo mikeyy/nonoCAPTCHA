@@ -20,8 +20,8 @@ settings = {
     "keyboard_traverse": False, # Tab/Enter clicking of buttons instead
     "check_blacklist": False, # Check Google search page for unusual traffic 
                               # text and close on true before solving
-    "gmail": "",  # leave blank to ignore
-    "gmail_password": "",  # signing into google increases probability of success
+    "gmail": "",  # Leave blank to ignore
+    "gmail_password": "",  # Signing into google increases probability of success
 
     "api_subkey": "", # API key for Azure Cognitive Services
     "pageurl": "https://google.com/recaptcha/api2/demo",   # ReCAPTCHA pageurl
@@ -33,6 +33,7 @@ settings = {
         "override_js": "data/override.js", # Used to override navigator
         "deface_html": "data/deface.html", # HTML code to deface page
         "resolutions_json": "data/resolutions.json", # Monitor resolutions
+        "cookies": "data/cookie_jar"  # Stores cookies
     },
     "wait_timeout": {
         "load_timeout": 30,  # Seconds to wait for page to load
