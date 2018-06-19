@@ -16,9 +16,9 @@ This script was first featured on Reddit at [/r/Python](https://reddit.com/r/Pyt
 Preview
 -------
 
-Check out this presentation of the script in action!
+Check out this 1-minute presentation of the script in action, with only 8 threads!
 
-[nonoCAPTCHA preview](http://mikeyy.com/nonocaptcha/presentation.gif)
+![nonoCAPTCHA preview](https://github.com/mikeyy/nonoCAPTCHA/blob/presentation/presentation.gif)
 
 Compatibility
 -------------
