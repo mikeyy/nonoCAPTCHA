@@ -6,9 +6,9 @@
 import asyncio
 import random
 
-import util
-from config import settings
-from solver import Solver
+from nonoCAPTCHA import util
+from nonoCAPTCHA.solver import Solver
+from nonoCAPTCHA.config import settings
 
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)

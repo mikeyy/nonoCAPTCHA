@@ -4,9 +4,9 @@ import asyncio
 from async_timeout import timeout
 from quart import Quart, Response, request
 
-import util
-from solver import Solver
-from config import settings
+from nonoCAPTCHA import util
+from nonoCAPTCHA.solver import Solver
+from nonoCAPTCHA.config import settings
 
 # Max browsers to open/threads
 count = 10
