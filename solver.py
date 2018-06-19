@@ -6,6 +6,7 @@
 import sys
 import time
 import json
+import types
 import atexit
 import random
 import signal
@@ -31,7 +32,6 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 if settings["debug"]:
     logger.setLevel('DEBUG')
-
 
 
 class Launcher(launcher.Launcher):
@@ -74,12 +74,14 @@ class Launcher(launcher.Launcher):
             self.proc.terminate()
             self.proc.wait()
 
+
 async def launch(options, **kwargs):
     return await Launcher(options, **kwargs).launch()
 
 
-
 class Solver(object):
+    instance_count = 0
+
     def __init__(
         self,
         pageurl,
@@ -98,6 +100,9 @@ class Solver(object):
         self.detected = False
         self.headless = settings["headless"]
 
+        self.proc_id = self.instance_count
+        type(self).instance_count += 1
+
     async def start(self):
         """Start solving"""
 
@@ -108,7 +113,7 @@ class Solver(object):
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
 
-            logger.debug("Starting solver with proxy %s", self.proxy)
+            self.log(f"Starting solver with proxy {self.proxy}")
             with async_timeout(120):
                 result = await self.solve()
         except:
@@ -116,7 +121,7 @@ class Solver(object):
         finally:
             end = time.time()
             elapsed = end - start
-            logger.debug("Time elapsed: %s", elapsed)
+            self.log(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
 
@@ -220,22 +225,20 @@ class Solver(object):
 }"""
         return func
 
+    @util.throw_away_exceptions
     async def goto_and_deface(self):
         """ Open tab and deface page """
 
         user_agent = await self.cloak_navigator()
         await self.page.setUserAgent(user_agent)
-        try:
-            timeout = settings["wait_timeout"]["load_timeout"]
-            await self.page.goto(
-                self.url, timeout=timeout * 1000, waitUntil="documentloaded"
-            )
-            func = await self.deface_page()
-            timeout = settings["wait_timeout"]["deface_timeout"]
-            await self.page.waitForFunction(func, timeout=timeout * 1000)
-            return 1
-        except:
-           return
+        timeout = settings["wait_timeout"]["load_timeout"]
+        await self.page.goto(
+            self.url, timeout=timeout * 1000, waitUntil="documentloaded"
+        )
+        func = await self.deface_page()
+        timeout = settings["wait_timeout"]["deface_timeout"]
+        await self.page.waitForFunction(func, timeout=timeout * 1000)
+        return 1
 
     async def solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio 
@@ -243,12 +246,12 @@ class Solver(object):
         """
 
         if settings["check_blacklist"]:
-            logger.debug("Checking Google search for blacklist")
+            self.log("Checking Google search for blacklist")
             if await self.is_blacklisted():
                 return
 
         if not await self.goto_and_deface():
-            logger.debug("Problem defacing page")
+            self.log("Problem defacing page")
             return
 
         self.get_frames()     
@@ -264,12 +267,12 @@ class Solver(object):
                 if result:
                     code = await self.g_recaptcha_response()
                     if code:
-                        logger.debug("Audio response successful")
+                        self.log("Audio response successful")
                         return f"OK|{code}"
         else:
             code = await self.g_recaptcha_response()
             if code:
-                logger.debug("One-click successful")
+                self.log("One-click successful")
                 return f"OK|{code}"
 
     async def solve_by_audio(self):
@@ -287,7 +290,7 @@ class Solver(object):
             if self.detected:
                 raise
             return 1
-            
+
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
@@ -301,7 +304,7 @@ class Solver(object):
         """ Click checkbox """
         
         if not settings["keyboard_traverse"]:
-            logger.debug("Clicking checkbox")
+            self.log("Clicking checkbox")
             checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
             await self.click_button(checkbox)
         else:
@@ -313,7 +316,7 @@ class Solver(object):
         """ Click audio button """
 
         if not settings["keyboard_traverse"]:
-            logger.debug("Clicking audio button")
+            self.log("Clicking audio button")
             audio_button = await self.image_frame.J("#recaptcha-audio-button")
             await self.click_button(audio_button)
         else:
@@ -324,10 +327,7 @@ class Solver(object):
             await self.check_detection(self.image_frame, timeout)
         except:
             pass
-        finally:
-            if self.detected:
-                raise
-    
+
     async def get_audio_response(self):
         """ Download audio data then send to speech-to-text API for answer """
         
@@ -340,7 +340,7 @@ class Solver(object):
             f'{download_link_element}.getAttribute("href")'
         )
 
-        logger.debug("Downloading audio file")
+        self.log("Downloading audio file")
         audio_data = await util.get_page(audio_url, self.proxy, binary=True)
 
         answer = None
@@ -349,10 +349,10 @@ class Solver(object):
             answer = await get_text(tmpfile.name)
 
         if answer:
-            logger.debug('Received answer "%s"', answer)
+            self.log(f"Received answer {answer}")
             return answer
 
-        logger.debug("No answer, reloading")
+        self.log("No answer, reloading")
         await self.click_reload_button()  
         
         func = (
@@ -360,18 +360,12 @@ class Solver(object):
             f'{download_link_element}.getAttribute("href")'
         )
         timeout = settings["wait_timeout"]["reload_timeout"]
-        try:
-            await self.check_detection(
-                self.image_frame, timeout, wants_true=func
-            )
-        except:
-            raise
-        else:
-            if self.detected:
-                raise
+        await self.check_detection(
+            self.image_frame, timeout, wants_true=func
+        )
 
     async def type_audio_response(self, answer):
-        logger.debug("Typing audio response")
+        self.log("Typing audio response")
         response_input = await self.image_frame.J("#audio-response")
         length = random.uniform(70, 130)
         await response_input.type(text=answer, delay=length)
@@ -379,14 +373,14 @@ class Solver(object):
     async def click_verify(self):
         if settings["keyboard_traverse"]:
             response_input = await self.image_frame.J("#audio-response")
-            logger.debug("Pressing Enter")
+            self.log("Pressing Enter")
             await response_input.press("Enter")
         else:
             verify_button = await self.image_frame.J(
                 "#recaptcha-verify-button"
             )
 
-            logger.debug("Clicking verify")
+            self.log("Clicking verify")
             await self.click_button(verify_button)
             
     async def click_reload_button(self):
@@ -406,22 +400,20 @@ class Solver(object):
         code = await self.page.evaluate(func)
         return code
 
+    @util.throw_away_exceptions
     async def is_blacklisted(self):
-        try:
-            timeout = settings["wait_timeout"]["load_timeout"]
-            url = "https://www.google.com/search?q=my+ip&hl=en"
-            response = await util.get_page(
-                url, proxy=self.proxy, timeout=timeout
-            )
-            detected_phrase = (
-                "Our systems have detected unusual traffic "
-                "from your computer"
-            )
-            if detected_phrase in response:
-                logger.debug("IP has been blacklisted by Google")
-                return 1
-        except:
-            return
+        timeout = settings["wait_timeout"]["load_timeout"]
+        url = "https://www.google.com/search?q=my+ip&hl=en"
+        response = await util.get_page(
+            url, proxy=self.proxy, timeout=timeout
+        )
+        detected_phrase = (
+            "Our systems have detected unusual traffic "
+            "from your computer"
+        )
+        if detected_phrase in response:
+            self.log("IP has been blacklisted by Google")
+            return 1
 
     async def check_detection(self, frame, timeout, wants_true=""):
         """Checks if "Try again later" modal appears"""
@@ -481,5 +473,16 @@ class Solver(object):
         else:
             eval = "typeof wasdetected !== 'undefined'"
             if await self.image_frame.evaluate(eval):
-                logger.debug("Automation detected")
+                self.log("Automation detected")
                 self.detected = True
+
+    def log(self, message):
+        logger.debug(f'{self.proc_id} {message}')
+
+    def __getattribute__(self, item):
+        """Checks we have not been detected before entering a method"""
+        attr = super(Solver, self).__getattribute__(item)
+        if isinstance(attr, types.MethodType):
+            if super(Solver, self).__getattribute__('detected'):
+                raise SystemExit("Have been detected")
+        return attr
