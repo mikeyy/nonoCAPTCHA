@@ -34,7 +34,7 @@ Installation
 ------------
 
 ```shell
-$ python setup.py install
+$ pip install nonocaptcha
 ```
 
 Configuration
