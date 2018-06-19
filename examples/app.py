@@ -1,7 +1,6 @@
 import time
 import random
 import asyncio
-import backoff
 from async_timeout import timeout
 from quart import Quart, Response, request
 
@@ -36,7 +35,6 @@ def get_proxies():
     return iter(shuff)
 
 
-@backoff.on_predicate(backoff.constant, interval=1, max_time=60)
 async def work(pageurl, sitekey):
     while not proxies:
         await asyncio.sleep(1)
@@ -55,9 +53,6 @@ async def work(pageurl, sitekey):
             options=options,
             proxy=proxy
         )
-        
-        if client.debug:
-             print (f'Starting solver with proxy {proxy}')
 
         answer = await client.start()
 

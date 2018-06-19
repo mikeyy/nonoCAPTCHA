@@ -15,10 +15,9 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 # Max browsers to open
-threads = 10
+threads = 1
 
-
-sort_position = True
+sort_position = False
 if sort_position:
     """Use only if you know what you are doing, haven't yet automated avialable
     screen space!
@@ -77,9 +76,6 @@ async def work():
     client = Solver(
         settings["pageurl"], settings["sitekey"], options=options, proxy=proxy
     )
-
-    if client.debug:
-        print(f"Starting solver with proxy {proxy}")
 
     answer = await client.start()
 
