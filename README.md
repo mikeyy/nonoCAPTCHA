@@ -48,19 +48,20 @@ Usage
 If you would like to use it in your own script
 
 ```python
+from nonocaptcha.solver import Solver
 from config import settings
-from nonoCAPTCHA.solver import Solver
 
 client = Solver(
     settings['pageurl'],
     settings['sitekey'],
     options=options,
     proxy=proxy,
-    #proxy_auth=auth_details(),
+    proxy_auth=auth_details(),
 )
 
 answer = await client.start()
-print(answer)
+if answer:
+    print(answer)
 ```
 
 Use the included multithread script.
