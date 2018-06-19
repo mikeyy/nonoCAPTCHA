@@ -6,9 +6,6 @@ from quart import Quart, Response, request
 
 from nonoCAPTCHA import util
 from nonoCAPTCHA.solver import Solver
-
-import os.path, sys
-sys.path.append(os.getcwd())
 from config import settings
 
 # Max browsers to open/threads

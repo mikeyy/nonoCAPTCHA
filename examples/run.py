@@ -9,9 +9,6 @@ import signal
 
 from nonoCAPTCHA import util
 from nonoCAPTCHA.solver import Solver
-
-import os.path, sys
-sys.path.append(os.getcwd())
 from config import settings
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)

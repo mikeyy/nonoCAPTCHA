@@ -27,3 +27,6 @@ __all__ = (
     "__version__",
     "version_info",
 )
+
+import os.path, sys
+sys.path.append(os.getcwd())
