@@ -121,7 +121,7 @@ class Solver(object):
         finally:
             end = time.time()
             elapsed = end - start
-            logger.debug(f"Time elapsed: {elapsed}")
+            self.log(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
 
