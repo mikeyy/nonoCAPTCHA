@@ -14,7 +14,7 @@ from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
 
-from nonoCAPTCHA.config import settings
+from config import settings
 
 
 SUB_KEY = settings["api_subkey"]
