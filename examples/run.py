@@ -11,6 +11,7 @@ from nonoCAPTCHA.solver import Solver
 from nonoCAPTCHA.config import settings
 
 import signal
+
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 

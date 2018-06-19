@@ -20,25 +20,24 @@ from pyppeteer.connection import Connection
 from user_agent import generate_navigator_js
 from async_timeout import timeout as async_timeout
 
-from nonoCAPTCHA import util
 from config import settings
+from nonoCAPTCHA import util
 from nonoCAPTCHA.helper import wait_between
 from nonoCAPTCHA.speech import get_text
 
 
-FORMAT = '%(asctime)s %(message)s'
+FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 if settings["debug"]:
-    logger.setLevel('DEBUG')
-
+    logger.setLevel("DEBUG")
 
 
 class Launcher(launcher.Launcher):
     async def launch(self):
         self.chromeClosed = False
         self.connection: Optional[Connection] = None
-        env = self.options.get('env')
+        env = self.options.get("env")
         self.proc = await asyncio.subprocess.create_subprocess_exec(
             *self.cmd,
             stdout=asyncio.subprocess.DEVNULL,
@@ -52,20 +51,21 @@ class Launcher(launcher.Launcher):
 
         # dont forget to close browser process
         atexit.register(_close_process)
-        if self.options.get('handleSIGINT', True):
+        if self.options.get("handleSIGINT", True):
             signal.signal(signal.SIGINT, _close_process)
-        if self.options.get('handleSIGTERM', True):
+        if self.options.get("handleSIGTERM", True):
             signal.signal(signal.SIGTERM, _close_process)
-        if not sys.platform.startswith('win'):
+        if not sys.platform.startswith("win"):
             # SIGHUP is not defined on windows
-            if self.options.get('handleSIGHUP', True):
+            if self.options.get("handleSIGHUP", True):
                 signal.signal(signal.SIGHUP, _close_process)
 
-        connectionDelay = self.options.get('slowMo', 0)
+        connectionDelay = self.options.get("slowMo", 0)
         self.browserWSEndpoint = self._get_ws_endpoint()
         self.connection = Connection(self.browserWSEndpoint, connectionDelay)
         return await Browser.create(
-            self.connection, self.options, self.proc, self.killChrome)
+            self.connection, self.options, self.proc, self.killChrome
+        )
 
     def waitForChromeToClose(self):
         """Terminate chrome."""
@@ -74,9 +74,9 @@ class Launcher(launcher.Launcher):
             self.proc.terminate()
             self.proc.wait()
 
+
 async def launch(options, **kwargs):
     return await Launcher(options, **kwargs).launch()
-
 
 
 class Solver(object):
@@ -133,13 +133,13 @@ class Solver(object):
             '--cryptauth-http-host ""',
             "--disable-affiliation-based-matching",
             "--disable-answers-in-suggest",
-            #"--disable-background-networking", Possibly increases detection..
+            # "--disable-background-networking", Possibly increases detection..
             "--disable-breakpad",
             "--disable-demo-mode",
             "--disable-device-discovery-notifications",
             "--disable-java",
             "--disable-preconnect",
-            #"--dns-prefetch-disable", # Discernably slower load-times
+            # "--dns-prefetch-disable", # Discernably slower load-times
         ]
 
         if self.headless:
@@ -157,7 +157,7 @@ class Solver(object):
 
         if self.proxy:
             chrome_args.append(f"--proxy-server=http://{self.proxy}")
-        
+
         args = self.options.pop("args")
         args.extend(chrome_args)
 
@@ -235,7 +235,7 @@ class Solver(object):
             await self.page.waitForFunction(func, timeout=timeout * 1000)
             return 1
         except:
-           return
+            return
 
     async def solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio 
@@ -251,7 +251,7 @@ class Solver(object):
             logger.debug("Problem defacing page")
             return
 
-        self.get_frames()     
+        self.get_frames()
         await self.click_checkbox()
 
         timeout = settings["wait_timeout"]["success_timeout"]
@@ -276,10 +276,11 @@ class Solver(object):
         """ Go through procedures to solve audio """
 
         answer = await self.get_audio_response()
-        if not answer: return
+        if not answer:
+            return
         await self.type_audio_response(answer)
         await self.click_verify()
-        
+
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
             await self.check_detection(self.checkbox_frame, timeout)
@@ -287,7 +288,7 @@ class Solver(object):
             if self.detected:
                 raise
             return 1
-            
+
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
@@ -299,7 +300,7 @@ class Solver(object):
 
     async def click_checkbox(self):
         """ Click checkbox """
-        
+
         if not settings["keyboard_traverse"]:
             logger.debug("Clicking checkbox")
             checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
@@ -308,7 +309,7 @@ class Solver(object):
             self.body = await self.page.J("body")
             await self.body.press("Tab")
             await self.body.press("Enter")
-            
+
     async def click_audio_button(self):
         """ Click audio button """
 
@@ -318,7 +319,7 @@ class Solver(object):
             await self.click_button(audio_button)
         else:
             await self.body.press("Enter")
-            
+
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.check_detection(self.image_frame, timeout)
@@ -327,15 +328,15 @@ class Solver(object):
         finally:
             if self.detected:
                 raise
-    
+
     async def get_audio_response(self):
         """ Download audio data then send to speech-to-text API for answer """
-        
+
         download_link_element = (
             'document.getElementsByClassName("rc-audiochallenge-tdownload-link'
             '")[0]'
         )
-        
+
         audio_url = await self.image_frame.evaluate(
             f'{download_link_element}.getAttribute("href")'
         )
@@ -353,8 +354,8 @@ class Solver(object):
             return answer
 
         logger.debug("No answer, reloading")
-        await self.click_reload_button()  
-        
+        await self.click_reload_button()
+
         func = (
             f'"{audio_url}" !== '
             f'{download_link_element}.getAttribute("href")'
@@ -375,7 +376,7 @@ class Solver(object):
         response_input = await self.image_frame.J("#audio-response")
         length = random.uniform(70, 130)
         await response_input.type(text=answer, delay=length)
-        
+
     async def click_verify(self):
         if settings["keyboard_traverse"]:
             response_input = await self.image_frame.J("#audio-response")
@@ -388,19 +389,17 @@ class Solver(object):
 
             logger.debug("Clicking verify")
             await self.click_button(verify_button)
-            
+
     async def click_reload_button(self):
-        reload_button = await self.image_frame.J(
-            "#recaptcha-reload-button"
-        )
+        reload_button = await self.image_frame.J("#recaptcha-reload-button")
         await self.click_button(reload_button)
-            
+
     async def click_button(self, button):
         click_delay = random.uniform(70, 130)
         wait_delay = random.uniform(2000, 4000)
         await asyncio.sleep(wait_delay / 1000)
         await button.click(delay=click_delay / 1000)
-            
+
     async def g_recaptcha_response(self):
         func = 'document.getElementById("g-recaptcha-response").value'
         code = await self.page.evaluate(func)
@@ -475,7 +474,7 @@ class Solver(object):
             checkbox,
         )
         try:
-            await frame.waitForFunction(func, timeout = timeout * 1000)
+            await frame.waitForFunction(func, timeout=timeout * 1000)
         except:
             raise
         else:

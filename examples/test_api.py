@@ -15,6 +15,7 @@ count = 10
 
 sem = asyncio.Semaphore(count)
 
+
 async def work():
     async with sem:
         start = time.time()
@@ -30,10 +31,7 @@ async def work():
 
 
 async def main():
-    tasks = [
-            asyncio.ensure_future(work())
-            for i in range(count)
-        ]
+    tasks = [asyncio.ensure_future(work()) for i in range(count)]
 
     futures = await asyncio.gather(*tasks)
     for (i, future) in zip(range(count), futures):

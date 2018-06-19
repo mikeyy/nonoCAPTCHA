@@ -40,19 +40,12 @@ async def work(pageurl, sitekey):
         await asyncio.sleep(1)
 
     # Chromium options and arguments
-    options = {"ignoreHTTPSErrors": True, 
-               "args": ["--timeout 5"]
-    }
+    options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 
     async with sem:
         proxy = next(proxies)
 
-        client = Solver(
-            pageurl,
-            sitekey,
-            options=options,
-            proxy=proxy
-        )
+        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
 
         answer = await client.start()
 

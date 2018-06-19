@@ -9,7 +9,7 @@ authors = (("Michael Mooney", "mikeyy@mikeyy.com"),)
 
 authors_email = ", ".join("{}".format(email) for _, email in authors)
 
-__license__ = ("GPL-3.0")
+__license__ = "GPL-3.0"
 __author__ = ", ".join(
     "{} <{}>".format(name, email) for name, email in authors
 )
