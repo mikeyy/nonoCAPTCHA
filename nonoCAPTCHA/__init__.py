@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-version_info = (0, 0, 3)
+version_info = (0, 0, 6)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
