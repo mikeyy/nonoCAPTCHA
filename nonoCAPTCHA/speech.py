@@ -14,6 +14,8 @@ from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
 
+import os.path, sys
+sys.path.append(os.getcwd())
 from config import settings
 
 

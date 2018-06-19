@@ -20,10 +20,13 @@ from pyppeteer.connection import Connection
 from user_agent import generate_navigator_js
 from async_timeout import timeout as async_timeout
 
-from config import settings
 from nonoCAPTCHA import util
 from nonoCAPTCHA.helper import wait_between
 from nonoCAPTCHA.speech import get_text
+
+import os.path, sys
+sys.path.append(os.getcwd())
+from config import settings
 
 
 FORMAT = "%(asctime)s %(message)s"
