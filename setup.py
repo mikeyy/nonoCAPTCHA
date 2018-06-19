@@ -10,8 +10,6 @@ module = SourceFileLoader(
     os.path.join(module_name, '__init__.py')
 ).load_module()
 
-os.symlink(f'../data', f'{module_name}/data')
-
 def load_requirements(fname):
     """ load requirements from a pip requirements file """
     with open(fname) as f:
@@ -35,5 +33,6 @@ setup(
         'Programming Language :: Python :: 3.6'
     ],
     package_data = {module_name: ['data/*']},
+    packages=find_packages(),
     install_requires=load_requirements('requirements.txt'),
 )
