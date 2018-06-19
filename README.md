@@ -34,7 +34,7 @@ Installation
 ------------
 
 ```
-pip install -r requirements.txt
+$python setup.py install
 ```
 
 Configuration
@@ -47,10 +47,10 @@ Usage
 
 If you would like to use it in your own script
 
-```
+```python
 from config import settings
-from solver import Solver
-  
+from nonoCAPTCHA.solver import Solver
+
 client = Solver(
     settings['pageurl'],
     settings['sitekey'],
@@ -68,15 +68,12 @@ Or use the included multithread script.
 Don't forget to edit variable count for amount of threads to use!
 
 ```
-python run.py
+$ python examples/run.py
 ```
 
-Or you can use
+Or you can use and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
 
+*Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.*
 ```
-python app.py
+$ python examples/app.py
 ```
-
-and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
-
-Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.
