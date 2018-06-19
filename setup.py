@@ -32,7 +32,6 @@ setup(
         'Operating System :: MacOS',
         'Programming Language :: Python :: 3.6'
     ],
-    package_data = {module_name: ['data/*']},
     packages=find_packages(),
     install_requires=load_requirements('requirements.txt'),
 )
