@@ -111,8 +111,7 @@ class Solver(object):
             logger.debug("Starting solver with proxy %s", self.proxy)
             with async_timeout(120):
                 result = await self.solve()
-        except Exception as e:
-            print(e)
+        except:
             result = None
         finally:
             end = time.time()
@@ -477,8 +476,7 @@ class Solver(object):
         )
         try:
             await frame.waitForFunction(func, timeout = timeout * 1000)
-        except Exception as e:
-            print(e)
+        except:
             raise
         else:
             eval = "typeof wasdetected !== 'undefined'"
