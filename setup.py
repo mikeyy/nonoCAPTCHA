@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from importlib.machinery import SourceFileLoader
 
 
-module_name = "nonoCAPTCHA"
+module_name = "nonocaptcha"
 
 module = SourceFileLoader(
     module_name, os.path.join(module_name, "__init__.py")

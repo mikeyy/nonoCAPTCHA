@@ -7,9 +7,9 @@ import asyncio
 import random
 import time
 
-from nonoCAPTCHA import util
-from nonoCAPTCHA.solver import Solver
-from nonoCAPTCHA.config import settings
+from nonocaptcha import util
+from nonocaptcha.solver import Solver
+from config import settings
 
 count = 10
 

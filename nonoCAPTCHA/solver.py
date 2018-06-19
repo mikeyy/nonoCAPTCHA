@@ -20,9 +20,9 @@ from pyppeteer.connection import Connection
 from user_agent import generate_navigator_js
 from async_timeout import timeout as async_timeout
 
-from nonoCAPTCHA import util
-from nonoCAPTCHA.helper import wait_between
-from nonoCAPTCHA.speech import get_text
+from nonocaptcha import util
+from nonocaptcha.helper import wait_between
+from nonocaptcha.speech import get_text
 from config import settings
 
 

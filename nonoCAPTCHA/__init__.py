@@ -14,7 +14,7 @@ __author__ = ", ".join(
     "{} <{}>".format(name, email) for name, email in authors
 )
 
-package_info = "nonoCAPTCHA - defeating Google's reCAPTCHA one step at a time"
+package_info = "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio, using Microsoft Azure's Speech-to-Text API. "
 
 # It's same persons right now
 __maintainer__ = __author__
