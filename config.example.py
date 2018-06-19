@@ -12,7 +12,13 @@
    https://2captcha.com/2captcha-api#solving_recaptchav2_new
 
    Should work with the configured values unless your proxies are really slow.
+
+   I wouldn't touch data files, unless you're crazy.
 """
+import os
+
+path = os.path.abspath(os.path.dirname(__file__))
+
 
 settings = {
     "debug": True,  # Prints actions as they occur, in your console
@@ -25,14 +31,14 @@ settings = {
     "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",  # ReCAPTCHA sitekey
     "proxy_source": "",  # Only used for app.py or run.py
     "data_files": {
-        "override_js": "data/override.js",  # Used to override navigator
-        "deface_html": "data/deface.html",  # HTML code to deface page
-        "resolutions_json": "data/resolutions.json",  # Monitor resolutions
+        "override_js": os.path.join(path, "data/override.js"),
+        "deface_html": os.path.join(path, "data/deface.html"),
+        "resolutions_json": os.path.join(path, "data/resolutions.json"),
     },
     "wait_timeout": {
         "load_timeout": 30,  # Seconds to wait for page to load
         "deface_timeout": 30,  # Seconds to wait for page to be defaced
-        "success_timeout": 10,  # Seconds to wait due to checkbox animation
+        "success_timeout": 5,  # Seconds to wait due to checkbox animation
         "audio_button_timeout": 10,  # Seconds to wait for audio button
         "audio_link_timeout": 10,  # Seconds to wait for the audio link,
         # not the download!
