@@ -4,7 +4,10 @@
 """Utility functions."""
 
 import aiohttp
+import asyncio
 import aiofiles
+import functools
+import logging
 from async_timeout import timeout as async_timeout
 
 __all__ = ["save_file", "load_file", "get_page"]
@@ -33,3 +36,17 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=60):
                 if binary:
                     return await response.read()
                 return await response.text()
+
+
+def throw_away_exceptions(f):
+    """Decorator that returns None if an exception occured and logs the exception. Use with cation."""
+    @functools.wraps(f)
+    async def inner(*args, **kwargs):
+        try:
+            if asyncio.iscoroutinefunction(f):
+                return await f(*args, **kwargs)
+            else:
+                return f(*args, **kwargs)
+        except BaseException as e:
+            logging.debug(f'{f.__name__} encountered an error: {e} {type(e)}')
+    return inner

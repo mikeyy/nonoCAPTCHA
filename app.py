@@ -55,9 +55,6 @@ async def work(pageurl, sitekey):
             options=options,
             proxy=proxy
         )
-        
-        if client.debug:
-             print (f'Starting solver with proxy {proxy}')
 
         answer = await client.start()
 
