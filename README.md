@@ -33,8 +33,8 @@ Python 3.6.5+ and FFmpeg
 Installation
 ------------
 
-```
-$python setup.py install
+```shell
+$ python setup.py install
 ```
 
 Configuration
@@ -63,17 +63,17 @@ answer = await client.start()
 print(answer)
 ```
 
-Or use the included multithread script.
+Use the included multithread script.
 
-Don't forget to edit variable count for amount of threads to use!
+*Edit variable count for amount of threads to use*
 
-```
+```shell
 $ python examples/run.py
 ```
 
-Or you can use and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
+Use the included mini-server and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
 
 *Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.*
-```
+```shell
 $ python examples/app.py
 ```
