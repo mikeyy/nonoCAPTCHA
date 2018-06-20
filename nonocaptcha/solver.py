@@ -12,6 +12,7 @@ import random
 import signal
 import asyncio
 import logging
+import pathlib
 import tempfile
 
 from pyppeteer import launcher
@@ -105,6 +106,7 @@ class Solver(object):
 
         self.detected = False
         self.headless = settings["headless"]
+        self.cookies = []
 
     async def start(self):
         """Start solving"""
@@ -115,6 +117,10 @@ class Solver(object):
             self.page = await self.browser.newPage()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
+            if settings['gmail']:
+                await self.sign_in_to_google()
+                for c in self.cookies:
+                    await self.page.setCookie(c)  # rethink for multiple accounts
 
             logger.debug("Starting solver with proxy %s", self.proxy)
             with async_timeout(120):
@@ -490,3 +496,26 @@ class Solver(object):
             if await self.image_frame.evaluate(eval):
                 logger.debug("Automation detected")
                 self.detected = True
+
+    async def sign_in_to_google(self):
+        cookie_path = settings['data_files']['cookies'] + '/google_account'
+        if not pathlib.Path(cookie_path).exists():
+            url = "https://accounts.google.com/Login"
+            page = await self.browser.newPage()
+            await page.goto(url, waitUntil="documentloaded")
+            username = await page.querySelector('#identifierId')
+            await username.type(settings['gmail'])
+            button = await page.querySelector('#identifierNext')
+            await button.click()
+            await asyncio.sleep(2) # better way to do this...
+            navigation = page.waitForNavigation()
+            password = await page.querySelector('#password')
+            await password.type(settings['gmail_password'])
+            button = await page.querySelector('#passwordNext')
+            await button.click()
+            await navigation
+            self.cookies = await page.cookies()
+            util.serialize(self.cookies, cookie_path)
+            await page.close()
+        else:
+            self.cookies = util.deserialize(cookie_path)
