@@ -90,11 +90,13 @@ async def main():
     completed, pending = await asyncio.wait(
         tasks, return_when=asyncio.FIRST_COMPLETED
     )
+    count = 0
     while 1:
         for task in completed:
             result = task.result()
             if result:
-                print(result)
+                count += 1
+                print(f"{count}: {result}")
         new_task = [asyncio.ensure_future(work())]
         completed, pending = await asyncio.wait(
             set(new_task) | pending, return_when=asyncio.FIRST_COMPLETED
