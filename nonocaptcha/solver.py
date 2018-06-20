@@ -13,6 +13,7 @@ import signal
 import sys
 import tempfile
 import time
+import pathlib
 
 from async_timeout import timeout as async_timeout
 from user_agent import generate_navigator_js
@@ -88,6 +89,7 @@ class Solver(object):
     logger = logging.getLogger(__name__)
     if settings["debug"]:
         logger.setLevel("DEBUG")
+    proc_count = 0
 
     def __init__(
         self,
@@ -107,6 +109,11 @@ class Solver(object):
         self.detected = False
         self.headless = settings["headless"]
         self.cookies = []
+        self.proc_id = self.proc_count
+        type(self).proc_count += 1
+
+    def log(self, message):
+        self.logger.debug(f'{self.proc_id} {message}')
 
     async def start(self):
         """Start solving"""
@@ -123,15 +130,16 @@ class Solver(object):
                 for c in self.cookies:
                     await self.page.setCookie(c) # rethink multiple accounts
 
-            self.logger.debug("Starting solver with proxy %s", self.proxy)
+            self.log(f"Starting solver with proxy {self.proxy}")
             with async_timeout(120):
                 result = await self.solve()
-        except:
+        except BaseException as e:
+            self.log(f"{e} {type(e)}")
             result = None
         finally:
             end = time.time()
             elapsed = end - start
-            self.logger.debug("Time elapsed: %s", elapsed)
+            self.log(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
 
@@ -258,12 +266,12 @@ class Solver(object):
         """
 
         if settings["check_blacklist"]:
-            self.logger.debug("Checking Google search for blacklist")
+            self.log("Checking Google search for blacklist")
             if await self.is_blacklisted():
                 return
 
         if not await self.goto_and_deface():
-            self.logger.debug("Problem defacing page")
+            self.log("Problem defacing page")
             return
 
         self.get_frames()
@@ -287,12 +295,12 @@ class Solver(object):
                 if result:
                     code = await self.g_recaptcha_response()
                     if code:
-                        self.logger.debug("Audio response successful")
+                        self.log("Audio response successful")
                         return f"OK|{code}"
         else:
             code = await self.g_recaptcha_response()
             if code:
-                self.logger.debug("One-click successful")
+                self.log("One-click successful")
                 return f"OK|{code}"
 
     def get_frames(self):
@@ -308,19 +316,19 @@ class Solver(object):
         """Click checkbox"""
 
         if not settings["keyboard_traverse"]:
-            self.logger.debug("Clicking checkbox")
+            self.log("Clicking checkbox")
             checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
             await self.click_button(checkbox)
         else:
             self.body = await self.page.J("body")
             await self.body.press("Tab")
             await self.body.press("Enter")
-            
+
     async def click_audio_button(self):
         """Click audio button"""
 
         if not settings["keyboard_traverse"]:
-            self.logger.debug("Clicking audio button")
+            self.log("Clicking audio button")
             audio_button = await self.image_frame.J("#recaptcha-audio-button")
             await self.click_button(audio_button)
         else:
@@ -329,8 +337,6 @@ class Solver(object):
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.check_detection(self.image_frame, timeout)
-        except:
-            pass
         finally:
             if self.detected:
                 raise
@@ -357,7 +363,7 @@ class Solver(object):
                 "from your computer"
             )
             if detected_phrase in response:
-                self.logger.debug("IP has been blacklisted by Google")
+                self.log("IP has been blacklisted by Google")
                 return 1
         except:
             return
@@ -436,13 +442,8 @@ class Solver(object):
             try_again_header,
             checkbox,
         )
-        try:
-            await frame.waitForFunction(func, timeout=timeout * 1000)
-        except Exception as e:
-            print(e)
-            raise
-        else:
-            eval = "typeof wasdetected !== 'undefined'"
-            if await self.image_frame.evaluate(eval):
-                self.logger.debug("Automation detected")
-                self.detected = True
+        await frame.waitForFunction(func, timeout=timeout * 1000)
+        eval = "typeof wasdetected !== 'undefined'"
+        if await self.image_frame.evaluate(eval):
+            self.log("Automation detected")
+            self.detected = True
