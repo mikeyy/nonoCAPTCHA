@@ -29,10 +29,15 @@ settings = {
     "pageurl": "https://google.com/recaptcha/api2/demo",  # ReCAPTCHA pageurl
     "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",  # ReCAPTCHA sitekey
     "proxy_source": "",  # Only used for app.py or run.py
+                              # text and close on true before solving
+    "gmail": "",  # Leave blank to ignore
+    "gmail_password": "",  # Signing into google increases probability of success
+
     "data_files": {
-        "override_js": f"{package_dir}/data/override.js",
-        "deface_html": f"{package_dir}/data/deface.html",
-        "resolutions_json": f"{package_dir}/data/resolutions.json",
+        "override_js": f"{package_dir}/data/override.js",  # Used to override navigator
+        "deface_html": f"{package_dir}/data/deface.html",  # HTML code to deface page
+        "resolutions_json": f"{package_dir}/data/resolutions.json",  # Monitor resolutions
+        "cookies": f"{package_dir}/data/cookie_jar"  # Stores cookies
     },
     "wait_timeout": {
         "load_timeout": 30,  # Seconds to wait for page to load
