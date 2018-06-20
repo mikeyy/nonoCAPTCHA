@@ -89,6 +89,8 @@ async def launch(options, **kwargs):
 
 
 class Solver(object):
+    proc_count = 0
+
     def __init__(
         self,
         pageurl,
@@ -107,6 +109,12 @@ class Solver(object):
         self.detected = False
         self.headless = settings["headless"]
         self.cookies = []
+        self.logger = logger
+        self.proc_id = self.proc_count
+        type(self).proc_count += 1
+
+    def log(self, message):
+        self.logger.debug(f'{self.proc_id} {message}')
 
     async def start(self):
         """Start solving"""
@@ -122,15 +130,16 @@ class Solver(object):
                 for c in self.cookies:
                     await self.page.setCookie(c)  # rethink for multiple accounts
 
-            logger.debug("Starting solver with proxy %s", self.proxy)
+            logger.debug(f"Starting solver with proxy {self.proxy}")
             with async_timeout(120):
                 result = await self.solve()
-        except:
+        except BaseException as e:
+            self.log(f"{e} {type(e)}")
             result = None
         finally:
             end = time.time()
             elapsed = end - start
-            logger.debug("Time elapsed: %s", elapsed)
+            logger.debug(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
 
@@ -257,12 +266,12 @@ class Solver(object):
         """
 
         if settings["check_blacklist"]:
-            logger.debug("Checking Google search for blacklist")
+            self.log("Checking Google search for blacklist")
             if await self.is_blacklisted():
                 return
 
         if not await self.goto_and_deface():
-            logger.debug("Problem defacing page")
+            self.log("Problem defacing page")
             return
 
         self.get_frames()
@@ -278,12 +287,12 @@ class Solver(object):
                 if result:
                     code = await self.g_recaptcha_response()
                     if code:
-                        logger.debug("Audio response successful")
+                        self.log("Audio response successful")
                         return f"OK|{code}"
         else:
             code = await self.g_recaptcha_response()
             if code:
-                logger.debug("One-click successful")
+                self.log("One-click successful")
                 return f"OK|{code}"
 
     async def solve_by_audio(self):
@@ -316,7 +325,7 @@ class Solver(object):
         """ Click checkbox """
 
         if not settings["keyboard_traverse"]:
-            logger.debug("Clicking checkbox")
+            self.log("Clicking checkbox")
             checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
             await self.click_button(checkbox)
         else:
@@ -328,7 +337,7 @@ class Solver(object):
         """ Click audio button """
 
         if not settings["keyboard_traverse"]:
-            logger.debug("Clicking audio button")
+            self.log("Clicking audio button")
             audio_button = await self.image_frame.J("#recaptcha-audio-button")
             await self.click_button(audio_button)
         else:
@@ -337,8 +346,6 @@ class Solver(object):
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.check_detection(self.image_frame, timeout)
-        except:
-            pass
         finally:
             if self.detected:
                 raise
@@ -355,7 +362,7 @@ class Solver(object):
             f'{download_link_element}.getAttribute("href")'
         )
 
-        logger.debug("Downloading audio file")
+        self.log("Downloading audio file")
         audio_data = await util.get_page(audio_url, self.proxy, binary=True)
 
         answer = None
@@ -364,10 +371,10 @@ class Solver(object):
             answer = await get_text(tmpfile.name)
 
         if answer:
-            logger.debug('Received answer "%s"', answer)
+            self.log(f"Received answer '{answer}'")
             return answer
 
-        logger.debug("No answer, reloading")
+        self.log("No answer reloading")
         await self.click_reload_button()
 
         func = (
@@ -375,18 +382,14 @@ class Solver(object):
             f'{download_link_element}.getAttribute("href")'
         )
         timeout = settings["wait_timeout"]["reload_timeout"]
-        try:
-            await self.check_detection(
-                self.image_frame, timeout, wants_true=func
-            )
-        except:
-            raise
-        else:
-            if self.detected:
-                raise
+        await self.check_detection(
+            self.image_frame, timeout, wants_true=func
+        )
+        if self.detected:
+            raise SystemExit("Was detected")
 
     async def type_audio_response(self, answer):
-        logger.debug("Typing audio response")
+        self.log("Typing audio response")
         response_input = await self.image_frame.J("#audio-response")
         length = random.uniform(70, 130)
         await response_input.type(text=answer, delay=length)
@@ -394,14 +397,14 @@ class Solver(object):
     async def click_verify(self):
         if settings["keyboard_traverse"]:
             response_input = await self.image_frame.J("#audio-response")
-            logger.debug("Pressing Enter")
+            self.log("Pressing Enter")
             await response_input.press("Enter")
         else:
             verify_button = await self.image_frame.J(
                 "#recaptcha-verify-button"
             )
 
-            logger.debug("Clicking verify")
+            self.log("Clicking verify")
             await self.click_button(verify_button)
 
     async def click_reload_button(self):
@@ -431,7 +434,7 @@ class Solver(object):
                 "from your computer"
             )
             if detected_phrase in response:
-                logger.debug("IP has been blacklisted by Google")
+                self.log("IP has been blacklisted by Google")
                 return 1
         except:
             return
@@ -487,15 +490,11 @@ class Solver(object):
             try_again_header,
             checkbox,
         )
-        try:
-            await frame.waitForFunction(func, timeout=timeout * 1000)
-        except:
-            raise
-        else:
-            eval = "typeof wasdetected !== 'undefined'"
-            if await self.image_frame.evaluate(eval):
-                logger.debug("Automation detected")
-                self.detected = True
+        await frame.waitForFunction(func, timeout=timeout * 1000)
+        eval = "typeof wasdetected !== 'undefined'"
+        if await self.image_frame.evaluate(eval):
+            self.log("Automation detected")
+            self.detected = True
 
     async def sign_in_to_google(self):
         cookie_path = settings['data_files']['cookies'] + '/google_account'
