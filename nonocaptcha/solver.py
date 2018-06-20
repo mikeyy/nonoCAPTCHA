@@ -3,28 +3,28 @@
 
 """Solver module."""
 
-import sys
-import time
-import json
+import asyncio
 import atexit
+import json
+import logging
 import psutil
 import random
 import signal
-import asyncio
-import logging
-import pathlib
+import sys
 import tempfile
+import time
+import pathlib
 
+from async_timeout import timeout as async_timeout
+from user_agent import generate_navigator_js
 from pyppeteer import launcher
 from pyppeteer.util import merge_dict
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
-from user_agent import generate_navigator_js
-from async_timeout import timeout as async_timeout
 
 from nonocaptcha import util
+from nonocaptcha.audio import SolveAudio
 from nonocaptcha.helper import wait_between
-from nonocaptcha.speech import get_text
 
 try:
     from config import settings
@@ -37,9 +37,6 @@ except:
 
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
-if settings["debug"]:
-    logger.setLevel("DEBUG")
 
 
 class Launcher(launcher.Launcher):
@@ -89,6 +86,9 @@ async def launch(options, **kwargs):
 
 
 class Solver(object):
+    logger = logging.getLogger(__name__)
+    if settings["debug"]:
+        logger.setLevel("DEBUG")
     proc_count = 0
 
     def __init__(
@@ -109,7 +109,6 @@ class Solver(object):
         self.detected = False
         self.headless = settings["headless"]
         self.cookies = []
-        self.logger = logger
         self.proc_id = self.proc_count
         type(self).proc_count += 1
 
@@ -125,12 +124,13 @@ class Solver(object):
             self.page = await self.browser.newPage()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
+
             if settings['gmail']:
                 await self.sign_in_to_google()
                 for c in self.cookies:
-                    await self.page.setCookie(c)  # rethink for multiple accounts
+                    await self.page.setCookie(c) # rethink multiple accounts
 
-            logger.debug(f"Starting solver with proxy {self.proxy}")
+            self.log(f"Starting solver with proxy {self.proxy}")
             with async_timeout(120):
                 result = await self.solve()
         except BaseException as e:
@@ -139,7 +139,7 @@ class Solver(object):
         finally:
             end = time.time()
             elapsed = end - start
-            logger.debug(f"Time elapsed: {elapsed}")
+            self.log(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
 
@@ -189,7 +189,7 @@ class Solver(object):
         return browser
 
     async def cloak_navigator(self):
-        """ Emulate another browser's navigator properties and set webdriver
+        """Emulate another browser's navigator properties and set webdriver
             false.
         """
 
@@ -217,7 +217,7 @@ class Solver(object):
         html_code = await util.load_file(settings["data_files"]["deface_html"])
         mockPage = (
             (
-                """() => {
+               """() => {
         var x = (function () {/*
             %s
         */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
@@ -231,7 +231,7 @@ class Solver(object):
             % self.sitekey
         )
         await self.page.evaluate(mockPage)
-        func = """() => {
+        func ="""() => {
     var frame = parent.document.getElementsByTagName('iframe')[1];
     if (typeof frame !== 'undefined') {
         frame.onload = function() {
@@ -244,7 +244,7 @@ class Solver(object):
         return func
 
     async def goto_and_deface(self):
-        """ Open tab and deface page """
+        """Open tab and deface page"""
 
         user_agent = await self.cloak_navigator()
         await self.page.setUserAgent(user_agent)
@@ -275,6 +275,13 @@ class Solver(object):
             return
 
         self.get_frames()
+        self.audio = SolveAudio(
+            frames = (self.checkbox_frame, self.image_frame),
+            check_detection = self.check_detection,
+            proxy = self.proxy,
+            logger = self.logger
+        )
+
         await self.click_checkbox()
 
         timeout = settings["wait_timeout"]["success_timeout"]
@@ -283,7 +290,8 @@ class Solver(object):
         except:
             await self.click_audio_button()
             for i in range(5):
-                result = await self.solve_by_audio()
+                result = await self.audio.solve_by_audio()
+                print (result)
                 if result:
                     code = await self.g_recaptcha_response()
                     if code:
@@ -295,23 +303,6 @@ class Solver(object):
                 self.log("One-click successful")
                 return f"OK|{code}"
 
-    async def solve_by_audio(self):
-        """ Go through procedures to solve audio """
-
-        answer = await self.get_audio_response()
-        if not answer:
-            return
-        await self.type_audio_response(answer)
-        await self.click_verify()
-
-        timeout = settings["wait_timeout"]["success_timeout"]
-        try:
-            await self.check_detection(self.checkbox_frame, timeout)
-        finally:
-            if self.detected:
-                raise
-            return 1
-
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
@@ -322,7 +313,7 @@ class Solver(object):
         )
 
     async def click_checkbox(self):
-        """ Click checkbox """
+        """Click checkbox"""
 
         if not settings["keyboard_traverse"]:
             self.log("Clicking checkbox")
@@ -334,7 +325,7 @@ class Solver(object):
             await self.body.press("Enter")
 
     async def click_audio_button(self):
-        """ Click audio button """
+        """Click audio button"""
 
         if not settings["keyboard_traverse"]:
             self.log("Clicking audio button")
@@ -350,71 +341,9 @@ class Solver(object):
             if self.detected:
                 raise
 
-    async def get_audio_response(self):
-        """ Download audio data then send to speech-to-text API for answer """
-
-        download_link_element = (
-            'document.getElementsByClassName("rc-audiochallenge-tdownload-link'
-            '")[0]'
-        )
-
-        audio_url = await self.image_frame.evaluate(
-            f'{download_link_element}.getAttribute("href")'
-        )
-
-        self.log("Downloading audio file")
-        audio_data = await util.get_page(audio_url, self.proxy, binary=True)
-
-        answer = None
-        with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
-            await util.save_file(tmpfile.name, audio_data, binary=True)
-            answer = await get_text(tmpfile.name)
-
-        if answer:
-            self.log(f"Received answer '{answer}'")
-            return answer
-
-        self.log("No answer reloading")
-        await self.click_reload_button()
-
-        func = (
-            f'"{audio_url}" !== '
-            f'{download_link_element}.getAttribute("href")'
-        )
-        timeout = settings["wait_timeout"]["reload_timeout"]
-        await self.check_detection(
-            self.image_frame, timeout, wants_true=func
-        )
-        if self.detected:
-            raise SystemExit("Was detected")
-
-    async def type_audio_response(self, answer):
-        self.log("Typing audio response")
-        response_input = await self.image_frame.J("#audio-response")
-        length = random.uniform(70, 130)
-        await response_input.type(text=answer, delay=length)
-
-    async def click_verify(self):
-        if settings["keyboard_traverse"]:
-            response_input = await self.image_frame.J("#audio-response")
-            self.log("Pressing Enter")
-            await response_input.press("Enter")
-        else:
-            verify_button = await self.image_frame.J(
-                "#recaptcha-verify-button"
-            )
-
-            self.log("Clicking verify")
-            await self.click_button(verify_button)
-
-    async def click_reload_button(self):
-        reload_button = await self.image_frame.J("#recaptcha-reload-button")
-        await self.click_button(reload_button)
-
     async def click_button(self, button):
         click_delay = random.uniform(70, 130)
-        wait_delay = random.uniform(2000, 4000)
-        await asyncio.sleep(wait_delay / 1000)
+        await wait_between(2000, 4000)
         await button.click(delay=click_delay / 1000)
 
     async def g_recaptcha_response(self):
@@ -439,6 +368,29 @@ class Solver(object):
         except:
             return
 
+    async def sign_in_to_google(self):
+        cookie_path = settings['data_files']['cookies'] + '/google_account'
+        if not pathlib.Path(cookie_path).exists():
+            url = "https://accounts.google.com/Login"
+            page = await self.browser.newPage()
+            await page.goto(url, waitUntil="documentloaded")
+            username = await page.querySelector('#identifierId')
+            await username.type(settings['gmail'])
+            button = await page.querySelector('#identifierNext')
+            await button.click()
+            await asyncio.sleep(2) # better way to do this...
+            navigation = page.waitForNavigation()
+            password = await page.querySelector('#password')
+            await password.type(settings['gmail_password'])
+            button = await page.querySelector('#passwordNext')
+            await button.click()
+            await navigation
+            self.cookies = await page.cookies()
+            util.serialize(self.cookies, cookie_path)
+            await page.close()
+        else:
+            self.cookies = util.deserialize(cookie_path)
+
     async def check_detection(self, frame, timeout, wants_true=""):
         """Checks if "Try again later" modal appears"""
 
@@ -462,7 +414,7 @@ class Solver(object):
         #    l = [f'if({i}) return true;' for i in wants_true]
         #    wants_true = '\n'.join(wants_true)
 
-        func = """() => {
+        func ="""() => {
             %s
             
             var elem_bot = %s;
@@ -484,7 +436,7 @@ class Solver(object):
             if(elem_anchor.getAttribute("aria-checked") === "true"){
                 return true
             }
-        }""" % (
+        }"""% (
             wants_true,
             bot_header,
             try_again_header,
@@ -495,26 +447,3 @@ class Solver(object):
         if await self.image_frame.evaluate(eval):
             self.log("Automation detected")
             self.detected = True
-
-    async def sign_in_to_google(self):
-        cookie_path = settings['data_files']['cookies'] + '/google_account'
-        if not pathlib.Path(cookie_path).exists():
-            url = "https://accounts.google.com/Login"
-            page = await self.browser.newPage()
-            await page.goto(url, waitUntil="documentloaded")
-            username = await page.querySelector('#identifierId')
-            await username.type(settings['gmail'])
-            button = await page.querySelector('#identifierNext')
-            await button.click()
-            await asyncio.sleep(2) # better way to do this...
-            navigation = page.waitForNavigation()
-            password = await page.querySelector('#password')
-            await password.type(settings['gmail_password'])
-            button = await page.querySelector('#passwordNext')
-            await button.click()
-            await navigation
-            self.cookies = await page.cookies()
-            util.serialize(self.cookies, cookie_path)
-            await page.close()
-        else:
-            self.cookies = util.deserialize(cookie_path)
