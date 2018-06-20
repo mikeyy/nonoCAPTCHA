@@ -15,10 +15,9 @@
 
    I wouldn't touch data files, unless you're crazy.
 """
-import os
 
-path = os.path.abspath(os.path.dirname(__file__))
-
+import nonocaptcha
+package_dir = nonocaptcha.__package_dir__
 
 settings = {
     "debug": True,  # Prints actions as they occur, in your console
@@ -31,9 +30,9 @@ settings = {
     "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",  # ReCAPTCHA sitekey
     "proxy_source": "",  # Only used for app.py or run.py
     "data_files": {
-        "override_js": os.path.join(path, "data/override.js"),
-        "deface_html": os.path.join(path, "data/deface.html"),
-        "resolutions_json": os.path.join(path, "data/resolutions.json"),
+        "override_js": f"{package_dir}/data/override.js",
+        "deface_html": f"{package_dir}/data/deface.html",
+        "resolutions_json": f"{package_dir}/data/resolutions.json",
     },
     "wait_timeout": {
         "load_timeout": 30,  # Seconds to wait for page to load
