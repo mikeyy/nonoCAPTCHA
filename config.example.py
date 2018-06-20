@@ -24,12 +24,11 @@ settings = {
     "headless": False,  # Run browser headlessly
     "keyboard_traverse": False,  # Tab/Enter clicking of buttons instead
     "check_blacklist": False,  # Check Google search page for unusual traffic
-    # text and close on true before solving
+                               # text and close on true before solving
     "api_subkey": "",  # API key for Azure Cognitive Services
     "pageurl": "https://google.com/recaptcha/api2/demo",  # ReCAPTCHA pageurl
     "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",  # ReCAPTCHA sitekey
     "proxy_source": "",  # Only used for app.py or run.py
-                              # text and close on true before solving
     "gmail": "",  # Leave blank to ignore
     "gmail_password": "",  # Signing into google increases probability of success
 
