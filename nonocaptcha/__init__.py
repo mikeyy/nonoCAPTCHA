@@ -3,7 +3,7 @@
 
 import os.path, sys
 
-version_info = (0, 0, 10)
+version_info = (0, 0, 12)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
@@ -20,7 +20,6 @@ package_info = "An asynchronized Python library to automate solving ReCAPTCHA v2
 
 __package_dir__ = os.path.dirname(os.path.abspath(__file__))
 
-# It's same persons right now
 __maintainer__ = __author__
 
 __all__ = (
