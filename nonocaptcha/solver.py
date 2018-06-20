@@ -43,7 +43,7 @@ if settings["debug"]:
 class Launcher(launcher.Launcher):
     async def launch(self):
         self.chromeClosed = False
-        self.connection: Optional[Connection] = None
+        self.connection = None
         env = self.options.get("env")
         self.proc = await asyncio.subprocess.create_subprocess_exec(
             *self.cmd,
