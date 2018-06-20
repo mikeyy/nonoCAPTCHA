@@ -21,7 +21,7 @@ async def load_file(file):
         return await f.read()
 
 
-async def get_page(url, proxy=None, binary=False, verify=False, timeout=60):
+async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
     if proxy:
         proxy = f"http://{proxy}"
 
