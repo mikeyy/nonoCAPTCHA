@@ -7,6 +7,7 @@ import sys
 import time
 import json
 import atexit
+import psutil
 import random
 import signal
 import asyncio
@@ -51,7 +52,6 @@ class Launcher(launcher.Launcher):
             stderr=asyncio.subprocess.DEVNULL,
             env=env,
         )
-
         def _close_process(*args, **kwargs):
             if not self.chromeClosed:
                 asyncio.get_event_loop().run_until_complete(self.killChrome())
@@ -76,10 +76,11 @@ class Launcher(launcher.Launcher):
 
     def waitForChromeToClose(self):
         """Terminate chrome."""
-        if self.proc.returncode is None and not self.chromeClosed:
+        if self.proc.returncode is not None and not self.chromeClosed:
             self.chromeClosed = True
-            self.proc.terminate()
-            self.proc.wait()
+            if psutil.pid_exists(self.proc.pid):
+                self.proc.terminate()
+                self.proc.kill()
 
 
 async def launch(options, **kwargs):
