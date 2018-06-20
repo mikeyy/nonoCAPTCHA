@@ -1,7 +1,7 @@
 nonoCAPTCHA
 ===========
 
-An async Python library to automate solving ReCAPTCHA v2 by audio, using Microsoft Azure's Speech-to-Text API.
+An async Python library to automate solving ReCAPTCHA v2 by audio, using Microsoft Azure's Speech-to-Text API. Built with Pyppeteer for it's Chrome automation framework and similarities to Puppeteer, PyDub for easily converting MP3 files into WAV, Quart for it's async minimalist web-framework, and Python's built-in AsyncIO for convenience. 
 
 Disclaimer
 ----------
@@ -16,9 +16,9 @@ This script was first featured on Reddit at [/r/Python](https://reddit.com/r/Pyt
 Preview
 -------
 
-Check out this presentation of the script in action!
+Check out this 1-minute presentation of the script in action, with only 8 threads!
 
-[nonoCAPTCHA preview](http://mikeyy.com/nonocaptcha/presentation.gif)
+![nonoCAPTCHA preview](https://github.com/mikeyy/nonoCAPTCHA/blob/presentation/presentation.gif)
 
 Compatibility
 -------------
@@ -28,13 +28,13 @@ Linux, macOS, and Windows!
 Requirements
 ------------
 
-Python 3.6.5+ and FFmpeg
+[Python 3.6.5+](https://www.python.org/downloads/release/python-365/), [FFmpeg](https://ffmpeg.org/download.html) and a [Microsoft Azure](https://portal.azure.com/) account with Bing Speech API access
 
 Installation
 ------------
 
-```
-pip install -r requirements.txt
+```shell
+$ pip install nonocaptcha
 ```
 
 Configuration
@@ -47,36 +47,34 @@ Usage
 
 If you would like to use it in your own script
 
-```
+```python
+from nonocaptcha.solver import Solver
 from config import settings
-from solver import Solver
-  
+
 client = Solver(
     settings['pageurl'],
     settings['sitekey'],
     options=options,
     proxy=proxy,
-    #proxy_auth=auth_details(),
+    proxy_auth=auth_details(),
 )
 
 answer = await client.start()
-print(answer)
+if answer:
+    print(answer)
 ```
 
-Or use the included multithread script.
+Use the included multithread script.
 
-Don't forget to edit variable count for amount of threads to use!
+*Edit variable count for amount of threads to use*
 
-```
-python run.py
-```
-
-Or you can use
-
-```
-python app.py
+```shell
+$ python examples/run.py
 ```
 
-and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
+Use the included mini-server and access http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
 
-Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.
+*Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.*
+```shell
+$ python examples/app.py
+```

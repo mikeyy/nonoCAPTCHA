@@ -65,6 +65,3 @@ config.py
 
 # Modified Pyppeteer files
 .pyppeteer
-
-# Google's API Javascript file
-data/api.js

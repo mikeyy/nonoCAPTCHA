@@ -7,6 +7,7 @@ chardet==3.0.4
 idna==2.7
 idna-ssl==1.0.1
 multidict==4.3.1
+psutil==5.4.6
 pydub==0.22.1
 pyee==5.0.0
 pyppeteer==0.0.17

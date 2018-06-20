@@ -7,13 +7,14 @@ import asyncio
 import random
 import time
 
-import util
+from nonocaptcha import util
+from nonocaptcha.solver import Solver
 from config import settings
-from solver import Solver
 
 count = 10
 
 sem = asyncio.Semaphore(count)
+
 
 async def work():
     async with sem:
@@ -30,10 +31,7 @@ async def work():
 
 
 async def main():
-    tasks = [
-            asyncio.ensure_future(work())
-            for i in range(count)
-        ]
+    tasks = [asyncio.ensure_future(work()) for i in range(count)]
 
     futures = await asyncio.gather(*tasks)
     for (i, future) in zip(range(count), futures):
