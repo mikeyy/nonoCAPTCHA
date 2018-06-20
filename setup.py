@@ -24,6 +24,7 @@ setup(
     author_email=module.authors_email,
     license=module.__license__,
     description=module.package_info,
+    url="https://github.com/mikeyy/nonoCAPTCHA",
     long_description=open("README.md").read(),
     platforms="all",
     classifiers=[
