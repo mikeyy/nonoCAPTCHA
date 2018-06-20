@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-version_info = (0, 0, 6)
+import os.path, sys
+
+version_info = (0, 0, 9)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
@@ -16,6 +18,8 @@ __author__ = ", ".join(
 
 package_info = "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio, using Microsoft Azure's Speech-to-Text API. "
 
+__package_dir__ = os.path.dirname(os.path.abspath(__file__))
+
 # It's same persons right now
 __maintainer__ = __author__
 
@@ -24,9 +28,9 @@ __all__ = (
     "__author__",
     "__license__",
     "__maintainer__",
+    "__package_dir__",
     "__version__",
     "version_info",
 )
 
-import os.path, sys
 sys.path.append(os.getcwd())
