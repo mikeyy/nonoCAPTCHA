@@ -26,15 +26,8 @@ from pyppeteer.errors import TimeoutError
 from nonocaptcha import util
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.helper import wait_between
+from config import settings
 
-try:
-    from config import settings
-except:
-    print("Solver can't run without a config.py file!\n"
-          "Please see https://github.com/mikeyy/nonoCAPTCHA for more info.")
-    
-    import sys
-    sys.exit(0)
 
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)

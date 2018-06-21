@@ -13,15 +13,7 @@ from io import StringIO, BytesIO
 from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
-
-try:
-    from config import settings
-except:
-    print("Solver can't run without a config.py file!\n"
-          "Please see https://github.com/mikeyy/nonoCAPTCHA for more info.")
-    
-    import sys
-    sys.exit(0)
+from config import settings
 
 
 SUB_KEY = settings["api_subkey"]
