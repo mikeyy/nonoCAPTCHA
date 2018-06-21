@@ -8,12 +8,11 @@ import tempfile
 
 from nonocaptcha import util
 from nonocaptcha.speech import get_text
-from nonocaptcha.helper import wait_between
+from nonocaptcha.base import ImageFramer
 from config import settings
 
 
-
-class SolveAudio(object):
+class SolveAudio(ImageFramer):
     def __init__(self, frames, check_detection, proxy, log):
         self.checkbox_frame, self.image_frame = frames
         self.check_detection = check_detection
@@ -78,7 +77,7 @@ class SolveAudio(object):
             raise
         else:
             if self.detected:
-                raise
+                raise SystemExit('We were detected')
 
     async def type_audio_response(self, answer):
         self.log("Typing audio response")
@@ -98,12 +97,3 @@ class SolveAudio(object):
 
             self.log("Clicking verify")
             await self.click_button(verify_button)
-
-    async def click_reload_button(self):
-        reload_button = await self.image_frame.J("#recaptcha-reload-button")
-        await self.click_button(reload_button)
-
-    async def click_button(self, button):
-        click_delay = random.uniform(70, 130)
-        await wait_between(2000, 4000)
-        await button.click(delay=click_delay / 1000)

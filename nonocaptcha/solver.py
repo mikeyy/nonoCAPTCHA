@@ -25,7 +25,8 @@ from pyppeteer.errors import TimeoutError
 
 from nonocaptcha import util
 from nonocaptcha.audio import SolveAudio
-from nonocaptcha.helper import wait_between
+from nonocaptcha.GRIS import GRIS
+from nonocaptcha.base import ImageFramer
 from config import settings
 
 
@@ -79,7 +80,7 @@ async def launch(options, **kwargs):
     return await Launcher(options, **kwargs).launch()
 
 
-class Solver(object):
+class Solver(ImageFramer):
     logger = logging.getLogger(__name__)
     if settings["debug"]:
         logger.setLevel("DEBUG")
@@ -310,14 +311,14 @@ class Solver(object):
     async def click_checkbox(self):
         """Click checkbox"""
 
-        if not settings["keyboard_traverse"]:
-            self.log("Clicking checkbox")
-            checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
-            await self.click_button(checkbox)
-        else:
+        if settings["keyboard_traverse"]:
             self.body = await self.page.J("body")
             await self.body.press("Tab")
             await self.body.press("Enter")
+        else:
+            self.log("Clicking checkbox")
+            checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
+            await self.click_button(checkbox)
 
     async def click_audio_button(self):
         """Click audio button"""
@@ -337,11 +338,6 @@ class Solver(object):
         finally:
             if self.detected:
                 raise
-
-    async def click_button(self, button):
-        click_delay = random.uniform(70, 130)
-        await wait_between(2000, 4000)
-        await button.click(delay=click_delay / 1000)
 
     async def g_recaptcha_response(self):
         func = 'document.getElementById("g-recaptcha-response").value'
