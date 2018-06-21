@@ -65,3 +65,6 @@ config.py
 
 # Modified Pyppeteer files
 .pyppeteer
+
+# build script
+build.sh
