@@ -60,7 +60,6 @@ async def work(pageurl, sitekey):
         answer = await client.start()
 
         if answer:
-            print(answer)
             return answer
 
 
