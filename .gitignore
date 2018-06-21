@@ -68,3 +68,6 @@ config.py
 
 # build script
 build.sh
+
+# pyenv
+.python-version
