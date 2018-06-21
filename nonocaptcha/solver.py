@@ -24,6 +24,7 @@ from pyppeteer.connection import Connection
 from pyppeteer.errors import TimeoutError
 
 from nonocaptcha import util
+from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.GRIS import GRIS
 from nonocaptcha.base import ImageFramer
@@ -272,33 +273,51 @@ class Solver(ImageFramer):
             return
 
         self.get_frames()
-        self.audio = SolveAudio(
-            frames = (self.checkbox_frame, self.image_frame),
-            check_detection = self.check_detection,
-            proxy = self.proxy,
-            log = self.log
-        )
-
+        
         await self.click_checkbox()
 
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
         except:
-            await self.click_audio_button()
-            for i in range(5):
-                result = await self.audio.solve_by_audio()
-                if result:
-                    code = await self.g_recaptcha_response()
-                    if code:
-                        self.log("Audio response successful")
-                        return f"OK|{code}"
+            code = await self._solve()
+            if code:
+                return code
         else:
             code = await self.g_recaptcha_response()
             if code:
                 self.log("One-click successful")
                 return f"OK|{code}"
 
+    async def _solve(self):
+        # Coming soon!
+        solve_image = False
+        if solve_image:
+            self.image = SolveImage(
+                frames = (self.checkbox_frame, self.image_frame),
+                check_detection = self.check_detection,
+                proxy = self.proxy,
+                log = self.log
+            )
+            solve = self.image.solve_by_image
+        else:
+            self.audio = SolveAudio(
+                frames = (self.checkbox_frame, self.image_frame),
+                check_detection = self.check_detection,
+                proxy = self.proxy,
+                log = self.log
+            )
+            await self.click_audio_button()
+            solve = self.audio.solve_by_audio
+
+        for i in range(5):
+            result = await solve()
+            if result:
+                code = await self.g_recaptcha_response()
+                if code:
+                    self.log("Audio response successful")
+                    return f"OK|{code}"
+    
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
@@ -385,7 +404,8 @@ class Solver(ImageFramer):
             self.cookies = util.deserialize(cookie_path)
 
     async def check_detection(self, frame, timeout, wants_true=""):
-        """Checks if "Try again later" modal appears"""
+        """Checks if "Try again later", "please solve more modal appears 
+        or success"""
 
         # I got lazy here
         bot_header = (
