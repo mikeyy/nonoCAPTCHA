@@ -26,7 +26,6 @@ from pyppeteer.errors import TimeoutError
 from nonocaptcha import util
 from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
-from nonocaptcha.GRIS import GRIS
 from nonocaptcha.base import ImageFramer
 from config import settings
 
