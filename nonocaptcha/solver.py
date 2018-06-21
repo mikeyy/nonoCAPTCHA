@@ -272,7 +272,6 @@ class Solver(object):
 
         self.get_frames()
         
-
         await self.click_checkbox()
 
         timeout = settings["wait_timeout"]["success_timeout"]
@@ -289,14 +288,25 @@ class Solver(object):
                 return f"OK|{code}"
 
     async def _solve(self):
-        self.audio = SolveAudio(
-            frames = (self.checkbox_frame, self.image_frame),
-            check_detection = self.check_detection,
-            proxy = self.proxy,
-            log = self.log
-        )
-        await self.click_audio_button()
-        solve = self.audio.solve_by_audio
+        # Coming soon!
+        solve_image = False
+        if solve_image:
+            self.image = SolveImage(
+                frames = (self.checkbox_frame, self.image_frame),
+                check_detection = self.check_detection,
+                proxy = self.proxy,
+                log = self.log
+            )
+            solve = self.image.solve_by_image
+        else:
+            self.audio = SolveAudio(
+                frames = (self.checkbox_frame, self.image_frame),
+                check_detection = self.check_detection,
+                proxy = self.proxy,
+                log = self.log
+            )
+            await self.click_audio_button()
+            solve = self.audio.solve_by_audio
 
         for i in range(5):
             result = await solve()
