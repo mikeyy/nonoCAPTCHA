@@ -46,7 +46,7 @@ Requirements
 ------------
 
 `Python
-3.6.5+ <https://www.python.org/downloads/release/python-365/>`__,
+3.6.5 <https://www.python.org/downloads/release/python-365/>`__,
 `FFmpeg <https://ffmpeg.org/download.html>`__ and a `Microsoft
 Azure <https://portal.azure.com/>`__ account with Bing Speech API access
 
