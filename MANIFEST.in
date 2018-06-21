@@ -1,1 +1,2 @@
 include nonocaptcha/data/*.*
+include LICENSE.txt
