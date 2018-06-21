@@ -16,8 +16,7 @@
    I wouldn't touch data files, unless you're crazy.
 """
 
-import nonocaptcha
-package_dir = nonocaptcha.__package_dir__
+from nonocaptcha import __package_dir__ as package_dir
 
 settings = {
     "debug": True,  # Prints actions as they occur, in your console
