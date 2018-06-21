@@ -15,14 +15,15 @@ class SolveImage(object):
         """Go through procedures to solve image"""
         
         title = await self.get_image_title()
+        image_url = await self.get_image_url()
+        
         return title
 
     async def get_image_title(self):
         """Something, something... something"""
 
         image_title_element = (
-            'document.getElementsByClassName("rc-imageselect-desc'
-            '")[0]'
+            'document.getElementsByClassName("rc-imageselect-desc")[0]'
         )
 
         if await self.image_frame.evaluate(
@@ -33,7 +34,16 @@ class SolveImage(object):
                 'canonical")[0]'
             )
 
-        return await self.image_frame.evaluate(
+        title = await self.image_frame.evaluate(
             f"{image_title_element}.innerText"
             f".replace( /.*\\n(.*)\\n.*/,'$1');"
         )
+        return str(title).strip()
+   
+    async def get_image_url(self):
+        image_url_element = (
+            'document.getElementsByClassName("rc-image-tile-wrapper")[0].'
+            'getElementsByTagName("img")[0].src'
+        )
+
+        return await self.image_frame.evaluate(f"{image_url_element}")
