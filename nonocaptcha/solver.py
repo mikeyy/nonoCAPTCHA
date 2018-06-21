@@ -24,6 +24,7 @@ from pyppeteer.connection import Connection
 from pyppeteer.errors import TimeoutError
 
 from nonocaptcha import util
+from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.helper import wait_between
 from config import settings
@@ -407,7 +408,8 @@ class Solver(object):
             self.cookies = util.deserialize(cookie_path)
 
     async def check_detection(self, frame, timeout, wants_true=""):
-        """Checks if "Try again later" modal appears"""
+        """Checks if "Try again later", "please solve more modal appears 
+        or success"""
 
         # I got lazy here
         bot_header = (

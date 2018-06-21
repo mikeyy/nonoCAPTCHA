@@ -11,13 +11,11 @@ class SolveImage(object):
         self.log = log
         self.detected = False
 
-
-   async def solve_by_image(self):
+    async def solve_by_image(self):
         """Go through procedures to solve image"""
         
         title = await self.get_image_title()
         return title
-
 
     async def get_image_title(self):
         """Something, something... something"""
@@ -26,16 +24,16 @@ class SolveImage(object):
             'document.getElementsByClassName("rc-imageselect-desc'
             '")[0]'
         )
-        if self.image_frame.evaluate(
-            "typeof {image_title_element} === 'undefined'"
-        )
+
+        if await self.image_frame.evaluate(
+            f"typeof {image_title_element} === 'undefined'"
+        ):
             image_title_element = (
                 'document.getElementsByClassName("rc-imageselect-desc-no-'
                 'canonical")[0]'
             )
-        
-        self.image_frame.evaluate("{image_title}.innerText")
 
-        return self.image_frame.evaluate(
-            "{image_title_element}.innerText.replace(/.*\n([^&]*)\n.*/,'$1');"
+        return await self.image_frame.evaluate(
+            f"{image_title_element}.innerText"
+            f".replace( /.*\\n(.*)\\n.*/,'$1');"
         )
