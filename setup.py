@@ -25,13 +25,20 @@ setup(
     license=module.__license__,
     description=module.package_info,
     url="https://github.com/mikeyy/nonoCAPTCHA",
-    long_description=open("README.md").read(),
+    long_description=open("README.rst").read(),
     platforms="all",
     classifiers=[
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
-        "Operating System :: MacOS",
+        "Operating System :: OS Independent"
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: JavaScript",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Utilities"
     ],
     package_data={'data': ['*.*']},
     include_package_data=True,
