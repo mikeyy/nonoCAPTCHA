@@ -13,14 +13,14 @@ class SolveImage(object):
 
 
    async def solve_by_image(self):
-        """Go through procedures to solve audio"""
+        """Go through procedures to solve image"""
         
         title = await self.get_image_title()
         return title
 
 
-    async def get_audio_response(self):
-        """Download audio data then send to speech-to-text API for answer"""
+    async def get_image_title(self):
+        """Something, something... something"""
 
         image_title_element = (
             'document.getElementsByClassName("rc-imageselect-desc'
