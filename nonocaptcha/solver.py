@@ -271,12 +271,7 @@ class Solver(object):
             return
 
         self.get_frames()
-        self.audio = SolveAudio(
-            frames = (self.checkbox_frame, self.image_frame),
-            check_detection = self.check_detection,
-            proxy = self.proxy,
-            log = self.log
-        )
+        
 
         await self.click_checkbox()
 
@@ -284,20 +279,33 @@ class Solver(object):
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
         except:
-            await self.click_audio_button()
-            for i in range(5):
-                result = await self.audio.solve_by_audio()
-                if result:
-                    code = await self.g_recaptcha_response()
-                    if code:
-                        self.log("Audio response successful")
-                        return f"OK|{code}"
+            code = await self._solve()
+            if code:
+                return code
         else:
             code = await self.g_recaptcha_response()
             if code:
                 self.log("One-click successful")
                 return f"OK|{code}"
 
+    async def _solve(self):
+        self.audio = SolveAudio(
+            frames = (self.checkbox_frame, self.image_frame),
+            check_detection = self.check_detection,
+            proxy = self.proxy,
+            log = self.log
+        )
+        await self.click_audio_button()
+        solve = self.audio.solve_by_audio
+
+        for i in range(5):
+            result = await solve()
+            if result:
+                code = await self.g_recaptcha_response()
+                if code:
+                    self.log("Audio response successful")
+                    return f"OK|{code}"
+    
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
