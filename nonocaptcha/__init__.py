@@ -42,7 +42,6 @@ except:
           "folder.")
 
     import sys
-    from nonocaptcha import __package_dir__
     from shutil import copyfile
     copyfile(f"{__package_dir__}/config.example.py", "config.example.py")
     sys.exit(0)
