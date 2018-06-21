@@ -9,11 +9,11 @@ from nonocaptcha.helper import wait_between
 from config import settings
 
 class SolveAudio(object):
-    def __init__(self, frames, check_detection, proxy, logger):
+    def __init__(self, frames, check_detection, proxy, log):
         self.checkbox_frame, self.image_frame = frames
         self.check_detection = check_detection
         self.proxy = proxy
-        self.logger = logger
+        self.log = log
         self.detected = False
     
     async def solve_by_audio(self):
@@ -45,7 +45,7 @@ class SolveAudio(object):
             f'{download_link_element}.getAttribute("href")'
         )
 
-        self.logger.debug("Downloading audio file")
+        self.log("Downloading audio file")
         audio_data = await util.get_page(audio_url, self.proxy, binary=True)
 
         answer = None
@@ -54,10 +54,10 @@ class SolveAudio(object):
             answer = await get_text(tmpfile.name)
 
         if answer:
-            self.logger.debug('Received answer "%s"', answer)
+            self.log(f'Received answer "{answer}"')
             return answer
 
-        self.logger.debug("No answer, reloading")
+        self.log("No answer, reloading")
         await self.click_reload_button()
 
         func = (
@@ -76,7 +76,7 @@ class SolveAudio(object):
                 raise
 
     async def type_audio_response(self, answer):
-        self.logger.debug("Typing audio response")
+        self.log("Typing audio response")
         response_input = await self.image_frame.J("#audio-response")
         length = random.uniform(70, 130)
         await response_input.type(text=answer, delay=length)
@@ -84,14 +84,14 @@ class SolveAudio(object):
     async def click_verify(self):
         if settings["keyboard_traverse"]:
             response_input = await self.image_frame.J("#audio-response")
-            self.logger.debug("Pressing Enter")
+            self.log("Pressing Enter")
             await response_input.press("Enter")
         else:
             verify_button = await self.image_frame.J(
                 "#recaptcha-verify-button"
             )
 
-            self.logger.debug("Clicking verify")
+            self.log("Clicking verify")
             await self.click_button(verify_button)
 
     async def click_reload_button(self):
