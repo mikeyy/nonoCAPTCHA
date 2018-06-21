@@ -27,33 +27,31 @@ proxies = None
 async def get_proxies():
     global proxies
     while 1:
-        src = settings["proxy_source"]
         protos = ["http://", "https://"]
-        if any(p in src for p in protos):
+        if any(p in proxy_src for p in protos):
             f = util.get_page
         else:
             f = util.load_file
     
-        result = await f(src)
+        result = await f(proxy_src)
         proxies = iter(shuffle(result.strip().split("\n")))
         await asyncio.sleep(10*60)
 
 
-def loop_proxies(loop):
-    asyncio.set_event_loop(loop)
-    asyncio.ensure_future(get_proxies())
+def loop_proxies():
+    asyncio.ensure_future(get_proxies(), loop=loop)
 
 
 @backoff.on_predicate(backoff.constant, interval=1, max_time=60)
 async def work(pageurl, sitekey):
-    while not proxies:
-        await asyncio.sleep(1)
-
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 
     async with sem:
-        proxy = next(proxies)
+        if proxy_source:
+            proxy = next(proxies)
+        else:
+            proxy = None
 
         client = Solver(pageurl, sitekey, options=options, proxy=proxy)
 
@@ -80,8 +78,13 @@ async def get():
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    t = threading.Thread(target=loop_proxies, args=(loop,))
-    t.start()
+    proxy_src = settings["proxy_source"]
+    if proxy_src:
+        loop = asyncio.get_event_loop()
+        t = threading.Thread(target=loop_proxies, args=(loop,))
+        t.start()
+        
+        while not proxies:
+            asyncio.sleep(1)
 
     app.run("0.0.0.0", 5000, loop=loop)

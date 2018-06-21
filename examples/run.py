@@ -6,6 +6,7 @@
 import asyncio
 import random
 import signal
+import threading
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
@@ -42,18 +43,28 @@ if sort_position:
         positions.append((position_x, position_y))
 
 
-def get_proxies():
-    src = settings["proxy_source"]
-    protos = ["http://", "https://"]
-    if any(p in src for p in protos):
-        f = util.get_page
-    else:
-        f = util.load_file
+def shuffle(i):
+    random.shuffle(i)
+    return i
 
-    future = asyncio.ensure_future(f(src))
-    loop.run_until_complete(future)
-    result = future.result()
-    return result.strip().split("\n")
+
+proxies = None
+async def get_proxies():
+    global proxies
+    while 1:
+        protos = ["http://", "https://"]
+        if any(p in proxy_src for p in protos):
+            f = util.get_page
+        else:
+            f = util.load_file
+    
+        result = await f(proxy_src)
+        proxies = iter(shuffle(result.strip().split("\n")))
+        await asyncio.sleep(10*60)
+
+
+def loop_proxies():
+    asyncio.ensure_future(get_proxies(), loop=loop)
 
 
 async def work():
@@ -72,7 +83,11 @@ async def work():
 
     options = {"ignoreHTTPSErrors": True, "args": args}
 
-    proxy = random.choice(proxies)
+    if proxy_src:
+        proxy = next(proxies)
+    else:
+        proxy = None
+
     client = Solver(
         settings["pageurl"], settings["sitekey"], options=options, proxy=proxy
     )
@@ -86,6 +101,11 @@ async def work():
 
 
 async def main():
+    if proxy_src:
+        print('Proxies loading...')
+        while proxies is None:
+            await asyncio.sleep(1)
+
     tasks = [asyncio.ensure_future(work()) for i in range(threads)]
     completed, pending = await asyncio.wait(
         tasks, return_when=asyncio.FIRST_COMPLETED
@@ -105,7 +125,10 @@ async def main():
 
 loop = asyncio.get_event_loop()
 
-proxies = get_proxies()
-print(len(proxies), "Loaded")
+proxy_src = settings["proxy_source"]
+if proxy_src:
+    loop = asyncio.get_event_loop()
+    t = threading.Thread(target=loop_proxies,)
+    t.start()
 
 loop.run_until_complete(main())
