@@ -35,8 +35,8 @@ __all__ = (
 sys.path.append(os.getcwd())
 
 try:
-    from config import settings
-except:
+    import config
+except ModuleNotFoundError:
     print("Solver can't run without a config.py file!\n"
           "An example (config.example.py) has been copied to your current "
           "folder.")
