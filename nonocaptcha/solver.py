@@ -21,6 +21,7 @@ from pyppeteer import launcher
 from pyppeteer.util import merge_dict
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
+from pyppeteer.errors import TimeoutError
 
 from nonocaptcha import util
 from nonocaptcha.audio import SolveAudio
@@ -117,7 +118,8 @@ class Solver(object):
 
     async def start(self):
         """Start solving"""
-
+        
+        result = None
         start = time.time()
         try:
             self.browser = await self.get_new_browser()
@@ -133,9 +135,10 @@ class Solver(object):
             self.log(f"Starting solver with proxy {self.proxy}")
             with async_timeout(120):
                 result = await self.solve()
+        except TimeoutError:
+            pass  # otherwise TimeoutError floods logging output
         except BaseException as e:
             self.log(f"{e} {type(e)}")
-            result = None
         finally:
             end = time.time()
             elapsed = end - start
@@ -279,7 +282,7 @@ class Solver(object):
             frames = (self.checkbox_frame, self.image_frame),
             check_detection = self.check_detection,
             proxy = self.proxy,
-            logger = self.logger
+            log = self.log
         )
 
         await self.click_checkbox()
@@ -291,7 +294,6 @@ class Solver(object):
             await self.click_audio_button()
             for i in range(5):
                 result = await self.audio.solve_by_audio()
-                print (result)
                 if result:
                     code = await self.g_recaptcha_response()
                     if code:
@@ -337,6 +339,8 @@ class Solver(object):
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.check_detection(self.image_frame, timeout)
+        except:
+            pass
         finally:
             if self.detected:
                 raise
@@ -442,8 +446,12 @@ class Solver(object):
             try_again_header,
             checkbox,
         )
-        await frame.waitForFunction(func, timeout=timeout * 1000)
-        eval = "typeof wasdetected !== 'undefined'"
-        if await self.image_frame.evaluate(eval):
-            self.log("Automation detected")
-            self.detected = True
+        try:
+            await frame.waitForFunction(func, timeout=timeout * 1000)
+        except:
+            raise
+        else:
+            eval = "typeof wasdetected !== 'undefined'"
+            if await self.image_frame.evaluate(eval):
+                self.log("Automation detected")
+                self.detected = True
