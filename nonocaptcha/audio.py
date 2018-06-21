@@ -11,6 +11,8 @@ from nonocaptcha.speech import get_text
 from nonocaptcha.helper import wait_between
 from config import settings
 
+
+
 class SolveAudio(object):
     def __init__(self, frames, check_detection, proxy, log):
         self.checkbox_frame, self.image_frame = frames
