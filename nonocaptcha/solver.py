@@ -7,27 +7,28 @@ import asyncio
 import atexit
 import json
 import logging
+import pathlib
 import psutil
 import random
 import signal
 import sys
 import tempfile
 import time
-import pathlib
 
 from async_timeout import timeout as async_timeout
-from user_agent import generate_navigator_js
 from pyppeteer import launcher
 from pyppeteer.util import merge_dict
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
 from pyppeteer.errors import TimeoutError
+from user_agent import generate_navigator_js
 
+from config import settings
 from nonocaptcha import util
 from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.base import ImageFramer
-from config import settings
+from nonocaptcha.detect import Detect
 
 
 FORMAT = "%(asctime)s %(message)s"
@@ -101,11 +102,11 @@ class Solver(ImageFramer):
         self.proxy = proxy
         self.proxy_auth = proxy_auth
 
-        self.detected = False
         self.headless = settings["headless"]
         self.cookies = []
         self.proc_id = self.proc_count
         type(self).proc_count += 1
+        self.detect = Detect(self.log)
 
     def log(self, message):
         self.logger.debug(f'{self.proc_id} {message}')
@@ -277,11 +278,11 @@ class Solver(ImageFramer):
 
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
-            await self.check_detection(self.checkbox_frame, timeout=timeout)
+            await self.detect.check_detection(self.checkbox_frame, timeout=timeout)
         except:
             code = await self._solve()
             if code:
-                return code
+                return f"OK|{code}"
         else:
             code = await self.g_recaptcha_response()
             if code:
@@ -294,7 +295,6 @@ class Solver(ImageFramer):
         if solve_image:
             self.image = SolveImage(
                 frames = (self.checkbox_frame, self.image_frame),
-                check_detection = self.check_detection,
                 proxy = self.proxy,
                 log = self.log
             )
@@ -302,7 +302,6 @@ class Solver(ImageFramer):
         else:
             self.audio = SolveAudio(
                 frames = (self.checkbox_frame, self.image_frame),
-                check_detection = self.check_detection,
                 proxy = self.proxy,
                 log = self.log
             )
@@ -315,7 +314,7 @@ class Solver(ImageFramer):
                 code = await self.g_recaptcha_response()
                 if code:
                     self.log("Audio response successful")
-                    return f"OK|{code}"
+                    return code
     
     def get_frames(self):
         self.checkbox_frame = next(
@@ -350,11 +349,11 @@ class Solver(ImageFramer):
 
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
-            await self.check_detection(self.image_frame, timeout)
+            await self.detect.check_detection(self.image_frame, timeout)
         except:
             pass
         finally:
-            if self.detected:
+            if self.detect.detected:
                 raise
 
     async def g_recaptcha_response(self):
@@ -401,65 +400,3 @@ class Solver(ImageFramer):
             await page.close()
         else:
             self.cookies = util.deserialize(cookie_path)
-
-    async def check_detection(self, frame, timeout, wants_true=""):
-        """Checks if "Try again later", "please solve more modal appears 
-        or success"""
-
-        # I got lazy here
-        bot_header = (
-            "parent.frames[1].document.getElementsByClassName"
-            '("rc-doscaptcha-header-text")[0]'
-        )
-        try_again_header = (
-            "parent.frames[1].document.getElementsByClassName"
-            '("rc-audiochallenge-error-message")[0]'
-        )
-        checkbox = (
-            'parent.frames[0].document.getElementById("recaptcha-anchor")'
-        )
-
-        if wants_true:
-            wants_true = f"if({wants_true}) return true;"
-
-        # if isinstance(wants_true, list):
-        #    l = [f'if({i}) return true;' for i in wants_true]
-        #    wants_true = '\n'.join(wants_true)
-
-        func ="""() => {
-            %s
-            
-            var elem_bot = %s;
-            if(typeof elem_bot !== 'undefined'){
-                if(elem_bot.innerText === 'Try again later'){
-                    window.wasdetected = true;
-                    return true;
-                }
-            }
-
-            var elem_try = %s;
-            if(typeof elem_try !== 'undefined'){
-                if(elem_try.innerText.indexOf('please solve more.') >= 0){
-                    return true;
-                }
-            }
-            
-            var elem_anchor = %s;
-            if(elem_anchor.getAttribute("aria-checked") === "true"){
-                return true
-            }
-        }"""% (
-            wants_true,
-            bot_header,
-            try_again_header,
-            checkbox,
-        )
-        try:
-            await frame.waitForFunction(func, timeout=timeout * 1000)
-        except:
-            raise
-        else:
-            eval = "typeof wasdetected !== 'undefined'"
-            if await self.image_frame.evaluate(eval):
-                self.log("Automation detected")
-                self.detected = True

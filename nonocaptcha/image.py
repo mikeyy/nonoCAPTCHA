@@ -4,9 +4,8 @@
 """ ***IN TESTING*** """
 
 class SolveImage(object):
-    def __init__(self, frames, check_detection, proxy, log):
+    def __init__(self, frames, proxy, log):
         self.checkbox_frame, self.image_frame = frames
-        self.check_detection = check_detection
         self.proxy = proxy
         self.log = log
         self.detected = False

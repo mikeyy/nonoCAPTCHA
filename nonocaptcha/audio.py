@@ -6,19 +6,18 @@
 import random
 import tempfile
 
+from config import settings
 from nonocaptcha import util
 from nonocaptcha.speech import get_text
 from nonocaptcha.base import ImageFramer
-from config import settings
-
+from nonocaptcha.detect import Detect
 
 class SolveAudio(ImageFramer):
-    def __init__(self, frames, check_detection, proxy, log):
+    def __init__(self, frames, proxy, log):
         self.checkbox_frame, self.image_frame = frames
-        self.check_detection = check_detection
         self.proxy = proxy
         self.log = log
-        self.detected = False
+        self.detect = Detect(log)
     
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
@@ -31,9 +30,9 @@ class SolveAudio(ImageFramer):
         
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
-            await self.check_detection(self.checkbox_frame, timeout)
+            await self.detect.check_detection(self.checkbox_frame, timeout)
         finally:
-            if self.detected:
+            if self.detect.detected:
                 raise
             return 1
 
@@ -50,16 +49,21 @@ class SolveAudio(ImageFramer):
         )
 
         self.log("Downloading audio file")
-        audio_data = await util.get_page(audio_url, self.proxy, binary=True)
-
-        answer = None
-        with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
-            await util.save_file(tmpfile.name, audio_data, binary=True)
-            answer = await get_text(tmpfile.name)
-
-        if answer:
-            self.log(f'Received answer "{answer}"')
-            return answer
+        audio_data = await util.get_page(
+            audio_url, self.proxy, binary=True, timeout=30
+        )
+        
+        if audio_data is None:
+            self.log(f'Download timed-out"')
+        else:
+            answer = None
+            with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
+                await util.save_file(tmpfile.name, audio_data, binary=True)
+                answer = await get_text(tmpfile.name)
+    
+            if answer:
+                self.log(f'Received answer "{answer}"')
+                return answer
 
         self.log("No answer, reloading")
         await self.click_reload_button()
@@ -70,13 +74,13 @@ class SolveAudio(ImageFramer):
         )
         timeout = settings["wait_timeout"]["reload_timeout"]
         try:
-            await self.check_detection(
+            await self.detect.check_detection(
                 self.image_frame, timeout, wants_true=func
             )
         except:
             raise
         else:
-            if self.detected:
+            if self.detect.detected:
                 raise SystemExit('We were detected')
 
     async def type_audio_response(self, answer):
