@@ -26,9 +26,6 @@ class Base(Clicker):
 
     def log(self, message):
         self.logger.debug(f'{self.proc_id} {message}')
-        
-    def set_proc_id(self):
-        type(self).proc_id = self.proc_id
 
     def get_frames(self):
         self.checkbox_frame = next(
