@@ -24,6 +24,8 @@ class Base(Clicker):
     if settings["debug"]:
         logger.setLevel("DEBUG")
 
+    detected = False
+
     def log(self, message):
         self.logger.debug(f'{self.proc_id} {message}')
 
