@@ -15,7 +15,6 @@ class SolveAudio(Base):
     def __init__(self, page, proxy):
         self.page = page
         self.proxy = proxy
-        self = super().__init__()
     
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
