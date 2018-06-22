@@ -35,11 +35,6 @@ logging.basicConfig(format=FORMAT)
 
 
 
-class ButtonMissing(Exception):
-    pass
-
-
-
 class Launcher(launcher.Launcher):
     async def launch(self):
         self.chromeClosed = False
@@ -356,7 +351,8 @@ class Solver(Base):
                 func, timeout=timeout * 1000
             )
         except:
-            raise ButtonMissing("Audio button missing, aborting")
+            self.log("Audio button missing, aborting")
+            raise
 
     async def click_audio_button(self):
         """Click audio button after it appears."""
