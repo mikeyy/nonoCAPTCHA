@@ -6,7 +6,6 @@
 import asyncio
 import atexit
 import json
-import logging
 import pathlib
 import psutil
 import random
@@ -28,11 +27,6 @@ from nonocaptcha import util
 from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.base import Base
-
-
-FORMAT = "%(asctime)s %(message)s"
-logging.basicConfig(format=FORMAT)
-
 
 
 class Launcher(launcher.Launcher):
@@ -82,10 +76,6 @@ async def launch(options, **kwargs):
 
 
 class Solver(Base):
-    logger = logging.getLogger(__name__)
-    if settings["debug"]:
-        logger.setLevel("DEBUG")
-    proc_count = 0
 
     def __init__(
         self,
@@ -104,11 +94,7 @@ class Solver(Base):
 
         self.headless = settings["headless"]
         self.cookies = []
-        self.proc_id = self.proc_count
-        type(self).proc_count += 1
-
-    def log(self, message):
-        self.logger.debug(f'{self.proc_id} {message}')
+        self = super().__init__()
 
     async def start(self):
         """Start solving"""
@@ -294,18 +280,11 @@ class Solver(Base):
         # Coming soon!
         solve_image = False
         if solve_image:
-            self.image = SolveImage(
-                frames = (self.checkbox_frame, self.image_frame),
-                proxy = self.proxy,
-                log = self.log
-            )
+            self.image = SolveImage(self.page, self.proxy)
             solve = self.image.solve_by_image
         else:
-            self.audio = SolveAudio(
-                frames = (self.checkbox_frame, self.image_frame),
-                proxy = self.proxy,
-                log = self.log
-            )
+            self.audio = SolveAudio(self.page, self.proxy)
+
             await self.wait_for_audio_button()
             await self.click_audio_button()
             solve = self.audio.solve_by_audio
@@ -317,15 +296,6 @@ class Solver(Base):
                 if code:
                     self.log("Audio response successful")
                     return code
-    
-    def get_frames(self):
-        self.checkbox_frame = next(
-            frame for frame in self.page.frames if "api2/anchor" in frame.url
-        )
-
-        self.image_frame = next(
-            frame for frame in self.page.frames if "api2/bframe" in frame.url
-        )
 
     async def click_checkbox(self):
         """Click checkbox on page load."""

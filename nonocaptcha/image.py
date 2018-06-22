@@ -4,11 +4,10 @@
 """ ***IN TESTING*** """
 
 class SolveImage(object):
-    def __init__(self, frames, proxy, log):
-        self.checkbox_frame, self.image_frame = frames
+    def __init__(self, page, proxy):
+        self.page = page
         self.proxy = proxy
-        self.log = log
-        self.detected = False
+        self = super().__init__()
 
     async def solve_by_image(self):
         """Go through procedures to solve image"""

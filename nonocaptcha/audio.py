@@ -12,14 +12,16 @@ from nonocaptcha.speech import get_text
 from nonocaptcha.base import Base
 
 class SolveAudio(Base):
-    def __init__(self, frames, proxy, log):
-        self.checkbox_frame, self.image_frame = frames
+    def __init__(self, page, proxy):
+        self.page = page
         self.proxy = proxy
-        self.log = log
+        self = super().__init__()
     
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
-        
+
+        self.get_frames()
+
         answer = await self.get_audio_response()
         if not answer:
             return
