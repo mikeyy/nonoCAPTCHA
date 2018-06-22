@@ -96,7 +96,6 @@ class Solver(Base):
         self.headless = settings["headless"]
         self.cookies = [] 
         self.proc_id = self.proc_count
-        Base.proc_id = self.proc_id
         type(self).proc_count += 1
 
     async def start(self):
@@ -128,6 +127,9 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
+
+    def log(self, message):
+        self.logger.debug(f'{self.proc_id} {message}')
 
     async def get_new_browser(self):
         """Get new browser, set arguments from options, proxy,
@@ -282,10 +284,10 @@ class Solver(Base):
         # Coming soon!
         solve_image = False
         if solve_image:
-            self.image = SolveImage(self.page, self.proxy)
+            self.image = SolveImage(self.page, self.proxy, self.log)
             solve = self.image.solve_by_image
         else:
-            self.audio = SolveAudio(self.page, self.proxy)
+            self.audio = SolveAudio(self.page, self.proxy, self.log)
 
             await self.wait_for_audio_button()
             await self.click_audio_button()

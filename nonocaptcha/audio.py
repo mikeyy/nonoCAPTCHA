@@ -12,9 +12,10 @@ from nonocaptcha.speech import get_text
 from nonocaptcha.base import Base
 
 class SolveAudio(Base):
-    def __init__(self, page, proxy):
+    def __init__(self, page, proxy, log):
         self.page = page
         self.proxy = proxy
+        self.log = log
     
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
