@@ -39,13 +39,8 @@ class SolveAudio(Base):
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
 
-        download_link_element = (
-            'document.getElementsByClassName("rc-audiochallenge-tdownload-link'
-            '")[0]'
-        )
-
         audio_url = await self.image_frame.evaluate(
-            f'{download_link_element}.getAttribute("href")'
+            f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
 
         self.log("Downloading audio file")
@@ -54,7 +49,7 @@ class SolveAudio(Base):
         )
         
         if audio_data is None:
-            self.log(f'Download timed-out"')
+            self.log("Download timed-out")
         else:
             answer = None
             with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
@@ -70,7 +65,7 @@ class SolveAudio(Base):
 
         func = (
             f'"{audio_url}" !== '
-            f'{download_link_element}.getAttribute("href")'
+            f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
         timeout = settings["wait_timeout"]["reload_timeout"]
         try:

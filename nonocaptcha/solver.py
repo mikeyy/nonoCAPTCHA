@@ -173,63 +173,63 @@ class Solver(Base):
 
     async def cloak_navigator(self):
         """Emulate another browser's navigator properties and set webdriver
-            false.
+            false, inject jQuery.
         """
+
+        jquery_js = await util.load_file(
+            settings["data_files"]["jquery_js"]
+        )
 
         override_js = await util.load_file(
             settings["data_files"]["override_js"]
         )
-        jquery_js = await util.load_file(
-            settings["data_files"]["jquery_js"]
-        )
+        
+
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
         navigator_config["webdriver"] = False
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
+
         await self.page.evaluateOnNewDocument(
-            "() => {\n%s\n%s\n%s}" % (_navigator, override_js, jquery_js)
+            "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js)
         )
 
         return navigator_config["userAgent"]
 
-    async def deface_page(self):
-        """This is way faster than :meth:`setContent` method.
-        
+    async def wait_for_deface(self):
+        """Overwrite current page with reCAPTCHA widget and wait for image
+        iframe to load on document before continuing.
+            
         Function x is an odd hack for multiline text, but it works.
         """
-
         html_code = await util.load_file(settings["data_files"]["deface_html"])
-        mockPage = (
-            (
-               """() => {
-        var x = (function () {/*
-            %s
-        */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
+        
+        deface_js = (
+            ("""() => {
+    var x = (function () {/*
+        %s
+    */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
 
-        document.write() /* Clear html so we don't wait for load. */
-        document.open(); 
-        document.write(x)
-        document.close();
-    }"""
-                % html_code
-            )
-            % self.sitekey
-        )
-        await self.page.evaluate(mockPage)
+    document.open(); 
+    document.write(x)
+    document.close();
+}
+"""% html_code)% self.sitekey)
+
+        await self.page.evaluate(deface_js)
+    
         func ="""() => {
-    var frame = parent.document.getElementsByTagName('iframe')[1];
-    
-    if (typeof frame !== 'undefined') {
-        frame.onload = function() {
-            window.ready_eddy = true;
-        }
-    }    
-    
+    frame = $("iframe[src*='api2/bframe']")
+    $(frame).load( function() {
+        window.ready_eddy = true;
+    });
     if(window.ready_eddy) return true;
 }"""
-        return func
+
+        timeout = settings["wait_timeout"]["deface_timeout"]
+        await self.page.waitForFunction(func, timeout=timeout * 1000)
 
     async def goto_and_deface(self):
         """Open tab and deface page"""
@@ -241,9 +241,7 @@ class Solver(Base):
             await self.page.goto(
                 self.url, timeout=timeout * 1000, waitUntil="documentloaded"
             )
-            func = await self.deface_page()
-            timeout = settings["wait_timeout"]["deface_timeout"]
-            await self.page.waitForFunction(func, timeout=timeout * 1000)
+            await self.wait_for_deface()
             return 1
         except:
             return
@@ -315,13 +313,10 @@ class Solver(Base):
     async def wait_for_audio_button(self):
         """Wait for audio button to appear."""
 
-        audio_button_elem = "document.getElementById('recaptcha-audio-button')"
-        func = f"{audio_button_elem} !== null"
-
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.image_frame.waitForFunction(
-                func, timeout=timeout * 1000
+                "$('#recaptcha-audio-button').length", timeout=timeout * 1000
             )
         except:
             self.log("Audio button missing, aborting")
@@ -347,8 +342,7 @@ class Solver(Base):
                 raise
 
     async def g_recaptcha_response(self):
-        func = 'document.getElementById("g-recaptcha-response").value'
-        code = await self.page.evaluate(func)
+        code = await self.page.evaluate("$('#g-recaptcha-response').val()")
         return code
 
     async def is_blacklisted(self):
