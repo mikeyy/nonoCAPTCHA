@@ -179,6 +179,9 @@ class Solver(Base):
         override_js = await util.load_file(
             settings["data_files"]["override_js"]
         )
+        jquery_js = await util.load_file(
+            settings["data_files"]["jquery_js"]
+        )
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
@@ -186,7 +189,7 @@ class Solver(Base):
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
         await self.page.evaluateOnNewDocument(
-            "() => {\n%s\n%s\n}" % (_navigator, override_js)
+            "() => {\n%s\n%s\n%s}" % (_navigator, override_js, jquery_js)
         )
 
         return navigator_config["userAgent"]
@@ -204,12 +207,12 @@ class Solver(Base):
         var x = (function () {/*
             %s
         */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
-        
-        if (document.readyState !== 'loading'){
-            document.open(); 
-            document.write(x)
-            document.close();
-        }
+        $('html').html('') /* Clear html so we don't wait for load.
+                              Replacing html with x leaves us no <body> :(
+                           */
+        document.open(); 
+        document.write(x)
+        document.close();
     }"""
                 % html_code
             )
@@ -218,11 +221,12 @@ class Solver(Base):
         await self.page.evaluate(mockPage)
         func ="""() => {
     var frame = parent.document.getElementsByTagName('iframe')[1];
+    
     if (typeof frame !== 'undefined') {
         frame.onload = function() {
             window.ready_eddy = true;
         }
-    }
+    }    
     
     if(window.ready_eddy) return true;
 }"""
@@ -258,7 +262,7 @@ class Solver(Base):
         if not await self.goto_and_deface():
             self.log("Problem defacing page")
             return
-
+        
         self.get_frames()
         
         await self.click_checkbox()
