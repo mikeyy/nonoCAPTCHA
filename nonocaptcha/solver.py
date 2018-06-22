@@ -271,9 +271,7 @@ class Solver(Base):
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
         except:
-            code = await self._solve()
-            if code:
-                return f"OK|{code}"
+            return await self._solve()
         else:
             code = await self.g_recaptcha_response()
             if code:
@@ -299,7 +297,7 @@ class Solver(Base):
                 code = await self.g_recaptcha_response()
                 if code:
                     self.log("Audio response successful")
-                    return code
+                    return f"OK|{code}"
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
@@ -346,9 +344,7 @@ class Solver(Base):
 
     async def g_recaptcha_response(self):
         code = await self.page.evaluate("$('#g-recaptcha-response').val()")
-        print(code)
-        if code:
-            return code
+        return code
 
     async def is_blacklisted(self):
         try:
