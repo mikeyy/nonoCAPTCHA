@@ -6,6 +6,7 @@
 import asyncio
 import random
 import signal
+import sys
 import threading
 
 from nonocaptcha import util
@@ -123,7 +124,11 @@ async def main():
         )
 
 
-loop = asyncio.get_event_loop()
+if sys.platform == 'win32':
+    loop = asyncio.ProactorEventLoop()
+    asyncio.set_event_loop(loop)
+else:
+    loop = asyncio.get_event_loop()
 
 proxy_src = settings["proxy_source"]
 if proxy_src:
