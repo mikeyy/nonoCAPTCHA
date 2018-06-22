@@ -207,9 +207,8 @@ class Solver(Base):
         var x = (function () {/*
             %s
         */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
-        $('html').html('') /* Clear html so we don't wait for load.
-                              Replacing html with x leaves us no <body> :(
-                           */
+
+        document.write() /* Clear html so we don't wait for load. */
         document.open(); 
         document.write(x)
         document.close();
