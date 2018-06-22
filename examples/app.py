@@ -78,9 +78,15 @@ async def get():
 
 
 if __name__ == "__main__":
+
+    if sys.platform == 'win32':
+        loop = asyncio.ProactorEventLoop()
+        asyncio.set_event_loop(loop)
+    else:
+        loop = asyncio.get_event_loop()
+    
     proxy_src = settings["proxy_source"]
     if proxy_src:
-        loop = asyncio.get_event_loop()
         t = threading.Thread(target=loop_proxies, args=(loop,))
         t.start()
         
