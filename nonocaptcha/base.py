@@ -24,15 +24,11 @@ class Base(Clicker):
     if settings["debug"]:
         logger.setLevel("DEBUG")
 
-    proc_count = 0
-    detected = False
-
-    def __init__(self):
-        self.proc_id = self.proc_count
-        type(self).proc_count += 1
-
     def log(self, message):
         self.logger.debug(f'{self.proc_id} {message}')
+        
+    def set_proc_id(self):
+        type(self).proc_id = self.proc_id
 
     def get_frames(self):
         self.checkbox_frame = next(
@@ -61,24 +57,30 @@ class Base(Clicker):
         func ="""() => {
     %s
     
-    var checkbox_frame = window.parent.$("iframe[src*='api2/anchor']")
-        .context.documentWindow
-    var image_frame = window.parent.$("iframe[src*='api2/bframe']")
-        .context.documentWindow
+    var checkbox_frame = window.parent.$(
+        "iframe[src*='api2/anchor']"
+    ).context.documentWindow
 
-    var bot_header = $(".rc-doscaptcha-header-text", image_frame).text()
-    if(bot_header === 'Try again later'){
-        parent.window.wasdetected = true;
-        return true;
+    var image_frame = window.parent.$(
+        "iframe[src*='api2/bframe']"
+    ).context.documentWindow
+
+    var bot_header = $(".rc-doscaptcha-header-text", image_frame)
+    if(bot_header.length){
+        if(bot_header.text() === 'Try again later'){
+            parent.window.wasdetected = true;
+            return true;
+        }
     }
-
-    var try_again_header = $(".rc-audiochallenge-error-message", 
-        image_frame
-    ).text()
-
-    if(~try_again_header.indexOf("please solve more")){
-        try_again_header.text('Trying again...')
-        return true;
+        
+    var try_again_header = $(
+        ".rc-audiochallenge-error-message", image_frame
+    )
+    if(try_again_header.length){
+        if(~try_again_header.text().indexOf("please solve more")){
+            try_again_header.text('Trying again...')
+            return true;
+        }
     }
 
     var checkbox_anchor = $("#recaptcha-anchor", checkbox_frame);

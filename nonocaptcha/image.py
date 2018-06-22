@@ -7,7 +7,6 @@ class SolveImage(object):
     def __init__(self, page, proxy):
         self.page = page
         self.proxy = proxy
-        self = super().__init__()
 
     async def solve_by_image(self):
         """Go through procedures to solve image"""

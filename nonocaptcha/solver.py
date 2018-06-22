@@ -76,6 +76,8 @@ async def launch(options, **kwargs):
 
 
 class Solver(Base):
+    proc_count = 0
+    detected = False
 
     def __init__(
         self,
@@ -93,8 +95,10 @@ class Solver(Base):
         self.proxy_auth = proxy_auth
 
         self.headless = settings["headless"]
-        self.cookies = []
-        self = super().__init__()
+        self.cookies = [] 
+        self.proc_id = self.proc_count
+        Base.proc_id = self.proc_id
+        type(self).proc_count += 1
 
     async def start(self):
         """Start solving"""
@@ -343,7 +347,9 @@ class Solver(Base):
 
     async def g_recaptcha_response(self):
         code = await self.page.evaluate("$('#g-recaptcha-response').val()")
-        return code
+        print(code)
+        if code:
+            return code
 
     async def is_blacklisted(self):
         try:
