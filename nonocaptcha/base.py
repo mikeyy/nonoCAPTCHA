@@ -33,9 +33,6 @@ class Base(Clicker):
 
     def log(self, message):
         self.logger.debug(f'{self.proc_id} {message}')
-        
-    def get_page(self):
-        return self.page
 
     def get_frames(self):
         self.checkbox_frame = next(
@@ -101,7 +98,6 @@ class Base(Clicker):
             if(elem_anchor.getAttribute("aria-checked") === "true"){
                 return true
             }
-
             
         }"""% (
             wants_true,
