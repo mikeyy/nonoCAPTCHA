@@ -77,7 +77,6 @@ async def launch(options, **kwargs):
 
 class Solver(Base):
     proc_count = 0
-    detected = False
 
     def __init__(
         self,
