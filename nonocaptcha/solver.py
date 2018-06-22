@@ -64,7 +64,7 @@ class Launcher(launcher.Launcher):
 
     def waitForChromeToClose(self):
         """Terminate chrome."""
-        if self.proc.returncode is not None and not self.chromeClosed:
+        if self.proc.returncode is None and not self.chromeClosed:
             self.chromeClosed = True
             if psutil.pid_exists(self.proc.pid):
                 self.proc.terminate()
