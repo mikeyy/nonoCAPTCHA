@@ -13,7 +13,7 @@ from nonocaptcha.solver import Solver
 from config import settings
 
 # Max browsers to open/threads
-count = 100
+count = 10
 
 app = Quart(__name__)
 sem = asyncio.Semaphore(count)
@@ -27,7 +27,6 @@ def shuffle(i):
 proxies = None
 async def get_proxies():
     global proxies
-    print(1)
     while 1:
         protos = ["http://", "https://"]
         if any(p in proxy_src for p in protos):
@@ -40,8 +39,8 @@ async def get_proxies():
         await asyncio.sleep(10*60)
 
 
-def loop_proxies():
-    asyncio.ensure_future(get_proxies())
+def loop_proxies(loop):
+    asyncio.ensure_future(get_proxies(), loop=loop)
 
 
 async def work(pageurl, sitekey):
@@ -49,18 +48,20 @@ async def work(pageurl, sitekey):
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 
     async with sem:
-        if proxy_src:
-            proxy = next(proxies)
-        else:
-            proxy = None
-
-        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-
-        answer = await client.start()
-
-        if answer:
-            return answer
-
+        async with timeout(180) as t:
+            while 1:
+                if proxy_src:
+                    proxy = next(proxies)
+                else:
+                    proxy = None
+                
+                client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+                answer = await client.start()
+                if answer:
+                    return answer
+                else:
+                    if t.expired:
+                        break
 
 @app.route("/get", methods=["GET", "POST"])
 async def get():
@@ -68,7 +69,7 @@ async def get():
         while proxies is None:
             print('Proxies loading...')
             await asyncio.sleep(1)
-
+    
     if not request.args:
         result = "Invalid request"
     else:
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     
     proxy_src = settings["proxy_source"]
     if proxy_src:
-        t = threading.Thread(target=loop_proxies)
+        t = threading.Thread(target=loop_proxies, args=(loop,))
         t.start()
 
     app.run("0.0.0.0", 5000, loop=loop)
