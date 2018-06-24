@@ -7,7 +7,7 @@ import aiohttp
 import aiofiles
 import pickle
 from async_timeout import timeout as async_timeout
-from concurrent.futures._base import TimeoutError
+# from concurrent.futures._base import TimeoutError
 
 __all__ = ["save_file", "load_file", "get_page"]
 
@@ -37,7 +37,7 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
                     if binary:
                         return await response.read()
                     return await response.text()
-        except TimeoutError:
+        except: 
             return None
 
 
