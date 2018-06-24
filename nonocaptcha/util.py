@@ -18,8 +18,9 @@ async def save_file(file, data, binary=False):
         await f.write(data)
 
 
-async def load_file(file):
-    async with aiofiles.open(file, mode="r") as f:
+async def load_file(file, binary=False):
+    mode = "r" if not binary else "rb"
+    async with aiofiles.open(file, mode=mode) as f:
         return await f.read()
 
 
@@ -41,10 +42,9 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
 
 
 def serialize(obj, p):
-    with open(p, 'wb') as f:
-        pickle.dump(obj, f)
+    save_file(p, pickle.dump(obj, f), binary=True)
 
 
 def deserialize(p):
-    with open(p, 'rb') as f:
-        return pickle.load(f)
+    data = load_file(p, binary=True)
+    return pickle.load(data)
