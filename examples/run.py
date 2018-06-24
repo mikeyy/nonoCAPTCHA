@@ -19,7 +19,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 # Max browsers to open
 threads = 1
 
-sort_position = True
+sort_position = False
 if sort_position:
     """Use only if you know what you are doing, haven't yet automated avialable
     screen space!
