@@ -293,13 +293,12 @@ class Solver(Base):
             await self.click_audio_button()
             solve = self.audio.solve_by_audio
 
-        for i in range(5):
-            result = await solve()
-            if result:
-                code = await self.g_recaptcha_response()
-                if code:
-                    self.log("Audio response successful")
-                    return f"OK|{code}"
+        await solve()
+
+        code = await self.g_recaptcha_response()
+        if code:
+            self.log("Audio response successful")
+            return f"OK|{code}"
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
