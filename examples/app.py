@@ -1,7 +1,8 @@
-import time
-import random
 import asyncio
 import backoff
+import random
+import sys
+import time
 import threading
 
 from async_timeout import timeout
@@ -26,6 +27,7 @@ def shuffle(i):
 proxies = None
 async def get_proxies():
     global proxies
+    print(1)
     while 1:
         protos = ["http://", "https://"]
         if any(p in proxy_src for p in protos):
@@ -38,17 +40,16 @@ async def get_proxies():
         await asyncio.sleep(10*60)
 
 
-def loop_proxies():
+def loop_proxies(loop):
     asyncio.ensure_future(get_proxies(), loop=loop)
 
 
-@backoff.on_predicate(backoff.constant, interval=1, max_time=60)
 async def work(pageurl, sitekey):
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 
     async with sem:
-        if proxy_source:
+        if proxy_src:
             proxy = next(proxies)
         else:
             proxy = None
@@ -63,6 +64,11 @@ async def work(pageurl, sitekey):
 
 @app.route("/get", methods=["GET", "POST"])
 async def get():
+    if proxy_src:
+        print('Proxies loading...')
+        while proxies is None:
+            await asyncio.sleep(1)
+
     if not request.args:
         result = "Invalid request"
     else:
@@ -71,9 +77,10 @@ async def get():
         if not pageurl or not sitekey:
             result = "Missing sitekey or pageurl"
         else:
-            result = await work(pageurl, sitekey)
-            if not result:
-                result = "Request timed-out, please try again"
+            for i in range(2):
+                result = await work(pageurl, sitekey)
+                if not result:
+                    result = "Request timed-out, please try again"
     return Response(result, mimetype="text/plain")
 
 
@@ -89,8 +96,5 @@ if __name__ == "__main__":
     if proxy_src:
         t = threading.Thread(target=loop_proxies, args=(loop,))
         t.start()
-        
-        while not proxies:
-            asyncio.sleep(1)
 
     app.run("0.0.0.0", 5000, loop=loop)
