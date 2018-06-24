@@ -42,7 +42,19 @@ class Base(Clicker):
     async def check_detection(self, frame, timeout, wants_true=""):
         """Checks if "Try again later", "please solve more" modal appears 
         or success"""
-    
+
+        bot_header = (
+            "parent.frames[1].document.getElementsByClassName"
+            '("rc-doscaptcha-header-text")[0]'
+        )
+        try_again_header = (
+            "parent.frames[1].document.getElementsByClassName"
+            '("rc-audiochallenge-error-message")[0]'
+        )
+        checkbox = (
+            'parent.frames[0].document.getElementById("recaptcha-anchor")'
+        )
+
         if wants_true:
             wants_true = f"if({wants_true}) return true;"
     
@@ -51,52 +63,36 @@ class Base(Clicker):
         #    wants_true = '\n'.join(wants_true)
     
         func ="""() => {
-    %s
+            %s
+            
+            var elem_bot = %s;
+            if(typeof elem_bot !== 'undefined'){
+                if(elem_bot.innerText === 'Try again later'){
+                    parent.window.wasdetected = true;
+                    return true;
+                }
+            }
     
-    if (
-        ~window.document.URL.indexOf("api2/anchor") & window.top != window.self
-    ) {
-        var checkbox_frame = window.parent.$(
-            "iframe[src*='api2/anchor']"
-        ).context.documentWindow
-    }else{
-        var checkbox_frame = window.document
-    }
-        
-    if (
-        ~window.document.URL.indexOf("api2/bframe") & window.top != window.self
-    ){
-        var image_frame = window.parent.$(
-            "iframe[src*='api2/bframe']"
-        ).context.documentWindow
-    }else{
-        var image_frame = window.document
-    }
+            var elem_try = %s;
+            if(typeof elem_try !== 'undefined'){
+                if(elem_try.innerText.indexOf('please solve more.') >= 0){
+                    elem_try.parentNode.removeChild(elem_try);
+                    return true;
+                }
+            }
+            
+            var elem_anchor = %s;
+            if(elem_anchor.getAttribute("aria-checked") === "true"){
+                return true
+            }
 
-    var bot_header = $(".rc-doscaptcha-header-text", image_frame)
-    if(bot_header.length){
-        if(bot_header.text() === 'Try again later'){
-            parent.window.wasdetected = true;
-            return true;
-        }
-    }
-        
-    var try_again_header = $(
-        ".rc-audiochallenge-error-message", image_frame
-    )
-    if(try_again_header.length){
-        if(~try_again_header.text().indexOf("please solve more")){
-            try_again_header.text('Trying again...')
-            return true;
-        }
-    }
-
-    var checkbox_anchor = $("#recaptcha-anchor", checkbox_frame);
-    if(checkbox_anchor.attr("aria-checked") === "true"){
-        return true;
-    }
-    
-}"""% wants_true
+            
+        }"""% (
+            wants_true,
+            bot_header,
+            try_again_header,
+            checkbox
+        )
         try:
             await frame.waitForFunction(func, timeout=timeout * 1000)
         except:
