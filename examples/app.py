@@ -27,7 +27,6 @@ def shuffle(i):
 proxies = None
 async def get_proxies():
     global proxies
-    print(1)
     while 1:
         protos = ["http://", "https://"]
         if any(p in proxy_src for p in protos):
