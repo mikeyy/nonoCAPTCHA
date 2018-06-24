@@ -19,7 +19,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 # Max browsers to open
 threads = 1
 
-sort_position = False
+sort_position = True
 if sort_position:
     """Use only if you know what you are doing, haven't yet automated avialable
     screen space!
@@ -132,8 +132,7 @@ else:
 
 proxy_src = settings["proxy_source"]
 if proxy_src:
-    loop = asyncio.get_event_loop()
-    t = threading.Thread(target=loop_proxies,)
+    t = threading.Thread(target=loop_proxies)
     t.start()
 
 loop.run_until_complete(main())
