@@ -53,13 +53,25 @@ class Base(Clicker):
         func ="""() => {
     %s
     
-    var checkbox_frame = window.parent.$(
-        "iframe[src*='api2/anchor']"
-    ).context.documentWindow
-
-    var image_frame = window.parent.$(
-        "iframe[src*='api2/bframe']"
-    ).context.documentWindow
+    if (
+        ~window.document.URL.indexOf("api2/anchor") & window.top != window.self
+    ) {
+        var checkbox_frame = window.parent.$(
+            "iframe[src*='api2/anchor']"
+        ).context.documentWindow
+    }else{
+        var checkbox_frame = window.document
+    }
+        
+    if (
+        ~window.document.URL.indexOf("api2/bframe") & window.top != window.self
+    ){
+        var image_frame = window.parent.$(
+            "iframe[src*='api2/bframe']"
+        ).context.documentWindow
+    }else{
+        var image_frame = window.document
+    }
 
     var bot_header = $(".rc-doscaptcha-header-text", image_frame)
     if(bot_header.length){
