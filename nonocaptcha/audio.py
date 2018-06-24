@@ -16,25 +16,29 @@ class SolveAudio(Base):
         self.page = page
         self.proxy = proxy
         self.log = log
-    
+
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
 
         self.get_frames()
-
-        answer = await self.get_audio_response()
-        if not answer:
-            return
-        await self.type_audio_response(answer)
-        await self.click_verify()
         
-        timeout = settings["wait_timeout"]["success_timeout"]
-        try:
-            await self.check_detection(self.checkbox_frame, timeout)
-        finally:
-            if self.detected:
-                raise
-            return 1
+        for i in range(5):
+            answer = await self.get_audio_response()
+            if not answer:
+                continue
+
+            await self.type_audio_response(answer)
+            await self.click_verify()
+            
+            timeout = settings["wait_timeout"]["success_timeout"]
+            try:
+                await self.check_detection(self.image_frame, timeout)
+            except:
+                pass
+            finally:
+                if self.detected:
+                    raise
+                break
 
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
@@ -47,7 +51,7 @@ class SolveAudio(Base):
         audio_data = await util.get_page(
             audio_url, self.proxy, binary=True, timeout=30
         )
-        
+
         if audio_data is None:
             self.log("Download timed-out")
         else:
@@ -69,15 +73,14 @@ class SolveAudio(Base):
         )
         timeout = settings["wait_timeout"]["reload_timeout"]
         try:
-            await self.check_detection(
-                self.image_frame, timeout, wants_true=func
+            await self.image_frame.waitForFunction(
+                func, timeout=timeout * 1000
             )
         except:
             raise
         else:
-            if self.detected:
-                raise SystemExit('We were detected')
-
+            return
+            
     async def type_audio_response(self, answer):
         self.log("Typing audio response")
         response_input = await self.image_frame.J("#audio-response")
