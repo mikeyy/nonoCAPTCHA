@@ -43,18 +43,6 @@ class Base(Clicker):
         """Checks if "Try again later", "please solve more" modal appears 
         or success"""
 
-        bot_header = (
-            "parent.frames[1].document.getElementsByClassName"
-            '("rc-doscaptcha-header-text")[0]'
-        )
-        try_again_header = (
-            "parent.frames[1].document.getElementsByClassName"
-            '("rc-audiochallenge-error-message")[0]'
-        )
-        checkbox = (
-            'parent.frames[0].document.getElementById("recaptcha-anchor")'
-        )
-
         if wants_true:
             wants_true = f"if({wants_true}) return true;"
     
@@ -65,7 +53,8 @@ class Base(Clicker):
         func ="""() => {
             %s
             
-            var elem_bot = %s;
+            var elem_bot = parent.frames[1].document.getElementsByClassName
+                ("rc-doscaptcha-header-text")[0];
             if(typeof elem_bot !== 'undefined'){
                 if(elem_bot.innerText === 'Try again later'){
                     parent.window.wasdetected = true;
@@ -73,7 +62,8 @@ class Base(Clicker):
                 }
             }
     
-            var elem_try = %s;
+            var elem_try = parent.frames[1].document.getElementsByClassName
+                ("rc-audiochallenge-error-message")[0];
             if(typeof elem_try !== 'undefined'){
                 if(elem_try.innerText.indexOf('please solve more.') >= 0){
                     elem_try.parentNode.removeChild(elem_try);
@@ -81,18 +71,14 @@ class Base(Clicker):
                 }
             }
             
-            var elem_anchor = %s;
+            var elem_anchor = parent.frames[0].document.getElementById
+                ("recaptcha-anchor");
             if(elem_anchor.getAttribute("aria-checked") === "true"){
                 return true
             }
 
             
-        }"""% (
-            wants_true,
-            bot_header,
-            try_again_header,
-            checkbox
-        )
+        }"""% wants_true
         try:
             await frame.waitForFunction(func, timeout=timeout * 1000)
         except:
