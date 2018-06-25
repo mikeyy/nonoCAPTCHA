@@ -49,7 +49,7 @@ class Solver(Base):
         self.proxy_auth = proxy_auth
 
         self.headless = settings["headless"]
-        self.cookies = [] 
+        self.gmail_accounts = {}
         self.proc_id = self.proc_count
         type(self).proc_count += 1
 
@@ -66,8 +66,6 @@ class Solver(Base):
 
             if settings['gmail']:
                 await self.sign_in_to_google()
-                for c in self.cookies:
-                    await self.page.setCookie(c) # rethink multiple accounts
 
             self.log(f"Starting solver with proxy {self.proxy}")
             with async_timeout(120):
@@ -82,9 +80,6 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             await self.browser.close()
         return result
-
-    def log(self, message):
-        self.logger.debug(f'{self.proc_id} {message}')
 
     async def get_new_browser(self):
         """Get new browser, set arguments from options, proxy,
@@ -239,10 +234,10 @@ class Solver(Base):
         # Coming soon!
         solve_image = False
         if solve_image:
-            self.image = SolveImage(self.page, self.proxy, self.log)
+            self.image = SolveImage(self.page, self.proxy, self.proc_id)
             solve = self.image.solve_by_image
         else:
-            self.audio = SolveAudio(self.page, self.proxy, self.log)
+            self.audio = SolveAudio(self.page, self.proxy, self.proc_id)
 
             await self.wait_for_audio_button()
             await self.click_audio_button()
@@ -320,8 +315,10 @@ class Solver(Base):
             return
 
     async def sign_in_to_google(self):
-        cookie_path = settings['data_files']['cookies'] + '/google_account'
-        if not pathlib.Path(cookie_path).exists():
+        cookie_path = settings['data_files']['cookies']
+        if pathlib.Path(cookie_path).exists():
+            self.gmail_accounts = await util.deserialize(cookie_path)
+        if settings['gmail'] not in self.gmail_accounts:
             url = "https://accounts.google.com/Login"
             page = await self.browser.newPage()
             await page.goto(url, waitUntil="documentloaded")
@@ -329,15 +326,20 @@ class Solver(Base):
             await username.type(settings['gmail'])
             button = await page.querySelector('#identifierNext')
             await button.click()
-            await asyncio.sleep(2) # better way to do this...
+            await asyncio.sleep(2)  # better way to do this...
             navigation = page.waitForNavigation()
             password = await page.querySelector('#password')
             await password.type(settings['gmail_password'])
             button = await page.querySelector('#passwordNext')
             await button.click()
             await navigation
-            self.cookies = await page.cookies()
-            util.serialize(self.cookies, cookie_path)
+            cookies = await page.cookies()
+            self.gmail_accounts[settings["gmail"]] = cookies
+            await util.serialize(self.gmail_accounts, cookie_path)
             await page.close()
-        else:
-            self.cookies = util.deserialize(cookie_path)
+        await self.load_cookies()
+
+    async def load_cookies(self, account=settings["gmail"]):
+        cookies = self.gmail_accounts[account]
+        for c in cookies:
+            await self.page.setCookie(c)
