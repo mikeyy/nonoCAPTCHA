@@ -41,7 +41,7 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
             print(f'An error occured in get_page: {e}')
 
 
-async def serialize(obj, p):
+def serialize(obj, p):
     """Must be synchronous to prevent corrupting data"""
     with open(p, 'wb') as f:
         pickle.dump(obj, f)

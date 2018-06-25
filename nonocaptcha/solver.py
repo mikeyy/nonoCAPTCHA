@@ -382,7 +382,7 @@ class Solver(Base):
             await navigation
             cookies = await page.cookies()
             self.gmail_accounts[settings["gmail"]] = cookies
-            await util.serialize(self.gmail_accounts, cookie_path)
+            util.serialize(self.gmail_accounts, cookie_path)
             await page.close()
         await self.load_cookies()
 
