@@ -15,7 +15,7 @@ import tempfile
 import time
 
 from async_timeout import timeout as async_timeout
-from pyppeteer import launch
+from pyppeteer import launcher
 from pyppeteer.util import merge_dict
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
@@ -27,6 +27,53 @@ from nonocaptcha import util
 from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.base import Base
+
+
+
+class Launcher(launcher.Launcher):
+    async def launch(self):
+        self.chromeClosed = False
+        self.connection = None
+        env = self.options.get("env")
+        self.proc = await asyncio.subprocess.create_subprocess_exec(
+            *self.cmd,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+            env=env,
+        )
+        def _close_process(*args, **kwargs):
+            if not self.chromeClosed:
+                asyncio.get_event_loop().run_until_complete(self.killChrome())
+
+        # dont forget to close browser process
+        atexit.register(_close_process)
+        if self.options.get("handleSIGINT", True):
+            signal.signal(signal.SIGINT, _close_process)
+        if self.options.get("handleSIGTERM", True):
+            signal.signal(signal.SIGTERM, _close_process)
+        if not sys.platform.startswith("win"):
+            # SIGHUP is not defined on windows
+            if self.options.get("handleSIGHUP", True):
+                signal.signal(signal.SIGHUP, _close_process)
+
+        connectionDelay = self.options.get("slowMo", 0)
+        self.browserWSEndpoint = self._get_ws_endpoint()
+        self.connection = Connection(self.browserWSEndpoint, connectionDelay)
+        return await Browser.create(
+            self.connection, self.options, self.proc, self.killChrome
+        )
+
+    def waitForChromeToClose(self):
+        """Terminate chrome."""
+        if self.proc.returncode is None and not self.chromeClosed:
+            self.chromeClosed = True
+            if psutil.pid_exists(self.proc.pid):
+                self.proc.terminate()
+                self.proc.kill()
+
+
+async def launch(options, **kwargs):
+    return await Launcher(options, **kwargs).launch()
 
 
 
