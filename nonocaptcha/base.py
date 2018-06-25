@@ -12,8 +12,8 @@ logging.basicConfig(format=FORMAT)
 class Clicker:
     @staticmethod
     async def click_button(button):
-        click_delay = random.uniform(70, 130)
-        await wait_between(2000, 4000)
+        click_delay = random.uniform(30, 130)
+        await wait_between(500, 1500)
         await button.click(delay=click_delay / 1000)
 
 
