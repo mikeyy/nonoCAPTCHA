@@ -118,9 +118,9 @@ async def main():
             if result:
                 count += 1
                 print(f"{count}: {result}")
-        new_task = [asyncio.ensure_future(work())]
+        pending.add(asyncio.ensure_future(work()))
         completed, pending = await asyncio.wait(
-            set(new_task) | pending, return_when=asyncio.FIRST_COMPLETED
+            pending, return_when=asyncio.FIRST_COMPLETED
         )
 
 

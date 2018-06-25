@@ -9,21 +9,19 @@ FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
 
 
-
 class Clicker:
     @staticmethod
     async def click_button(button):
         click_delay = random.uniform(70, 130)
         await wait_between(2000, 4000)
         await button.click(delay=click_delay / 1000)
-        
 
 
 class Base(Clicker):
     logger = logging.getLogger(__name__)
     if settings["debug"]:
         logger.setLevel("DEBUG")
-    
+    proc_id = 0
     detected = False
     
     def get_frames(self):
@@ -87,3 +85,6 @@ class Base(Clicker):
             if await frame.evaluate(eval):
                 self.log("Automation detected")
                 self.detected = True
+
+    def log(self, message):
+        self.logger.debug(f'{self.proc_id} {message}')

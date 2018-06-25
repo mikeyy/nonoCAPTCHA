@@ -37,14 +37,16 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
                     if binary:
                         return await response.read()
                     return await response.text()
-        except: 
-            return None
+        except BaseException as e:
+            print(f'An error occured in get_page: {e}')
 
 
-def serialize(obj, p):
-    save_file(p, pickle.dump(obj, f), binary=True)
+async def serialize(obj, p):
+    """Must be synchronous to prevent corrupting data"""
+    with open(p, 'wb') as f:
+        pickle.dump(obj, f)
 
 
-def deserialize(p):
-    data = load_file(p, binary=True)
-    return pickle.load(data)
+async def deserialize(p):
+    data = await load_file(p, binary=True)
+    return pickle.loads(data)
