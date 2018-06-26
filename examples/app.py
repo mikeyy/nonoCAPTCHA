@@ -24,7 +24,7 @@ threads = 4
 # Max Browsers to have open at once
 count = 100
 
-sem = asyncio.Sempahore(count)
+sem = asyncio.Semaphore(count)
 app = Quart(__name__)
 
 
