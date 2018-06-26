@@ -41,6 +41,7 @@ class Launcher(launcher.Launcher):
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
             env=env,
+            loop = asyncio.get_event_loop()
         )
         def _close_process(*args, **kwargs):
             if not self.chromeClosed:
@@ -70,7 +71,7 @@ class Launcher(launcher.Launcher):
             self.chromeClosed = True
             if psutil.pid_exists(self.proc.pid):
                 self.proc.terminate()
-                self.proc.kill()
+                self.proc.wait()
 
 
 async def launch(options, **kwargs):
@@ -134,7 +135,10 @@ class Solver(Base):
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
             if self.browser:
-                await self.browser.close()
+                try:
+                    await self.browser.close()
+                except:
+                    pass
         return result
 
     async def get_new_browser(self):
@@ -150,12 +154,13 @@ class Solver(Base):
             '--cryptauth-http-host ""',
             "--disable-affiliation-based-matching",
             "--disable-answers-in-suggest",
-            # "--disable-background-networking", Possibly increases detection..
             "--disable-breakpad",
             "--disable-demo-mode",
             "--disable-device-discovery-notifications",
             "--disable-java",
             "--disable-preconnect",
+            "--restore-last-session",
+            "--incognito"
             # "--dns-prefetch-disable", # Discernably slower load-times
         ]
 
