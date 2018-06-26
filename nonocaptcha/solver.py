@@ -118,7 +118,7 @@ class Solver(Base):
                 await self.sign_in_to_google()
 
             self.log(f"Starting solver with proxy {self.proxy}")
-            await self.solve()
+            result = await self.solve()
         except TimeoutError:
             pass  # otherwise TimeoutError floods logging output
         except BaseException as e:
