@@ -108,17 +108,23 @@ class Solver(Base):
         result = None        
         start = time.time()
         try:
+            self.browser = await self.get_new_browser()
+            self.page = await self.browser.newPage()
+            if self.proxy_auth:
+                await self.page.authenticate(self.proxy_auth)
+
+            if settings['gmail']:
+                await self.sign_in_to_google()
+
+            self.log(f"Starting solver with proxy {self.proxy}")
             with async_timeout(120) as t:
-                self.browser = await self.get_new_browser()
-                self.page = await self.browser.newPage()
-                if self.proxy_auth:
-                    await self.page.authenticate(self.proxy_auth)
-    
-                if settings['gmail']:
-                    await self.sign_in_to_google()
-    
-                self.log(f"Starting solver with proxy {self.proxy}")
-                await self.solve()
+                task = asyncio.ensure_future(self.solve())
+                await task
+                result = task.result()
+                if t.expired:
+                    task.cancel()
+                    with suppress(asyncio.CancelledError):
+                        await task
         except TimeoutError:
             pass  # otherwise TimeoutError floods logging output
         except BaseException as e:
