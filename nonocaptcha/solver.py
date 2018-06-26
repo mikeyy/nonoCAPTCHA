@@ -216,8 +216,16 @@ class Solver(Base):
         """
         html_code = await util.load_file(settings["data_files"]["deface_html"])
         
-        deface_js = (
-            ("""() => {
+        deface_js = """() => {
+    window.recaptchaCallback = function () {
+        grecaptcha.render("g-recaptcha", {
+            sitekey: '%s',
+            callback: function () {
+                // something something
+            }
+        });
+    }
+
     var x = (function () {/*
         %s
     */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
@@ -225,11 +233,12 @@ class Solver(Base):
     document.open(); 
     document.write(x)
     document.close();
-}
-"""% html_code)% self.sitekey)
+}"""% (self.sitekey, html_code)
 
-        await self.page.evaluate(deface_js)
-    
+        try:
+            await self.page.evaluate(deface_js)
+        except Exception as e:
+            print(e)
         func ="""() => {
     frame = $("iframe[src*='api2/bframe']")
     $(frame).load( function() {
