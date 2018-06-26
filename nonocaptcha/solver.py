@@ -103,8 +103,9 @@ class Solver(Base):
         type(self).proc_count += 1
 
     async def start(self):
-        """Start solving"""
+        """Begin solving"""
 
+        result = None        
         start = time.time()
         try:
             self.browser = await self.get_new_browser()
@@ -288,10 +289,10 @@ class Solver(Base):
         # Coming soon...
         solve_image = False
         if solve_image:
-            self.image = SolveImage(self.proxy, self.proc_id)
+            self.image = SolveImage(self.page, self.proxy, self.proc_id)
             solve = self.image.solve_by_image
         else:
-            self.audio = SolveAudio(self.proxy, self.proc_id)
+            self.audio = SolveAudio(self.page, self.proxy, self.proc_id)
 
             await self.wait_for_audio_button()
             await self.click_audio_button()
