@@ -13,8 +13,7 @@ from nonocaptcha.base import Base
 
 
 class SolveAudio(Base):
-    def __init__(self, page, proxy, proc_id):
-        self.page = page
+    def __init__(self, proxy, proc_id):
         self.proxy = proxy
         self.proc_id = proc_id
 
