@@ -1,8 +1,10 @@
 History (Work in progress)
 =======
-### (2018-06-25)
+### Current Version (2018-06-25)
 * Add CHANGES.md file
 * Add TODO.md file
+* Lower mouse click (30ms,130ms) and wait delay(500ms,1.5secs)
+
 
 ### Version 0.0.14 (2018-06-20)
 * Fix bugs
