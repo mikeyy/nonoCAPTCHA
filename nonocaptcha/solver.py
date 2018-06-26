@@ -118,14 +118,7 @@ class Solver(Base):
                 await self.sign_in_to_google()
 
             self.log(f"Starting solver with proxy {self.proxy}")
-            with async_timeout(120) as t:
-                task = asyncio.ensure_future(self.solve())
-                await task
-                result = task.result()
-                if t.expired:
-                    task.cancel()
-                    with suppress(asyncio.CancelledError):
-                        await task
+            await self.solve()
         except TimeoutError:
             pass  # otherwise TimeoutError floods logging output
         except BaseException as e:
