@@ -153,8 +153,6 @@ class Solver(Base):
             "--disable-java",
             "--disable-preconnect",
             "--restore-last-session",
-            "--incognito"
-            # "--dns-prefetch-disable", # Discernably slower load-times
         ]
 
         if self.headless:
