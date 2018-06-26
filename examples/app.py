@@ -1,5 +1,4 @@
 import asyncio
-import backoff
 import os
 import random
 import sys
@@ -8,12 +7,10 @@ import time
 from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
-from functools import partial
 from multiprocessing import cpu_count
 from pathlib import Path
 from quart import Quart, Response, request
 from shutil import rmtree
-from threading import Thread
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
@@ -76,7 +73,7 @@ async def work(pageurl, sitekey):
     else:
         proxy = None
     
-    with sem:
+    async with sem:
         client = Solver(pageurl, sitekey, options=options, proxy=proxy)
         answer = await client.start()
         if answer:
