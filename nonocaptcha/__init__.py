@@ -3,7 +3,7 @@
 
 import os.path, sys
 
-version_info = (1, 2, 2)
+version_info = (1, 2, 3)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
@@ -26,8 +26,8 @@ __all__ = (
     "__author__",
     "__author__",
     "__license__",
-    "__maintainer__",
     "__package_dir__",
+    "__maintainer__",
     "__version__",
     "version_info",
 )
