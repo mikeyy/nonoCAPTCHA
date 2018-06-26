@@ -1,4 +1,5 @@
 import asyncio
+import backoff
 import os
 import random
 import sys
@@ -7,10 +8,12 @@ import time
 from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
+from functools import partial
 from multiprocessing import cpu_count
 from pathlib import Path
 from quart import Quart, Response, request
 from shutil import rmtree
+from threading import Thread
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
@@ -101,7 +104,7 @@ async def get():
                     if result or t.expired:
                         task.cancel()
                         with suppress(asyncio.CancelledError):
-                            wait task
+                            await task
                         break
             if not result:
                 result = "Request timed-out, please try again"           
