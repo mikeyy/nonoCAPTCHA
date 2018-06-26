@@ -15,6 +15,7 @@ import tempfile
 import time
 
 from async_timeout import timeout as async_timeout
+from contextlib import suppress
 from pyppeteer import launcher
 from pyppeteer.util import merge_dict
 from pyppeteer.browser import Browser
@@ -79,6 +80,7 @@ async def launch(options, **kwargs):
 
 class Solver(Base):
     proc_count = 0
+    browser = None
 
     def __init__(
         self,
@@ -102,8 +104,7 @@ class Solver(Base):
 
     async def start(self):
         """Start solving"""
-        
-        result = None
+
         start = time.time()
         try:
             self.browser = await self.get_new_browser()
@@ -115,8 +116,14 @@ class Solver(Base):
                 await self.sign_in_to_google()
 
             self.log(f"Starting solver with proxy {self.proxy}")
-            with async_timeout(120):
-                result = await self.solve()
+            with async_timeout(120) as t:
+                task = asyncio.ensure_future(self.solve())
+                await task
+                result = task.result()
+                if t.expired:
+                    task.cancel()
+                    with suppress(asyncio.CancelledError):
+                        await task
         except TimeoutError:
             pass  # otherwise TimeoutError floods logging output
         except BaseException as e:
@@ -125,7 +132,8 @@ class Solver(Base):
             end = time.time()
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
-            await self.browser.close()
+            if self.browser:
+                await self.browser.close()
         return result
 
     async def get_new_browser(self):
@@ -185,7 +193,6 @@ class Solver(Base):
         override_js = await util.load_file(
             settings["data_files"]["override_js"]
         )
-        
 
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
@@ -278,13 +285,13 @@ class Solver(Base):
                 return f"OK|{code}"
 
     async def _solve(self):
-        # Coming soon!
+        # Coming soon...
         solve_image = False
         if solve_image:
-            self.image = SolveImage(self.page, self.proxy, self.proc_id)
+            self.image = SolveImage(self.proxy, self.proc_id)
             solve = self.image.solve_by_image
         else:
-            self.audio = SolveAudio(self.page, self.proxy, self.proc_id)
+            self.audio = SolveAudio(self.proxy, self.proc_id)
 
             await self.wait_for_audio_button()
             await self.click_audio_button()
