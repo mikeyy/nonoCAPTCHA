@@ -1,24 +1,19 @@
 import asyncio
 import os
 import random
+import shutil
 import sys
 import time
 
 from async_timeout import timeout
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
-from multiprocessing import cpu_count
 from pathlib import Path
 from quart import Quart, Response, request
-from shutil import rmtree
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
 from config import settings
 
-# Max threads to use in Pool
-threads = 4
-# Max Browsers to have open at once
 count = 100
 
 sem = asyncio.Semaphore(count)
@@ -30,24 +25,11 @@ def shuffle(i):
     return i
 
 
-def new_event_loop(pool_size=None):
-    pool_size = pool_size or cpu_count()
-    if sys.platform == 'win32':
-        loop = asyncio.ProactorEventLoop()
-        asyncio.set_event_loop(loop)
-    else:
-        loop = asyncio.new_event_loop()
-    thread_pool = ThreadPoolExecutor(pool_size)
-    loop.set_default_executor(thread_pool)
-    asyncio.set_event_loop(loop)
-    return loop
-
-
 proxies = None
 async def get_proxies():
     global proxies
 
-    asyncio.set_event_loop(new_event_loop())
+    asyncio.set_event_loop(asyncio.get_event_loop())
     while 1:
         protos = ["http://", "https://"]
         if any(p in proxy_src for p in protos):
@@ -65,6 +47,7 @@ async def get_proxies():
 
 
 async def work(pageurl, sitekey):
+    
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 
@@ -72,19 +55,26 @@ async def work(pageurl, sitekey):
         proxy = random.choice(proxies)
     else:
         proxy = None
-    
+
     async with sem:
         client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-        answer = await client.start()
-        if answer:
-            return answer
+        try:
+            task = asyncio.ensure_future(client.start())
+            await task
+        except:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+        else:
+            return task.result()
 
 
 @app.route("/get", methods=["GET", "POST"])
 async def get():
     while not proxies:
         await asyncio.sleep(1)
-    
+
+    result = None
     if not request.args:
         result = "Invalid request"
     else:
@@ -93,30 +83,33 @@ async def get():
         if not pageurl or not sitekey:
             result = "Missing sitekey or pageurl"
         else:
-            async with timeout(180) as t:
+            async with timeout(1) as t:
                 while 1:
-                    task = asyncio.ensure_future(work(pageurl, sitekey), loop=loop)
+                    task = asyncio.ensure_future(work(pageurl, sitekey))
                     await task
                     result = task.result()
-                    if result or t.expired:
+                    if result:
+                        break
+
+                    if t.expired:
                         task.cancel()
                         with suppress(asyncio.CancelledError):
                             await task
                         break
+
             if not result:
-                result = "Request timed-out, please try again"           
+                result = "Request timed-out, please try again"        
     return Response(result, mimetype="text/plain")
+
 
 home = Path.home()
 dir = f'{home}/.pyppeteer/.dev_profile'
-for subdir in os.listdir(dir):
-    if os.path.isdir(subdir):
-        rmtree(subdir)
+shutil.rmtree(dir, ignore_errors=True)
 
 loop = asyncio.get_event_loop()
 proxy_src = settings["proxy_source"]
 if proxy_src:
     asyncio.ensure_future(get_proxies())
-    
+
 if __name__ == "__main__":
     app.run("0.0.0.0", 5000, loop=loop)
