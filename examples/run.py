@@ -7,7 +7,6 @@ import asyncio
 import random
 import signal
 import sys
-import threading
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
@@ -132,7 +131,6 @@ else:
 
 proxy_src = settings["proxy_source"]
 if proxy_src:
-    t = threading.Thread(target=loop_proxies)
-    t.start()
+    asyncio.ensure_future(get_proxies())
 
 loop.run_until_complete(main())

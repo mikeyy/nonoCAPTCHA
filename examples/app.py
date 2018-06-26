@@ -1,22 +1,27 @@
 import asyncio
-import backoff
+import os
 import random
 import sys
 import time
 
 from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
-from functools import partial
+from contextlib import suppress
 from multiprocessing import cpu_count
-from threading import Thread
+from pathlib import Path
 from quart import Quart, Response, request
+from shutil import rmtree
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
 from config import settings
 
 # Max threads to use in Pool
-threads = 100
+threads = 4
+# Max Browsers to have open at once
+count = 100
+
+sem = asyncio.Sempahore(count)
 app = Quart(__name__)
 
 
@@ -55,7 +60,7 @@ async def get_proxies():
         except:
             continue
         else:
-            proxies = iter(shuffle(result.strip().split("\n")))
+            proxies = shuffle(result.strip().split("\n"))
             await asyncio.sleep(10*60)
 
 
@@ -64,14 +69,15 @@ async def work(pageurl, sitekey):
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 
     if proxy_src:
-        proxy = next(proxies)
+        proxy = random.choice(proxies)
     else:
         proxy = None
     
-    client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-    answer = await client.start()
-    if answer:
-        return answer
+    with sem:
+        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+        answer = await client.start()
+        if answer:
+            return answer
 
 
 @app.route("/get", methods=["GET", "POST"])
@@ -93,13 +99,21 @@ async def get():
                     await task
                     result = task.result()
                     if result or t.expired:
+                        task.cancel()
+                        with suppress(asyncio.CancelledError):
+                            wait task
                         break
             if not result:
                 result = "Request timed-out, please try again"           
     return Response(result, mimetype="text/plain")
 
+home = Path.home()
+dir = f'{home}/.pyppeteer/.dev_profile'
+for subdir in os.listdir(dir):
+    if os.path.isdir(subdir):
+        rmtree(subdir)
 
-loop = new_event_loop()
+loop = asyncio.get_event_loop()
 proxy_src = settings["proxy_source"]
 if proxy_src:
     asyncio.ensure_future(get_proxies())

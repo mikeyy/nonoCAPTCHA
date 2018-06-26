@@ -48,6 +48,10 @@ class SolveAudio(Base):
             f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
 
+        if type(audio_url) is not str:
+            self.log('Audio url is not valid, aborting')
+            raise
+
         self.log("Downloading audio file")
         audio_data = await util.get_page(
             audio_url, self.proxy, binary=True, timeout=30
