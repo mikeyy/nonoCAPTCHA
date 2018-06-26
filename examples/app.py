@@ -83,7 +83,7 @@ async def get():
         if not pageurl or not sitekey:
             result = "Missing sitekey or pageurl"
         else:
-            async with timeout(1) as t:
+            async with timeout(180) as t:
                 while 1:
                     task = asyncio.ensure_future(work(pageurl, sitekey))
                     await task
