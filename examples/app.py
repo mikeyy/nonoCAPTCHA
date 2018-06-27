@@ -1,5 +1,4 @@
 import asyncio
-import os
 import random
 import shutil
 import sys
@@ -15,8 +14,6 @@ from nonocaptcha.solver import Solver
 from config import settings
 
 count = 100
-
-sem = asyncio.Semaphore(count)
 app = Quart(__name__)
 
 
@@ -42,7 +39,7 @@ async def get_proxies():
         except:
             continue
         else:
-            proxies = shuffle(result.strip().split("\n"))
+            proxies = iter(shuffle(result.strip().split("\n")))
             await asyncio.sleep(10*60)
 
 
@@ -50,23 +47,16 @@ async def work(pageurl, sitekey):
     
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-
-    if proxy_src:
-        proxy = random.choice(proxies)
-    else:
-        proxy = None
-
-    async with sem:
-        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-        try:
-            task = asyncio.ensure_future(client.start())
-            await task
-        except:
-            task.cancel()
-            with suppress(asyncio.CancelledError):
-                await task
+    
+    while 1:
+        if proxy_src:
+            proxy =  next(proxies)
         else:
-            return task.result()
+            proxy = None
+    
+        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+        answer = await client.start()
+        return answer
 
 
 @app.route("/get", methods=["GET", "POST"])
@@ -83,21 +73,9 @@ async def get():
         if not pageurl or not sitekey:
             result = "Missing sitekey or pageurl"
         else:
-            async with timeout(180) as t:
-                while 1:
-                    task = asyncio.ensure_future(work(pageurl, sitekey))
-                    await task
-                    result = task.result()
-                    if result:
-                        break
-
-                    if t.expired:
-                        task.cancel()
-                        with suppress(asyncio.CancelledError):
-                            await task
-                        break
-
-            if not result:
+            try:
+                result = await asyncio.wait_for(work(pageurl, sitekey), 180)
+            except asyncio.TimeoutError:
                 result = "Request timed-out, please try again"        
     return Response(result, mimetype="text/plain")
 
