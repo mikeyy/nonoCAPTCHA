@@ -48,15 +48,17 @@ async def work(pageurl, sitekey):
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     
-    while 1:
-        if proxy_src:
-            proxy =  next(proxies)
-        else:
-            proxy = None
-    
-        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-        answer = await client.start()
-        return answer
+    async with timeout(180) as t:
+        while not t.expired:
+            if proxy_src:
+                proxy =  next(proxies)
+            else:
+                proxy = None
+        
+            client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+            answer = await client.start()
+            if answer:
+                return answer
 
 
 @app.route("/get", methods=["GET", "POST"])
@@ -73,9 +75,8 @@ async def get():
         if not pageurl or not sitekey:
             result = "Missing sitekey or pageurl"
         else:
-            try:
-                result = await asyncio.wait_for(work(pageurl, sitekey), 180)
-            except asyncio.TimeoutError:
+            result = await work(pageurl, sitekey)
+            if not result:
                 result = "Request timed-out, please try again"        
     return Response(result, mimetype="text/plain")
 
