@@ -6,6 +6,7 @@
 import asyncio
 import atexit
 import json
+import os
 import pathlib
 import psutil
 import random
@@ -40,8 +41,7 @@ class Launcher(launcher.Launcher):
             *self.cmd,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
-            env=env,
-            loop = asyncio.get_event_loop()
+            env=env
         )
         def _close_process(*args, **kwargs):
             if not self.chromeClosed:
@@ -65,13 +65,28 @@ class Launcher(launcher.Launcher):
             self.connection, self.options, self.proc, self.killChrome
         )
 
-    def waitForChromeToClose(self):
+    async def waitForChromeToClose(self):
         """Terminate chrome."""
         if self.proc.returncode is None and not self.chromeClosed:
             self.chromeClosed = True
             if psutil.pid_exists(self.proc.pid):
                 self.proc.terminate()
-                self.proc.wait()
+                self.proc.kill()
+                await self.proc.wait()
+                
+    async def killChrome(self) -> None:
+        """Terminate chromium process."""
+        if self.connection and self.connection._connected:
+            try:
+                await self.connection.send('Browser.close')
+                await self.connection.dispose()
+            except Exception:
+                # ignore errors on browser termination process
+                pass
+        if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
+            # Force kill chrome only when using temporary userDataDir
+            await self.waitForChromeToClose()
+            self._cleanup_tmp_user_data_dir()
 
 
 async def launch(options, **kwargs):
@@ -106,7 +121,7 @@ class Solver(Base):
     async def start(self):
         """Begin solving"""
 
-        result = None        
+        result = None
         start = time.time()
         try:
             self.browser = await self.get_new_browser()
@@ -128,11 +143,9 @@ class Solver(Base):
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
             if self.browser:
-                try:
-                    await self.browser.close()
-                except:
-                    pass
+                await self.browser.close()
         return result
+    
 
     async def get_new_browser(self):
         """Get new browser, set arguments from options, proxy,
@@ -212,29 +225,19 @@ class Solver(Base):
         """
         html_code = await util.load_file(settings["data_files"]["deface_html"])
         
-        deface_js = """() => {
-    window.recaptchaCallback = function () {
-        grecaptcha.render("g-recaptcha", {
-            sitekey: '%s',
-            callback: function () {
-                // something something
-            }
-        });
-    }
-
+        deface_js = (
+            ("""() => {
     var x = (function () {/*
         %s
     */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
-
     document.open(); 
     document.write(x)
     document.close();
-}"""% (self.sitekey, html_code)
+}
+"""% html_code)% self.sitekey)
 
-        try:
-            await self.page.evaluate(deface_js)
-        except Exception as e:
-            print(e)
+        await self.page.evaluate(deface_js)
+    
         func ="""() => {
     frame = $("iframe[src*='api2/bframe']")
     $(frame).load( function() {
