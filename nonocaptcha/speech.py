@@ -14,22 +14,10 @@ from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
 from config import settings
-from functools import partial, wraps
+from nonocaptcha.util import threaded
 
 
 SUB_KEY = settings["api_subkey"]
-
-
-def threaded(func):
-    @wraps(func)
-    async def wrap(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-
-        return await loop.run_in_executor(
-            None, partial(func, *args, **kwargs)
-        )
-
-    return wrap
 
 @threaded
 def bytes_from_file(filename, chunksize=8192):

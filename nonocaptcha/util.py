@@ -5,12 +5,33 @@
 
 import aiohttp
 import aiofiles
+import asyncio
 import pickle
 from async_timeout import timeout as async_timeout
-# from concurrent.futures._base import TimeoutError
+from functools import partial, wraps
 
-__all__ = ["save_file", "load_file", "get_page"]
 
+__all__ = [
+           "save_file", 
+           "load_file",
+           "get_page", 
+           "threaded",
+           "serialize",
+           "deserialize"
+]
+
+
+def threaded(func):
+    @wraps(func)
+    async def wrap(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+
+        return await loop.run_in_executor(
+            None, partial(func, *args, **kwargs)
+        )
+
+    return wrap
+    
 
 async def save_file(file, data, binary=False):
     mode = "w" if not binary else "wb"
@@ -39,6 +60,8 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
                     return await response.text()
         except BaseException as e:
             print(f'An error occured in get_page: {e}')
+        except:
+            raise
 
 
 def serialize(obj, p):
