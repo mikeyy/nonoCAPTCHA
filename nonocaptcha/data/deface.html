@@ -12,9 +12,11 @@
             }
         </style>
         <title>ReCAPTCHA</title>
-        <script src="https://www.google.com/recaptcha/api.js?onload=recaptchaCallback&render=explicit" async defer></script>
+        <script src="https://recaptcha.net/recaptcha/api.js" async></script>
     </head>
     <body>
-        <div id="g-recaptcha"></div>
+        <form action="?" method="POST">
+            <div class="g-recaptcha" data-sitekey="%s"></div>
+        </form>
     </body>
 </html>
