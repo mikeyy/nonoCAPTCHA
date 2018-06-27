@@ -22,7 +22,7 @@ History (Work in progress)
 * Add TODO.md file
 * Lower mouse click (30ms,130ms) and wait delay(500ms,1.5secs)
 
-* ... unfinished
+### ... unfinished
 
 ### Version 0.0.14 (2018-06-20)
 * Fix bugs
