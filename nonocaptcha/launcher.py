@@ -6,10 +6,12 @@ import signal
 import sys
 
 from pyppeteer import launcher
+from pyppeteer import connection
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
+
 
 DEFAULT_ARGS = [
     #! = added in
@@ -47,13 +49,28 @@ AUTOMATION_ARGS = [
 ]
 
 
+
+
+class Connection(connection.Connection):
+    async def _async_send(self, msg):
+        while not self._connected:
+            await asyncio.sleep(self._delay)
+
+        try:
+            await self.connection.send(msg)
+        except:
+            pass
+
+
+
+
 class Launcher(launcher.Launcher):
     def __init__(self, options, **kwargs):
         """Make new launcher."""
         self.options = merge_dict(options, kwargs)
         self.port = get_free_port()
         self.url = f'http://127.0.0.1:{self.port}'
-        self.chrome_args: List[str] = []
+        self.chrome_args = []
 
         if not self.options.get('ignoreDefaultArgs', False):
             self.chrome_args.extend(DEFAULT_ARGS)
@@ -126,8 +143,10 @@ class Launcher(launcher.Launcher):
         return await Browser.create(
             self.connection, self.options, self.proc, self.killChrome
         )
-
                 
+    def waitForChromeToClose(self) -> None:
+        pass
+
     async def killChrome(self) -> None:
         """Terminate chromium process."""
         if self.connection and self.connection._connected:
@@ -139,4 +158,5 @@ class Launcher(launcher.Launcher):
                 pass
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir
+            # await self.waitForChromeToClose()
             self._cleanup_tmp_user_data_dir()
