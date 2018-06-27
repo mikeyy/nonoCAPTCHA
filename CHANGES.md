@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-27)
+* Delete temporary Chrome profile on Browser exit
+
+### 1.2.8 (2018-06-27)
 * Possible fix for Chrome termination on ungraceful exit (such as timeout)
 
 ### Version 1.2.7 (2018-06-27)

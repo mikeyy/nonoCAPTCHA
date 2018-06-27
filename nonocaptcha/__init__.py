@@ -3,7 +3,7 @@
 
 import os.path, sys
 
-version_info = (1, 2, 8)
+version_info = (1, 2, 9)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
