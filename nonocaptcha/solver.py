@@ -4,99 +4,30 @@
 """Solver module."""
 
 import asyncio
-import atexit
 import json
 import os
 import pathlib
 import psutil
-import random
-import signal
 import sys
-import tempfile
 import time
 
-from async_timeout import timeout as async_timeout
-from contextlib import suppress
-from pyppeteer import launcher
 from pyppeteer.util import merge_dict
-from pyppeteer.browser import Browser
-from pyppeteer.connection import Connection
 from pyppeteer.errors import TimeoutError
 from user_agent import generate_navigator_js
 
 from config import settings
-from nonocaptcha import util
+from nonocaptcha.base import Base
 from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
-from nonocaptcha.base import Base
-
-
-
-class Launcher(launcher.Launcher):
-    async def launch(self):
-        self.chromeClosed = False
-        self.connection = None
-        env = self.options.get("env")
-        self.proc = await asyncio.subprocess.create_subprocess_exec(
-            *self.cmd,
-            stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.DEVNULL,
-            env=env
-        )
-        def _close_process(*args, **kwargs):
-            if not self.chromeClosed:
-                asyncio.get_event_loop().run_until_complete(self.killChrome())
-
-        # dont forget to close browser process
-        atexit.register(_close_process)
-        if self.options.get("handleSIGINT", True):
-            signal.signal(signal.SIGINT, _close_process)
-        if self.options.get("handleSIGTERM", True):
-            signal.signal(signal.SIGTERM, _close_process)
-        if not sys.platform.startswith("win"):
-            # SIGHUP is not defined on windows
-            if self.options.get("handleSIGHUP", True):
-                signal.signal(signal.SIGHUP, _close_process)
-
-        connectionDelay = self.options.get("slowMo", 0)
-        self.browserWSEndpoint = self._get_ws_endpoint()
-        self.connection = Connection(self.browserWSEndpoint, connectionDelay)
-        return await Browser.create(
-            self.connection, self.options, self.proc, self.killChrome
-        )
-
-    async def waitForChromeToClose(self):
-        """Terminate chrome."""
-        if self.proc.returncode is None and not self.chromeClosed:
-            self.chromeClosed = True
-            if psutil.pid_exists(self.proc.pid):
-                self.proc.terminate()
-                self.proc.kill()
-                await self.proc.wait()
-                
-    async def killChrome(self) -> None:
-        """Terminate chromium process."""
-        if self.connection and self.connection._connected:
-            try:
-                await self.connection.send('Browser.close')
-                await self.connection.dispose()
-            except Exception:
-                # ignore errors on browser termination process
-                pass
-        if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
-            # Force kill chrome only when using temporary userDataDir
-            await self.waitForChromeToClose()
-            self._cleanup_tmp_user_data_dir()
-
-
-async def launch(options, **kwargs):
-    return await Launcher(options, **kwargs).launch()
+from nonocaptcha.launcher import Launcher
+from nonocaptcha import util
 
 
 
 class Solver(Base):
     proc_count = 0
     browser = None
+    proc = None
 
     def __init__(
         self,
@@ -144,6 +75,8 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             if self.browser:
                 await self.browser.close()
+            if self.proc:
+                await self.kill_chrome()
         return result
     
 
@@ -152,43 +85,18 @@ class Solver(Base):
         and random window size if headless.
         """
 
-        chrome_args = [
-            "--no-sandbox",
-            "--disable-web-security",
-            "--disable-gpu",
-            "--disable-reading-from-canvas",
-            '--cryptauth-http-host ""',
-            "--disable-affiliation-based-matching",
-            "--disable-answers-in-suggest",
-            "--disable-breakpad",
-            "--disable-demo-mode",
-            "--disable-device-discovery-notifications",
-            "--disable-java",
-            "--disable-preconnect",
-            "--restore-last-session",
-        ]
-
-        if self.headless:
-            aspect_ratio_list = ["3:2", "4:3", "5:3", "5:4", "16:9", "16:10"]
-            aspect_ratio = random.choice(aspect_ratio_list)
-            resolutions_file = settings["data_files"]["resolutions_json"]
-            resolutions = await util.load_file(resolutions_file)
-            j = json.loads(resolutions)
-            resolution = random.choice(j[aspect_ratio])
-            height, width = resolution.split("x")
-            r = lambda: random.uniform(1, 2)
-            hsize = int((float(height) / r()))
-            wsize = int((float(width) / r()))
-            chrome_args.append(f"--window-size={hsize},{wsize}")
-
+        chrome_args = []
+    
         if self.proxy:
             chrome_args.append(f"--proxy-server=http://{self.proxy}")
 
         args = self.options.pop("args")
         args.extend(chrome_args)
-
         self.options.update({"headless": self.headless, "args": args})
-        browser = await launch(self.options)
+
+        launcher = Launcher(self.options)
+        self.proc = await launcher._proc()
+        browser = await launcher.launch(self.proc)
         return browser
 
     async def cloak_navigator(self):
@@ -406,3 +314,10 @@ class Solver(Base):
         cookies = self.gmail_accounts[account]
         for c in cookies:
             await self.page.setCookie(c)
+            
+    async def kill_chrome(self):
+        if self.proc.returncode is None:
+            if psutil.pid_exists(self.proc.pid):
+                self.proc.terminate()
+                self.proc.kill()
+                await self.proc.communicate()
