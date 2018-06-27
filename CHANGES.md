@@ -1,10 +1,28 @@
 History (Work in progress)
 =======
-### Current Version (2018-06-25)
+### Current Version (2018-06-27)
+* Possible fix for Chrome termination on ungraceful exit (such as timeout)
+
+### Version 1.2.7 (2018-06-27)
+* Revert back to old reCAPTCHA loading method
+
+### Version 1.2.6 (2018-06-26)
+* Remove chrome arguments uncertatin of their purpose
+* Removed hardcoded timeout from solver, handle externally
+* Add new example for HTTP client - create_task / get_task
+
+### Version 1.2.5 (2018-06-26)
+* Fix bugs
+
+### Version 1.2.4 (2018-06-26)
+* Timeout patch in solver reverted
+
+### Version 1.2.3 (2018-06-25)
 * Add CHANGES.md file
 * Add TODO.md file
 * Lower mouse click (30ms,130ms) and wait delay(500ms,1.5secs)
 
+* ... unfinished
 
 ### Version 0.0.14 (2018-06-20)
 * Fix bugs
