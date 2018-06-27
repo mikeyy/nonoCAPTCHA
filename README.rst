@@ -69,6 +69,7 @@ If you would like to use it in your own script
 
 .. code:: python
 
+   import asyncio
    from nonocaptcha.solver import Solver
    from config import settings
 
@@ -80,11 +81,11 @@ If you would like to use it in your own script
        proxy_auth=auth_details(),
    )
 
-   answer = await client.start()
+   answer = asyncio.get_event_loop().run_until_complete(client.start())
    if answer:
        print(answer)
 
-Use the included multithread script.
+Or use the included async script app.py/run.py
 
 *Edit variable count for amount of threads to use*
 
