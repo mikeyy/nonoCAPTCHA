@@ -76,7 +76,6 @@ If you would like to use it in your own script
    client = Solver(
        settings['pageurl'],
        settings['sitekey'],
-       options=options,
        proxy=proxy,
        proxy_auth=auth_details(),
    )
