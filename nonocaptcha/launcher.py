@@ -127,14 +127,6 @@ class Launcher(launcher.Launcher):
             self.connection, self.options, self.proc, self.killChrome
         )
 
-    async def waitForChromeToClose(self):
-        """Terminate chrome."""
-        if self.proc.returncode is None and not self.chromeClosed:
-            self.chromeClosed = True
-            if psutil.pid_exists(self.proc.pid):
-                self.proc.terminate()
-                self.proc.kill()
-                await self.proc.communicate()
                 
     async def killChrome(self) -> None:
         """Terminate chromium process."""
@@ -147,5 +139,4 @@ class Launcher(launcher.Launcher):
                 pass
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir
-            await self.waitForChromeToClose()
             self._cleanup_tmp_user_data_dir()
