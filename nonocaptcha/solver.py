@@ -73,8 +73,6 @@ class Solver(Base):
             end = time.time()
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
-            if self.browser:
-                await self.browser.close()
             if self.proc:
                 await self.kill_chrome()
         return result
@@ -94,9 +92,9 @@ class Solver(Base):
         args.extend(chrome_args)
         self.options.update({"headless": self.headless, "args": args})
 
-        launcher = Launcher(self.options)
-        self.proc = await launcher._proc()
-        browser = await launcher.launch(self.proc)
+        self.launcher = Launcher(self.options)
+        self.proc = await self.launcher._proc()
+        browser = await self.launcher.launch(self.proc)
         return browser
 
     async def cloak_navigator(self):
@@ -316,8 +314,10 @@ class Solver(Base):
             await self.page.setCookie(c)
             
     async def kill_chrome(self):
-        if self.proc.returncode is None:
+        if self.proc.returncode is None and not self.launcher.chromeClosed:
+            self.launcher.chromeClosed = True
             if psutil.pid_exists(self.proc.pid):
                 self.proc.terminate()
                 self.proc.kill()
-                await self.proc.communicate()
+                await self.proc.wait()
+            self.launcher._cleanup_tmp_user_data_dir()
