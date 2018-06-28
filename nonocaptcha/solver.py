@@ -74,7 +74,7 @@ class Solver(Base):
             end = time.time()
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
-            if self.browser.
+            if self.browser:
                 await self.browser.close()
             await self.kill_chrome()
         return result
