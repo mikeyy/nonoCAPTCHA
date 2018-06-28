@@ -64,7 +64,7 @@ class Solver(Base):
             self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
         except asyncio.TimeoutError:
-            raise
+            pass
         except asyncio.CancelledError:
             raise
         except BaseException as e:
