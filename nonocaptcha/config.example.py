@@ -24,13 +24,23 @@ settings = {
     "keyboard_traverse": False,  # Tab/Enter clicking of buttons instead
     "check_blacklist": False,  # Check Google search page for unusual traffic
                                # text and close on true before solving
-    "api_subkey": "",  # API key for Azure Cognitive Services
     "pageurl": "https://google.com/recaptcha/api2/demo",  # ReCAPTCHA pageurl
     "sitekey": "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",  # ReCAPTCHA sitekey
     "proxy_source": "",  # Only used for app.py or run.py
     "gmail": "",  # Leave blank to ignore
     "gmail_password": "",  # Signing into google increases probability of success
-
+    "speech_api": {
+        "service": "amazon",
+        "amazon": {
+            "key_id": "",
+            "secret_access_key": "",
+            "region": "",
+            "s3_bucket": "",
+        },
+        "azure": {
+            "api_subkey": "", # API key for Azure Cognitive Services   
+        }
+    },
     "data_files": {
         "override_js": f"{package_dir}/data/override.js",
         "jquery_js": f"{package_dir}/data/jquery.js",
