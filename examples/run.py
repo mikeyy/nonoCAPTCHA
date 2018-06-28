@@ -93,13 +93,15 @@ async def work():
     client = Solver(
         settings["pageurl"], settings["sitekey"], options=options, proxy=proxy
     )
-
-    answer = await client.start()
-
-    if sort_position:
-        used_positions.remove(this_position)
-
-    return answer
+    
+    answer = None
+    try:
+        answer = await client.start()
+    finally:
+        if sort_position:
+            used_positions.remove(this_position)
+        if answer:
+            return answer
 
 
 async def main():
