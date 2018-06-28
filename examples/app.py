@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 import shutil
 import sys
@@ -14,6 +15,8 @@ from nonocaptcha.solver import Solver
 from config import settings
 
 count = 100
+
+sem = asyncio.Semaphore(count)
 app = Quart(__name__)
 
 
@@ -48,25 +51,22 @@ async def work(pageurl, sitekey):
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     
-    async with timeout(180) as t:
-        while not t.expired:
-            if proxy_src:
-                proxy =  next(proxies)
-            else:
-                proxy = None
-        
+    result = None
+    while 1:
+        try:
+            proxy = next(proxies) if proxy_src else None
             client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-            answer = await client.start()
-            if answer:
-                return answer
-
+            result = await client.start()
+        finally:
+            await client.kill_chrome()
+            if result:
+                return result
 
 @app.route("/get", methods=["GET", "POST"])
 async def get():
     while not proxies:
         await asyncio.sleep(1)
 
-    result = None
     if not request.args:
         result = "Invalid request"
     else:
@@ -75,9 +75,10 @@ async def get():
         if not pageurl or not sitekey:
             result = "Missing sitekey or pageurl"
         else:
-            result = await work(pageurl, sitekey)
-            if not result:
-                result = "Request timed-out, please try again"        
+            try:
+                result = await asyncio.wait_for(work(pageurl, sitekey), 3*60)
+            except asyncio.TimeoutError:
+                result = "Request timed-out, please try again"     
     return Response(result, mimetype="text/plain")
 
 
@@ -91,4 +92,4 @@ if proxy_src:
     asyncio.ensure_future(get_proxies())
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000, loop=loop)
+    app.run("0.0.0.0", 8000, loop=loop)

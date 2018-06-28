@@ -19,6 +19,9 @@ app = Quart(__name__)
 tasks = {}
 
 
+# Celery doesn't work with asyncio at the moment, here is some pseudotasking!
+# Don't use this, really. Once Celery v5 is released, an example will be here.
+
 def shuffle(i):
     random.shuffle(i)
     return i
