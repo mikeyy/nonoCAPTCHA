@@ -12,7 +12,6 @@ import sys
 import time
 
 from pyppeteer.util import merge_dict
-from pyppeteer.errors import TimeoutError
 from user_agent import generate_navigator_js
 
 from config import settings
@@ -65,16 +64,19 @@ class Solver(Base):
 
             self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
-        except TimeoutError:
-            pass  # otherwise TimeoutError floods logging output
+        except asyncio.TimeoutError:
+            raise
+        except asyncio.CancelledError:
+            raise
         except BaseException as e:
             self.log(f"{e} {type(e)}")
         finally:
             end = time.time()
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
-            if self.proc:
-                await self.kill_chrome()
+            if self.browser.
+                await self.browser.close()
+            await self.kill_chrome()
         return result
     
 
@@ -314,10 +316,11 @@ class Solver(Base):
             await self.page.setCookie(c)
             
     async def kill_chrome(self):
-        if self.proc.returncode is None and not self.launcher.chromeClosed:
-            self.launcher.chromeClosed = True
-            if psutil.pid_exists(self.proc.pid):
-                self.proc.terminate()
-                self.proc.kill()
-                await self.proc.wait()
-            self.launcher._cleanup_tmp_user_data_dir()
+        if self.proc:
+            if self.proc.returncode is None and not self.launcher.chromeClosed:
+                self.launcher.chromeClosed = True
+                if psutil.pid_exists(self.proc.pid):
+                    self.proc.terminate()
+                    self.proc.kill()
+                    await self.proc.wait()
+                self.launcher._cleanup_tmp_user_data_dir()
