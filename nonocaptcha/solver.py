@@ -64,7 +64,7 @@ class Solver(Base):
             self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
         except asyncio.TimeoutError:
-            pass
+            raise
         except asyncio.CancelledError:
             raise
         except BaseException as e:
@@ -163,9 +163,9 @@ class Solver(Base):
                 self.url, timeout=timeout * 1000, waitUntil="documentloaded"
             )
             await self.wait_for_deface()
-            return 1
         except BaseException:
-            return
+            self.log("Problem defacing page")
+            raise
 
     async def solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio
@@ -176,10 +176,12 @@ class Solver(Base):
             self.log("Checking Google search for blacklist")
             if await self.is_blacklisted():
                 return
-
-        if not await self.goto_and_deface():
-            self.log("Problem defacing page")
+        
+        try:
+            await self.goto_and_deface()
+        except BaseException:
             return
+
         self.get_frames()
         await self.click_checkbox()
         timeout = settings["wait_timeout"]["success_timeout"]
@@ -201,17 +203,17 @@ class Solver(Base):
             solve = self.image.solve_by_image
         else:
             self.audio = SolveAudio(self.page, self.proxy, self.proc_id)
-
-            await self.wait_for_audio_button()
-            await self.click_audio_button()
+            if not await self.wait_for_audio_button():
+                return
+            if not await self.click_audio_button():
+                return
             solve = self.audio.solve_by_audio
 
-        await solve()
-
-        code = await self.g_recaptcha_response()
-        if code:
-            self.log("Audio response successful")
-            return f"OK|{code}"
+        if await solve():
+            code = await self.g_recaptcha_response()
+            if code:
+                self.log("Audio response successful")
+                return f"OK|{code}"
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
@@ -235,7 +237,8 @@ class Solver(Base):
             )
         except BaseException:
             self.log("Audio button missing, aborting")
-            raise
+        else:
+            return True
 
     async def click_audio_button(self):
         """Click audio button after it appears."""
@@ -250,11 +253,9 @@ class Solver(Base):
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.check_detection(self.image_frame, timeout)
-        except BaseException:
-            pass
         finally:
-            if self.detected:
-                raise
+            if not self.detected:
+                return True
 
     async def g_recaptcha_response(self):
         code = await self.page.evaluate("$('#g-recaptcha-response').val()")
@@ -275,7 +276,7 @@ class Solver(Base):
                 self.log("IP has been blacklisted by Google")
                 return 1
         except BaseException:
-            return
+            raise
 
     async def sign_in_to_google(self):
         cookie_path = settings['data_files']['cookies']

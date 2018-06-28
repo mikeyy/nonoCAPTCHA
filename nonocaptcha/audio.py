@@ -24,9 +24,13 @@ class SolveAudio(Base):
         self.get_frames()
 
         for i in range(5):
-            answer = await self.get_audio_response()
-            if not answer:
-                continue
+            try:
+                answer = await self.get_audio_response()
+            except BaseException:
+                return
+            else:
+                if not answer:
+                    continue
 
             await self.type_audio_response(answer)
             await self.click_verify()
@@ -34,12 +38,9 @@ class SolveAudio(Base):
             timeout = settings["wait_timeout"]["success_timeout"]
             try:
                 await self.check_detection(self.image_frame, timeout)
-            except BaseException:
-                pass
             finally:
-                if self.detected:
-                    raise
-                break
+                if not self.detected:
+                    return True
 
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
@@ -81,10 +82,8 @@ class SolveAudio(Base):
             await self.image_frame.waitForFunction(
                 func, timeout=timeout * 1000
             )
-        except BaseException:
-            raise
-        else:
-            return
+        finally:
+            pass
 
     async def type_audio_response(self, answer):
         self.log("Typing audio response")
