@@ -1,6 +1,12 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-27)
+* Add support for Amazon's Transcribe Speech-to-text
+
+### 1.2.10 (2018-06-28)
+* Bug fixes
+
+### 1.2.9 (2018-06-27)
 * Delete temporary Chrome profile on Browser exit
 
 ### 1.2.8 (2018-06-27)
