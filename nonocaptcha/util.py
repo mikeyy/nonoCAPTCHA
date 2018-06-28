@@ -59,7 +59,7 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
                         return await response.read()
                     return await response.text()
         except BaseException as e:
-            raise(f'An error occured in get_page: {e}')
+            raise BaseException(f'An error occured in get_page: {e}')
 
 
 def serialize(obj, p):
