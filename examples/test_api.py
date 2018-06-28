@@ -11,7 +11,7 @@ from nonocaptcha import util
 from nonocaptcha.solver import Solver
 from config import settings
 
-count = 10
+count = 100
 
 sem = asyncio.Semaphore(count)
 

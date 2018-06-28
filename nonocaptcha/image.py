@@ -3,6 +3,7 @@
 
 """ ***IN TESTING*** """
 
+
 class SolveImage(object):
     def __init__(self, page, proxy):
         self.page = page
@@ -10,10 +11,10 @@ class SolveImage(object):
 
     async def solve_by_image(self):
         """Go through procedures to solve image"""
-        
+
         title = await self.get_image_title()
         image_url = await self.get_image_url()
-        
+
         return title
 
     async def get_image_title(self):
@@ -36,7 +37,7 @@ class SolveImage(object):
             f".replace( /.*\\n(.*)\\n.*/,'$1');"
         )
         return str(title).strip()
-   
+
     async def get_image_url(self):
         image_url_element = (
             'document.getElementsByClassName("rc-image-tile-wrapper")[0].'

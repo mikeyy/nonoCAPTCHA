@@ -23,7 +23,7 @@ class Base(Clicker):
         logger.setLevel("DEBUG")
     proc_id = 0
     detected = False
-    
+
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
@@ -36,19 +36,19 @@ class Base(Clicker):
     async def click_reload_button(self):
         reload_button = await self.image_frame.J("#recaptcha-reload-button")
         await self.click_button(reload_button)
-        
+
     async def check_detection(self, frame, timeout, wants_true=""):
-        """Checks if "Try again later", "please solve more" modal appears 
+        """Checks if "Try again later", "please solve more" modal appears
         or success"""
-    
+
         if wants_true:
             wants_true = f"if({wants_true}) return true;"
-    
+
         # if isinstance(wants_true, list):
         #    l = [f'if({i}) return true;' for i in wants_true]
         #    wants_true = '\n'.join(wants_true)
-    
-        func ="""(function() {
+
+        func = """(function() {
     %s
 
     checkbox_frame = parent.frames[0].document;
@@ -61,7 +61,7 @@ class Base(Clicker):
             return true;
         }
     }
-    
+
     var try_again_header = $(".rc-audiochallenge-error-message", image_frame)
     if(try_again_header.length){
         if(try_again_header.text().indexOf("please solve more") > -1){
@@ -69,16 +69,16 @@ class Base(Clicker):
             return true;
         }
     }
-    
+
     var checkbox_anchor = $("#recaptcha-anchor", checkbox_frame);
     if(checkbox_anchor.attr("aria-checked") === "true"){
         return true;
     }
-    
-})()"""% wants_true
+
+})()""" % wants_true
         try:
             await frame.waitForFunction(func, timeout=timeout * 1000)
-        except:
+        except BaseException:
             raise
         else:
             eval = "typeof parent.window.wasdetected !== 'undefined'"

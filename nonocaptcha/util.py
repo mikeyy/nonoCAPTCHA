@@ -12,12 +12,12 @@ from functools import partial, wraps
 
 
 __all__ = [
-           "save_file", 
-           "load_file",
-           "get_page", 
-           "threaded",
-           "serialize",
-           "deserialize"
+    "save_file",
+    "load_file",
+    "get_page",
+    "threaded",
+    "serialize",
+    "deserialize"
 ]
 
 
@@ -31,7 +31,7 @@ def threaded(func):
         )
 
     return wrap
-    
+
 
 async def save_file(file, data, binary=False):
     mode = "w" if not binary else "wb"

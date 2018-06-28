@@ -22,7 +22,7 @@ class SolveAudio(Base):
         """Go through procedures to solve audio"""
 
         self.get_frames()
-        
+
         for i in range(5):
             answer = await self.get_audio_response()
             if not answer:
@@ -30,11 +30,11 @@ class SolveAudio(Base):
 
             await self.type_audio_response(answer)
             await self.click_verify()
-            
+
             timeout = settings["wait_timeout"]["success_timeout"]
             try:
                 await self.check_detection(self.image_frame, timeout)
-            except:
+            except BaseException:
                 pass
             finally:
                 if self.detected:
@@ -48,7 +48,7 @@ class SolveAudio(Base):
             f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
 
-        if type(audio_url) is not str:
+        if not isinstance(audio_url, str):
             self.log('Audio url is not valid, aborting')
             raise
 
@@ -64,7 +64,7 @@ class SolveAudio(Base):
             with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
                 await util.save_file(tmpfile.name, audio_data, binary=True)
                 answer = await get_text(tmpfile.name)
-    
+
             if answer:
                 self.log(f'Received answer "{answer}"')
                 return answer
@@ -81,11 +81,11 @@ class SolveAudio(Base):
             await self.image_frame.waitForFunction(
                 func, timeout=timeout * 1000
             )
-        except:
+        except BaseException:
             raise
         else:
             return
-            
+
     async def type_audio_response(self, answer):
         self.log("Typing audio response")
         response_input = await self.image_frame.J("#audio-response")

@@ -22,21 +22,19 @@ async def work(pageurl, sitekey, proxy):
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     async with timeout(10) as t:
-        while 1:
+        while True:
             client = Solver(pageurl, sitekey, options=options, proxy=proxy)
             task = asyncio.ensure_future(client.start())
             await task
             result = task.result()
             if result:
                 return result
-    
+
             if t.expired:
                 task.cancel()
                 with suppress(asyncio.CancelledError):
                     await task
                 return None
-
-
 
 
 class Server(object):
@@ -67,20 +65,20 @@ class Server(object):
         return web.json_response(response)
 
     async def load_proxies(self):
-        while 1:
+        while True:
             protos = ["http://", "https://"]
             if any(p in self.proxy_source for p in protos):
                 f = util.get_page
             else:
                 f = util.load_file
-            
+
             try:
                 result = await f(self.proxy_source)
-            except:
+            except BaseException:
                 continue
             else:
                 self.proxies = iter(shuffle(result.strip().split("\n")))
-                await asyncio.sleep(10*60)
+                await asyncio.sleep(10 * 60)
 
     async def start_background_tasks(self, app):
         app['dispatch'] = app.loop.create_task(self.load_proxies())

@@ -18,7 +18,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 # Max browsers to open
 threads = 1
 
-sort_position = False
+sort_position = True
 if sort_position:
     """Use only if you know what you are doing, haven't yet automated avialable
     screen space!
@@ -49,18 +49,20 @@ def shuffle(i):
 
 
 proxies = None
+
+
 async def get_proxies():
     global proxies
-    while 1:
+    while True:
         protos = ["http://", "https://"]
         if any(p in proxy_src for p in protos):
             f = util.get_page
         else:
             f = util.load_file
-    
+
         result = await f(proxy_src)
         proxies = iter(shuffle(result.strip().split("\n")))
-        await asyncio.sleep(10*60)
+        await asyncio.sleep(10 * 60)
 
 
 def loop_proxies():
@@ -111,7 +113,7 @@ async def main():
         tasks, return_when=asyncio.FIRST_COMPLETED
     )
     count = 0
-    while 1:
+    while True:
         for task in completed:
             result = task.result()
             if result:

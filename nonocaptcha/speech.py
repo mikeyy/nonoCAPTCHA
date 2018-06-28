@@ -19,6 +19,7 @@ from nonocaptcha.util import threaded
 
 SUB_KEY = settings["api_subkey"]
 
+
 @threaded
 def bytes_from_file(filename, chunksize=8192):
     with open(filename, "rb") as f:
@@ -29,6 +30,7 @@ def bytes_from_file(filename, chunksize=8192):
             else:
                 break
 
+
 @threaded
 def mp3_to_wav(mp3_filename):
     wav_filename = mp3_filename.replace(".mp3", ".wav")
@@ -36,13 +38,15 @@ def mp3_to_wav(mp3_filename):
     wav = sound.export(wav_filename, format="wav")
     return wav_filename
 
+
 @threaded
 def extract_json_body(response):
     pattern = "^\r\n"  # header separator is an empty line
     m = re.search(pattern, response, re.M)
     return json.loads(
-        response[m.end() :]
+        response[m.end():]
     )  # assuming that content type is json
+
 
 @threaded
 def build_message(req_id, payload):

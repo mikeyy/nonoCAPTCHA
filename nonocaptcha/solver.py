@@ -22,7 +22,6 @@ from nonocaptcha.launcher import Launcher
 from nonocaptcha import util
 
 
-
 class Solver(Base):
     proc_count = 0
     browser = None
@@ -78,7 +77,6 @@ class Solver(Base):
                 await self.browser.close()
             await self.kill_chrome()
         return result
-    
 
     async def get_new_browser(self):
         """Get new browser, set arguments from options, proxy,
@@ -86,7 +84,6 @@ class Solver(Base):
         """
 
         chrome_args = []
-    
         if self.proxy:
             chrome_args.append(f"--proxy-server=http://{self.proxy}")
 
@@ -128,25 +125,23 @@ class Solver(Base):
     async def wait_for_deface(self):
         """Overwrite current page with reCAPTCHA widget and wait for image
         iframe to load on document before continuing.
-            
+
         Function x is an odd hack for multiline text, but it works.
         """
         html_code = await util.load_file(settings["data_files"]["deface_html"])
-        
         deface_js = (
             ("""() => {
     var x = (function () {/*
         %s
     */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
-    document.open(); 
+    document.open();
     document.write(x)
     document.close();
 }
-"""% html_code)% self.sitekey)
+""" % html_code) % self.sitekey)
 
         await self.page.evaluate(deface_js)
-    
-        func ="""() => {
+        func = """() => {
     frame = $("iframe[src*='api2/bframe']")
     $(frame).load( function() {
         window.ready_eddy = true;
@@ -169,11 +164,11 @@ class Solver(Base):
             )
             await self.wait_for_deface()
             return 1
-        except:
+        except BaseException:
             return
 
     async def solve(self):
-        """Clicks checkbox, on failure it will attempt to solve the audio 
+        """Clicks checkbox, on failure it will attempt to solve the audio
         file
         """
 
@@ -185,15 +180,12 @@ class Solver(Base):
         if not await self.goto_and_deface():
             self.log("Problem defacing page")
             return
-        
         self.get_frames()
-        
         await self.click_checkbox()
-
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
-        except:
+        except BaseException:
             return await self._solve()
         else:
             code = await self.g_recaptcha_response()
@@ -241,7 +233,7 @@ class Solver(Base):
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-audio-button').length", timeout=timeout * 1000
             )
-        except:
+        except BaseException:
             self.log("Audio button missing, aborting")
             raise
 
@@ -258,7 +250,7 @@ class Solver(Base):
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.check_detection(self.image_frame, timeout)
-        except:
+        except BaseException:
             pass
         finally:
             if self.detected:
@@ -282,7 +274,7 @@ class Solver(Base):
             if detected_phrase in response:
                 self.log("IP has been blacklisted by Google")
                 return 1
-        except:
+        except BaseException:
             return
 
     async def sign_in_to_google(self):
@@ -314,7 +306,7 @@ class Solver(Base):
         cookies = self.gmail_accounts[account]
         for c in cookies:
             await self.page.setCookie(c)
-            
+
     async def kill_chrome(self):
         if self.proc:
             if self.proc.returncode is None and not self.launcher.chromeClosed:

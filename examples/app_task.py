@@ -28,47 +28,49 @@ def shuffle(i):
 
 
 proxies = None
+
+
 async def get_proxies():
     global proxies
 
     asyncio.set_event_loop(asyncio.get_event_loop())
-    while 1:
+    while True:
         protos = ["http://", "https://"]
         if any(p in proxy_src for p in protos):
             f = util.get_page
         else:
             f = util.load_file
-        
+
         try:
             result = await f(proxy_src)
-        except:
+        except BaseException:
             continue
         else:
             proxies = shuffle(result.strip().split("\n"))
-            await asyncio.sleep(10*60)
+            await asyncio.sleep(10 * 60)
 
 
 async def work(pageurl, sitekey, task_id):
-    
+
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 
     async with sem:
-        while 1:
+        while True:
             if proxy_src:
                 proxy = random.choice(proxies)
             else:
                 proxy = None
-            
+
             client = Solver(pageurl, sitekey, options=options, proxy=proxy)
             task = asyncio.ensure_future(client.start())
             await task
             result = task.result()
             if result:
                 break
-        
+
         tasks.update({
-            task_id: 
+            task_id:
             {
                 'status': 'finished',
                 'solution': result

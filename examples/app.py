@@ -28,15 +28,13 @@ def shuffle(i):
 proxies = None
 async def get_proxies():
     global proxies
-
     asyncio.set_event_loop(asyncio.get_event_loop())
     while 1:
         protos = ["http://", "https://"]
         if any(p in proxy_src for p in protos):
             f = util.get_page
         else:
-            f = util.load_file
-        
+            f = util.load_file      
         try:
             result = await f(proxy_src)
         except:
@@ -47,10 +45,8 @@ async def get_proxies():
 
 
 async def work(pageurl, sitekey):
-    
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-    
     result = None
     while 1:
         try:
@@ -66,7 +62,6 @@ async def work(pageurl, sitekey):
 async def get():
     while not proxies:
         await asyncio.sleep(1)
-
     if not request.args:
         result = "Invalid request"
     else:
