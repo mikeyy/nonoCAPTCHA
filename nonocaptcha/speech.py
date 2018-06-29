@@ -72,6 +72,7 @@ class Sphinx(object):
         config.set_string(
             "-var", os.path.join(self.MODEL_DIR, "en-us/variances")
         )
+        config.set_string('-logfn', '/dev/null')
         return Decoder(config)
     
     async def get_text(self, mp3_filename):
