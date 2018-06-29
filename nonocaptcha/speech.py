@@ -149,7 +149,6 @@ class Azure(object):
             while time.time() < timeout:
                 response = await websocket.recv()
                 content = await self.extract_json_body(response)
-                print(content)
                 if (
                     "RecognitionStatus" in content
                     and content["RecognitionStatus"] == "Success"
