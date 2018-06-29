@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-29)
+* Remove yet another print..
+
+### Version 1.4.0 (2018-06-29)
 * Add support for PocketSphinx
 
 ### Version 1.3.3 (2018-06-29)
