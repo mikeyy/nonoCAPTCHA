@@ -68,7 +68,6 @@ class SolveAudio(Base):
                 with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
                     await util.save_file(tmpfile.name, audio_data, binary=True)
                     answer = await speech.get_text(tmpfile.name)
-                print(service)
             else:
                 speech = Amazon()
                 answer = await speech.get_text(audio_data)
