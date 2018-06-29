@@ -142,7 +142,6 @@ class Azure(object):
             f"itiveservices/v1?language=en-US&Ocp-Apim-Subscription-Key="
             f"{self.SUB_KEY}&X-ConnectionId={conn_id}&format=detailed"
         )
-        print(url)
         async with websockets.connect(url) as websocket:
             await self.send_file(websocket, wav_filename)
             timeout = time.time() + 15
