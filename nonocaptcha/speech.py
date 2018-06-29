@@ -4,6 +4,7 @@
 """Text-to-speech modules"""
 
 import aiobotocore
+import aiofiles
 import asyncio
 import json
 import re
@@ -26,7 +27,7 @@ class Amazon(object):
     REGION_NAME = settings['speech_api']['amazon']['region']
     S3_BUCKET = settings['speech_api']['amazon']['s3_bucket']
 
-    async def get_text(self, data):
+    async def get_text(self, audio_data):
         session = aiobotocore.get_session()
         upload = session.create_client(
             's3',
@@ -44,7 +45,7 @@ class Amazon(object):
         # Upload audio file to bucket
         await upload.put_object(Bucket=self.S3_BUCKET,
                                 Key=filename,
-                                Body=data)
+                                Body=audio_data)
         job_name = uuid4().hex
         job_uri = (
             f"https://s3.{self.REGION_NAME}.amazonaws.com/{self.S3_BUCKET}/"
@@ -68,7 +69,7 @@ class Amazon(object):
                 ['COMPLETED', 'FAILED']
             ):
                 break
-            await asyncio.sleep(1)
+            await asyncio.sleep(5)
         # Delete audio file from bucket
         await upload.delete_object(Bucket=self.S3_BUCKET, Key=filename)
         if 'TranscriptFileUri' in status['TranscriptionJob']['Transcript']:
@@ -79,19 +80,16 @@ class Amazon(object):
             transcript = data['results']['transcripts'][0]['transcript']
             return transcript
 
+        # Delete audio file
+        await upload.delete_object(Bucket=self.S3_BUCKET, Key=filename)
+        
+        # Close clients
+        await upload._endpoint._aio_session.close()
+        await transcribe._endpoint._aio_session.close()
+
 
 class Azure(object):
     SUB_KEY = settings['speech_api']['azure']["api_subkey"]
-
-    @util.threaded
-    def bytes_from_file(self, filename, chunksize=8192):
-        with open(filename, "rb") as f:
-            while True:
-                chunk = f.read(chunksize)
-                if chunk:
-                    yield chunk
-                else:
-                    break
 
     @util.threaded
     def mp3_to_wav(self, mp3_filename):
@@ -121,32 +119,43 @@ class Azure(object):
         message += payload
         return message
 
+    async def bytes_from_file(self, filename, chunksize=8192):
+        async with aiofiles.open(filename, "rb") as f:
+            while True:
+                chunk = await f.read(chunksize)
+                if chunk:
+                    yield chunk
+                else:
+                    break
+
     async def send_file(self, websocket, filename):
         req_id = uuid4().hex
-        for payload in await self.bytes_from_file(filename):
+        async for payload in self.bytes_from_file(filename):
             message = await self.build_message(req_id, payload)
             await websocket.send(message)
 
     async def get_text(self, mp3_filename):
-        wav_filename = await self.mp3_to_wav(self.mp3_filename)
+        wav_filename = await self.mp3_to_wav(mp3_filename)
         conn_id = uuid4().hex
         url = (
             f"wss://speech.platform.bing.com/speech/recognition/dictation/cogn"
             f"itiveservices/v1?language=en-US&Ocp-Apim-Subscription-Key="
             f"{self.SUB_KEY}&X-ConnectionId={conn_id}&format=detailed"
         )
+        print(url)
         async with websockets.connect(url) as websocket:
             await self.send_file(websocket, wav_filename)
             timeout = time.time() + 15
             while time.time() < timeout:
                 response = await websocket.recv()
                 content = await self.extract_json_body(response)
+                print(content)
                 if (
                     "RecognitionStatus" in content
                     and content["RecognitionStatus"] == "Success"
                 ):
-                    answer = content["NBest"][0]["Display"]
-                    return answer[:-1].lower()
+                    answer = content["NBest"][0]["Lexical"]
+                    return answer
                 if (
                     "RecognitionStatus" in content
                     and content["RecognitionStatus"] == "EndOfDictation"

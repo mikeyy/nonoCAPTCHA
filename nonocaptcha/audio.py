@@ -62,7 +62,7 @@ class SolveAudio(Base):
             self.log("Download timed-out")
         else:
             answer = None
-            if settings["speech_api"]["service"].lower() is "azure":
+            if settings["speech_api"]["service"].lower() == "azure":
                 speech = Azure()
                 with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
                     await util.save_file(tmpfile.name, audio_data, binary=True)
@@ -87,8 +87,10 @@ class SolveAudio(Base):
             await self.image_frame.waitForFunction(
                 func, timeout=timeout * 1000
             )
-        finally:
-            pass
+        except BaseException:
+            raise
+        else:
+            return
 
     async def type_audio_response(self, answer):
         self.log("Typing audio response")
