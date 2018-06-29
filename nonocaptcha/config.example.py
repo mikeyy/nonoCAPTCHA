@@ -39,6 +39,10 @@ settings = {
         },
         "azure": {
             "api_subkey": "", # API key for Azure Cognitive Services   
+        },
+        "sphinx": {
+            "model_dir": "pocketsphinx/model/" # Directory for the trained model files
+                                                    # It's large so download it from https://github.com/mikeyy/nonoCAPTCHA
         }
     },
     "data_files": {
