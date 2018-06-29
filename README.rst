@@ -46,9 +46,11 @@ Requirements
 ------------
 
 `Python
-3.6.5 <https://www.python.org/downloads/release/python-365/>`__, swig,
-`FFmpeg <https://ffmpeg.org/download.html>`__ and a `Microsoft
-Azure <https://portal.azure.com/>`__ account with Bing Speech API access
+3.6.5 <https://www.python.org/downloads/release/python-365/>`__,
+`FFmpeg <https://ffmpeg.org/download.html>`__, a `Microsoft
+Azure <https://portal.azure.com/>`__ account for Bing Speech API access, an
+Amazon Web Services account for Transcribe and S3 access, and for Pocketsphinx
+you'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Ubuntu.
 
 Installation
 ------------
