@@ -65,7 +65,6 @@ class SolveAudio(Base):
             service = settings["speech_api"]["service"].lower()
             if service in ["azure", "sphinx"]:
                 speech = Azure() if service == "azure" else Sphinx()
-                print(service)
                 with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
                     await util.save_file(tmpfile.name, audio_data, binary=True)
                     answer = await speech.get_text(tmpfile.name)
