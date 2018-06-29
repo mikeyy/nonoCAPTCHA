@@ -7,18 +7,88 @@ import aiobotocore
 import aiofiles
 import asyncio
 import json
+import os
 import re
 import struct
 import time
 import websockets
+import tempfile
 
 from io import StringIO, BytesIO
 from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
+from pydub.silence import detect_nonsilent
+from pocketsphinx.pocketsphinx import *
+from sphinxbase.sphinxbase import *
 
 from config import settings
 from nonocaptcha import util
+
+
+class Sphinx(object):
+    MODEL_DIR = settings['speech_api']['sphinx']["model_dir"]
+
+    def mp3_to_wav(self, mp3_filename):
+        wav_filename = mp3_filename.replace(".mp3", ".wav")
+        segment = AudioSegment.from_mp3(mp3_filename)
+        sound = segment.set_channels(1).set_frame_rate(16000)
+        silence = detect_nonsilent(sound)
+        if silence:
+            start, end = silence[0]
+            sound = sound[:start] + sound[end:]
+        wav = sound.export(wav_filename, format="wav", bitrate="8000")
+        return wav_filename
+    
+    def build_decoder(self):
+        config = Decoder.default_config()
+        config.set_string(
+            "-dict", os.path.join(self.MODEL_DIR, "cmudict-en-us.dict")
+        )
+        config.set_string(
+            "-fdict", os.path.join(self.MODEL_DIR, "en-us/noisedict")
+        )
+        config.set_string(
+            "-featparams", os.path.join(self.MODEL_DIR, "en-us/feat.params")
+        )
+        config.set_string(
+            "-tmat", os.path.join(self.MODEL_DIR, "en-us/transition_matrices")
+        )
+        config.set_string(
+            "-hmm", os.path.join(self.MODEL_DIR, "en-us")
+        )
+        config.set_string(
+            "-lm", os.path.join(self.MODEL_DIR, "en-us.lm.bin")
+        )
+        config.set_string(
+            "-mdef", os.path.join(self.MODEL_DIR, "en-us/mdef")
+        )
+        config.set_string(
+            "-mean", os.path.join(self.MODEL_DIR, "en-us/means")
+        )
+        config.set_string("-sendump", os.path.join(
+            self.MODEL_DIR, "en-us/sendump")
+        )
+        config.set_string(
+            "-var", os.path.join(self.MODEL_DIR, "en-us/variances")
+        )
+        return Decoder(config)
+    
+    async def get_text(self, mp3_filename):
+        decoder = self.build_decoder()
+        decoder.start_utt()
+        wav_filename = self.mp3_to_wav(mp3_filename)
+        async with aiofiles.open(wav_filename, 'rb') as stream:
+            while True:
+              buf = await stream.read(1024)
+              if buf:
+                decoder.process_raw(buf, False, False)
+              else:
+                break
+        decoder.end_utt()
+        hyp = ' '.join([seg.word for seg in decoder.seg()])
+        answer = re.sub('<[^<]+?>|\[[^<]+?\]|\([^<]+?\)', '', hyp).strip()
+        return answer
 
 
 class Amazon(object):

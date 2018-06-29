@@ -8,7 +8,7 @@ import tempfile
 
 from config import settings
 from nonocaptcha import util
-from nonocaptcha.speech import Amazon, Azure
+from nonocaptcha.speech import Amazon, Azure, Sphinx
 from nonocaptcha.base import Base
 
 
@@ -62,11 +62,14 @@ class SolveAudio(Base):
             self.log("Download timed-out")
         else:
             answer = None
-            if settings["speech_api"]["service"].lower() == "azure":
-                speech = Azure()
+            service = settings["speech_api"]["service"].lower()
+            if service in ["azure", "sphinx"]:
+                speech = Azure() if service == "azure" else Sphinx()
+                print(service)
                 with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
                     await util.save_file(tmpfile.name, audio_data, binary=True)
                     answer = await speech.get_text(tmpfile.name)
+                print(service)
             else:
                 speech = Amazon()
                 answer = await speech.get_text(audio_data)
