@@ -34,10 +34,6 @@ class Sphinx(object):
         wav_filename = mp3_filename.replace(".mp3", ".wav")
         segment = AudioSegment.from_mp3(mp3_filename)
         sound = segment.set_channels(1).set_frame_rate(16000)
-        silence = detect_nonsilent(sound)
-        if silence:
-            start, end = silence[0]
-            sound = sound[:start] + sound[end:]
         sound.export(wav_filename, format="wav")
         return wav_filename
     
