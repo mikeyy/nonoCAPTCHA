@@ -1,13 +1,16 @@
 History (Work in progress)
 =======
-### Current Version (2018-06-28)
+### Current Version (2018-06-29)
+* Remove a print function..
+
+### Version 1.3.1 (2018-06-29)
 * Fix Azure Speech-to-text
 
 ### Version 1.3.0 (2018-06-28)
 * Add support for Amazon's Transcribe Speech-to-text
 
 ### Version 1.2.10 (2018-06-28)
-* Bug fixes
+* Fix bugs
 
 ### Version 1.2.9 (2018-06-27)
 * Delete temporary Chrome profile on Browser exit
@@ -20,7 +23,7 @@ History (Work in progress)
 
 ### Version 1.2.6 (2018-06-26)
 * Remove chrome arguments uncertatin of their purpose
-* Removed hardcoded timeout from solver, handle externally
+* Remove hardcoded timeout from solver, handle externally
 * Add new example for HTTP client - create_task / get_task
 
 ### Version 1.2.5 (2018-06-26)
