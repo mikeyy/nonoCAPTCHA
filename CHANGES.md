@@ -1,15 +1,18 @@
 History (Work in progress)
 =======
-### Current Version (2018-06-27)
+### Current Version (2018-06-28)
+* Fix Azure Speech-to-text
+
+### Version 1.3.0 (2018-06-28)
 * Add support for Amazon's Transcribe Speech-to-text
 
-### 1.2.10 (2018-06-28)
+### Version 1.2.10 (2018-06-28)
 * Bug fixes
 
-### 1.2.9 (2018-06-27)
+### Version 1.2.9 (2018-06-27)
 * Delete temporary Chrome profile on Browser exit
 
-### 1.2.8 (2018-06-27)
+### Version 1.2.8 (2018-06-27)
 * Possible fix for Chrome termination on ungraceful exit (such as timeout)
 
 ### Version 1.2.7 (2018-06-27)
