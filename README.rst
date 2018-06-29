@@ -1,7 +1,7 @@
 nonoCAPTCHA
 ===========
 
-An async Python library to automate solving ReCAPTCHA v2 by audio, using
+An async Python library to automate solving ReCAPTCHA v2 by audio using
 PocketSphinx, Microsoft Azure’s and Amazon's Transcribe Speech-to-Text API.
 Built with Pyppeteer for it’s Chrome automation framework and similarities to
 Puppeteer, PyDub for easily converting MP3 files into WAV, Quart for it’s async 
@@ -46,7 +46,7 @@ Requirements
 ------------
 
 `Python
-3.6.5 <https://www.python.org/downloads/release/python-365/>`__,
+3.6.5 <https://www.python.org/downloads/release/python-365/>`__, swig,
 `FFmpeg <https://ffmpeg.org/download.html>`__ and a `Microsoft
 Azure <https://portal.azure.com/>`__ account with Bing Speech API access
 
