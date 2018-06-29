@@ -57,8 +57,8 @@ class Amazon(object):
             MediaFormat='mp3',
             LanguageCode='en-US'
         )
-        # Wait 60 seconds for transcription
-        timeout = 60
+        # Wait 90 seconds for transcription
+        timeout = 90
         while time.time() > timeout:
             status = await transcribe.get_transcription_job(
                 TranscriptionJobName=job_name
