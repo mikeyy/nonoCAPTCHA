@@ -1,7 +1,13 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-29)
-* Remove detect silence from Sphinx module
+* Sphinx module
+    * Strip static from audio files
+    * Remove extra spaces from middle of words
+
+### 1.4.3 (2018-06-29)
+* Sphinx module
+    * Remove detect silence
 
 ### Version 1.4.2 (2018-06-29)
 * Fix bugs
