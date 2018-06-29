@@ -1,6 +1,12 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-29)
+* Remove detect silence from Sphinx module
+
+### Version 1.4.2 (2018-06-29)
+* Fix bugs
+
+### Version 1.4.1 (2018-06-29)
 * Remove yet another print..
 
 ### Version 1.4.0 (2018-06-29)
