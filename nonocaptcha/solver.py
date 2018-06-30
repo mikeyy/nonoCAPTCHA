@@ -75,7 +75,6 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             if self.browser:
                 await self.browser.close()
-            await self.kill_chrome()
         return result
 
     async def get_new_browser(self):
@@ -293,12 +292,11 @@ class Solver(Base):
             button = await page.querySelector('#identifierNext')
             await button.click()
             await asyncio.sleep(2)  # better way to do this...
-            navigation = page.waitForNavigation()
             password = await page.querySelector('#password')
             await password.type(settings['gmail_password'])
             button = await page.querySelector('#passwordNext')
             await button.click()
-            await navigation
+            await page.waitForNavigation()
             cookies = await page.cookies()
             self.gmail_accounts[settings["gmail"]] = cookies
             util.serialize(self.gmail_accounts, cookie_path)
@@ -309,13 +307,3 @@ class Solver(Base):
         cookies = self.gmail_accounts[account]
         for c in cookies:
             await self.page.setCookie(c)
-
-    async def kill_chrome(self):
-        if self.launcher.transport:
-            if (not self.launcher.transport.get_returncode() 
-                and not self.launcher.chromeClosed):
-                self.launcher.chromeClosed = True
-                if psutil.pid_exists(self.launcher.transport.get_pid()):
-                    self.launcher.transport.terminate()
-                    self.launcher.transport.kill()
-                self.launcher._cleanup_tmp_user_data_dir()
