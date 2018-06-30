@@ -23,6 +23,7 @@ class Base(Clicker):
         logger.setLevel("DEBUG")
     proc_id = 0
     detected = False
+    try_again = False
 
     def get_frames(self):
         self.checkbox_frame = next(
@@ -66,6 +67,7 @@ class Base(Clicker):
     if(try_again_header.length){
         if(try_again_header.text().indexOf("please solve more") > -1){
             try_again_header.text('Trying again...')
+            parent.window.tryagain = true;
             return true;
         }
     }
@@ -85,6 +87,11 @@ class Base(Clicker):
             if await frame.evaluate(eval):
                 self.log("Automation detected")
                 self.detected = True
+            eval = "parent.window.tryagain === true"
+            if await frame.evaluate(eval):
+                self.log("Incorrect answer, trying again")
+                await frame.evaluate("parent.window.tryagain = false;")
+                self.try_again = True
 
     def log(self, message):
         self.logger.debug(f'{self.proc_id} {message}')

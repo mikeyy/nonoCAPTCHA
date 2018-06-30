@@ -38,7 +38,12 @@ class SolveAudio(Base):
             timeout = settings["wait_timeout"]["success_timeout"]
             try:
                 await self.check_detection(self.image_frame, timeout)
-            finally:
+            except:
+                pass
+            else:
+                if self.try_again:
+                    self.try_again = False
+                    continue
                 if not self.detected:
                     return True
 
@@ -54,12 +59,12 @@ class SolveAudio(Base):
             raise
 
         self.log("Downloading audio file")
-        audio_data = await util.get_page(
-            audio_url, self.proxy, binary=True, timeout=30
-        )
-
-        if audio_data is None:
-            self.log("Download timed-out")
+        try:
+            audio_data = await util.get_page(
+                audio_url, self.proxy, binary=True, timeout=30
+            )
+        except:
+            self.log("Download timed-out, trying again")
         else:
             answer = None
             service = settings["speech_api"]["service"].lower()
