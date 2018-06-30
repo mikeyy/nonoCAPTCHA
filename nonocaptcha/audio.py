@@ -63,7 +63,9 @@ class SolveAudio(Base):
             audio_data = await util.get_page(
                 audio_url, self.proxy, binary=True, timeout=30
             )
-        except:
+        except asyncio.CancelledError:
+            return
+        except asyncio.TimeoutError:
             self.log("Download timed-out, trying again")
         else:
             answer = None
