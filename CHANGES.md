@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-30)
+* Fix issues with Windows directory removal
+
+### Version 1.4.12 (2018-06-30)
 * Remove remove_readonly
 
 ### Version 1.4.11 (2018-06-30)
