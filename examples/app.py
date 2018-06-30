@@ -1,23 +1,19 @@
 import asyncio
-import os
 import random
-import shutil
-import sys
-import time
 
+from aiohttp import web, ClientSession, ClientError
 from async_timeout import timeout
-from contextlib import suppress
-from pathlib import Path
-from quart import Quart, Response, request
+from collections import deque
+from functools import partial
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
 from config import settings
 
-count = 100
+proxy_source = settings["proxy_source"]
+proxies = None
 
-sem = asyncio.Semaphore(count)
-app = Quart(__name__)
+app = web.Application()
 
 
 def shuffle(i):
@@ -25,18 +21,49 @@ def shuffle(i):
     return i
 
 
-proxies = None
-async def get_proxies():
+async def work(pageurl, sitekey, proxy):
+    # Chromium options and arguments
+    options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+    with timeout(3*60) as timer:
+        try:
+            while not timer.expired:
+                client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+                result = await client.start()
+                if result:
+                    return result
+        except asyncio.CancelledError:
+            await client.kill_chrome()
+
+
+async def get_solution(request):
+    while not proxies:
+        await asyncio.sleep(1)
+
+    params = request.rel_url.query
+    pageurl = params['pageurl']
+    sitekey = params['sitekey']
+    response = {'error': 'invalid request'}
+    if pageurl and sitekey:
+        proxy = next(proxies)
+        result = await work(pageurl, sitekey, proxy)
+        if result:
+            response = {'solution': result}
+        else:
+            response = {'error': 'worker timed-out'}
+    return web.json_response(response)
+
+
+async def load_proxies():
     global proxies
-    asyncio.set_event_loop(asyncio.get_event_loop())
     while 1:
         protos = ["http://", "https://"]
-        if any(p in proxy_src for p in protos):
+        if any(p in proxy_source for p in protos):
             f = util.get_page
         else:
-            f = util.load_file      
+            f = util.load_file
+        
         try:
-            result = await f(proxy_src)
+            result = await f(proxy_source)
         except:
             continue
         else:
@@ -44,47 +71,17 @@ async def get_proxies():
             await asyncio.sleep(10*60)
 
 
-async def work(pageurl, sitekey, timer):
-    # Chromium options and arguments
-    options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-    result = None
-    while not timer.expired:
-        try:
-            proxy = next(proxies) if proxy_src else None
-            client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-            result = await client.start()
-        finally:
-            await client.kill_chrome()
-            if result:
-                return result
-
-@app.route("/get", methods=["GET", "POST"])
-async def get():
-    while not proxies:
-        await asyncio.sleep(1)
-    if not request.args:
-        result = "Invalid request"
-    else:
-        pageurl = request.args.get("pageurl")
-        sitekey = request.args.get("sitekey")
-        if not pageurl or not sitekey:
-            result = "Missing sitekey or pageurl"
-        else:
-            with timeout(3*60) as timer:
-                result = await work(pageurl, sitekey, timer)
-            if not result:
-                result = "Request timed-out, please try again"     
-    return Response(result, mimetype="text/plain")
+async def start_background_tasks(app):
+    app['dispatch'] = app.loop.create_task(load_proxies())
 
 
-home = Path.home()
-dir = f'{home}/.pyppeteer/.dev_profile'
-shutil.rmtree(dir, ignore_errors=True)
+async def cleanup_background_tasks(app):
+    app['dispatch'].cancel()
+    await app['dispatch']
 
-loop = asyncio.get_event_loop()
-proxy_src = settings["proxy_source"]
-if proxy_src:
-    asyncio.ensure_future(get_proxies())
+app.router.add_get('/get', get_solution)
+app.on_startup.append(start_background_tasks)
+app.on_cleanup.append(cleanup_background_tasks)
 
-if __name__ == "__main__":
-    app.run("0.0.0.0", 5000, loop=loop)
+if __name__ == '__main__':
+    web.run_app(app, host='127.0.0.1', port=5000)
