@@ -1,12 +1,12 @@
 History (Work in progress)
 =======
-### Version 1.4.4 (2018-06-29)
+### Current Version  (2018-06-29)
 * util.py
     * Fix aiohttp missing Timeout outside it's scope
 * examples/app.py
     * Now uses aiohttp instead of Quart
 
-### Current Version (2018-06-29)
+### Version 1.4.5 (2018-06-29)
 * Sphinx module
     * Strip static by percentage instead of 1500ms
 * Audio solving
