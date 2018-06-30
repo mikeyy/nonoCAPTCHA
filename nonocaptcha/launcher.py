@@ -1,5 +1,6 @@
 import asyncio
 import atexit
+import functools
 import psutil
 import os
 import signal
@@ -49,19 +50,14 @@ AUTOMATION_ARGS = [
 ]
 
 
+class DFProtocol(asyncio.SubprocessProtocol):
 
+    FD_NAMES = ['stdin', 'stdout', 'stderr']
 
-class Connection(connection.Connection):
-    async def _async_send(self, msg):
-        while not self._connected:
-            await asyncio.sleep(self._delay)
-
-        try:
-            await self.connection.send(msg)
-        except:
-            pass
-
-
+    def __init__(self, done_future):
+        self.done = done_future
+        self.buffer = bytearray()
+        super().__init__()
 
 
 class Launcher(launcher.Launcher):
@@ -71,6 +67,7 @@ class Launcher(launcher.Launcher):
         self.port = get_free_port()
         self.url = f'http://127.0.0.1:{self.port}'
         self.chrome_args = []
+        self.transport = None
 
         if not self.options.get('ignoreDefaultArgs', False):
             self.chrome_args.extend(DEFAULT_ARGS)
@@ -108,18 +105,20 @@ class Launcher(launcher.Launcher):
 
         self.cmd = [self.exec] + self.chrome_args
         
-    async def _proc(self):
-        env = self.options.get("env")
-        self.proc = await asyncio.subprocess.create_subprocess_exec(
-            *self.cmd,
-            stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.DEVNULL,
-            env=env
-        )
-        return self.proc
 
-    async def launch(self, proc):
-        self.proc = proc
+    async def launch(self):
+        env = self.options.get("env")
+        loop = asyncio.get_event_loop()
+        self.proc_done = asyncio.Future(loop=loop)
+        factory = functools.partial(DFProtocol, self.proc_done)
+        self.transport, self.proc = (
+            await loop.subprocess_exec(factory,
+                *self.cmd,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+                env=env
+            )
+        )
         self.chromeClosed = False
         self.connection = None
         def _close_process(*args, **kwargs):
