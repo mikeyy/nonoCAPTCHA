@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
-### Current Version  (2018-06-29)
+### Current Version (2018-06-29)
+* Fix bugs
+
+### Version 1.4.6 (2018-06-30)
 * util.py
     * Fix aiohttp missing Timeout outside it's scope
 * examples/app.py
