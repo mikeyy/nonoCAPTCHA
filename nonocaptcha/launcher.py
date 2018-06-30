@@ -156,7 +156,8 @@ class Launcher(launcher.Launcher):
             self.chromeClosed = True
             if psutil.pid_exists(self.proc.pid):
                 if sys.platform == 'win32':
-                    subprocess.call("taskkill", f"/pid {self.proc.pid} /T /F",
+                    subprocess.call(
+                        ["taskkill", f"/pid {self.proc.pid} /T /F"],
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL
                     )
