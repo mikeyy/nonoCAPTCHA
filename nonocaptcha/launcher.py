@@ -51,12 +51,6 @@ AUTOMATION_ARGS = [
 ]
 
 
-
-def remove_readonly(func, path, _):
-    "Clear the readonly bit and reattempt the removal"
-    os.chmod(path, stat.S_IWRITE)
-    func(path)
-
 class Connection(connection.Connection):
     async def _recv_loop(self):
         async with self._ws as connection:
@@ -168,7 +162,7 @@ class Launcher(launcher.Launcher):
         for retry in range(100):
             if self._tmp_user_data_dir and os.path.exists(
                     self._tmp_user_data_dir):
-                shutil.rmtree(self._tmp_user_data_dir, onerror=remove_readonly)
+                shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
             else:
                 break
         else:

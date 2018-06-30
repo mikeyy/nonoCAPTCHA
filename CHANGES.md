@@ -1,9 +1,12 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-30)
+* Remove remove_readonly
+
+### Version 1.4.11 (2018-06-30)
 * Place subprocess into list for killing parent Chrome
 
-### 1.4.10 (2018-06-30)
+### Version 1.4.10 (2018-06-30)
 * Actually 'import subprocess'
 
 ### Version 1.4.9 (2018-06-30)
