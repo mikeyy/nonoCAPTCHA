@@ -1,6 +1,15 @@
 History (Work in progress)
 =======
-### Current Version (2018-06-29)
+### Current Version (2018-06-30)
+* Kill parent Chromium process in Windows to allow deletion of Temporary User Data
+* Fix Google login
+* audio.py
+    * Add 'import asyncio'
+* solver.py
+    * remove self.kill_chrome
+* Fix bugs
+
+### Version 1.4.7 (2018-06-30)
 * Fix bugs
 
 ### Version 1.4.6 (2018-06-30)
