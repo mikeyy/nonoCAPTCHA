@@ -3,6 +3,7 @@
 
 """Audio solving module."""
 
+import asyncio
 import random
 import tempfile
 
