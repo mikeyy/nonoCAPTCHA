@@ -2,10 +2,16 @@ History (Work in progress)
 =======
 ### Current Version (2018-06-29)
 * Sphinx module
+    * Strip static by percentage instead of 1500ms
+* Audio solving
+    * Fix "Please solve more" bug, where it wouldn't exit instead of trying again
+
+### Version 1.4.4 (2018-06-29)
+* Sphinx module
     * Strip static from audio files
     * Remove extra spaces from middle of words
 
-### 1.4.3 (2018-06-29)
+### Version 1.4.3 (2018-06-29)
 * Sphinx module
     * Remove detect silence
 
