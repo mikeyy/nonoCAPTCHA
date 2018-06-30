@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-30)
+* Actually 'import subprocess'
+
+### Version 1.4.9 (2018-06-30)
 * launcher..py
     * 'import subprocess'
 
