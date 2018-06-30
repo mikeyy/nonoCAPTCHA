@@ -1,6 +1,10 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-30)
+* launcher..py
+    * 'import subprocess'
+
+### Version 1.4.8 (2018-06-30)
 * Kill parent Chromium process in Windows to allow deletion of Temporary User Data
 * Fix Google login
 * audio.py
