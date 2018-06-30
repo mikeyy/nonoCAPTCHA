@@ -144,24 +144,36 @@ class Launcher(launcher.Launcher):
         return await Browser.create(
             self.connection, self.options, self.proc, self.killChrome
         )
-                
-    def waitForChromeToClose(self):
+
+    async def waitForChromeToClose(self):
         if self.proc.returncode is None and not self.chromeClosed:
             self.chromeClosed = True
             if psutil.pid_exists(self.proc.pid):
                 if sys.platform == 'win32':
                     subprocess.call(
-                        ["taskkill", f"/pid {self.proc.pid} /T /F"],
+                        ["taskkill", "/pid {self.proc.pid} /T /F"],
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL
                     )
                 self.proc.terminate()
                 self.proc.kill()
-     
+                await self.proc.wait()
+
+    def windows_rmdir(self, path):
+        cmd_path = os.path.join(
+                os.environ['SYSTEMROOT'] if 'SYSTEMROOT' in os.environ 
+                else r'C:\Windows', 'System32', 'cmd.exe')
+        args = [cmd_path, '/C', 'rmdir', '/S', '/Q', path]
+        subprocess.check_call(args, env={},
+                              stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL)
+
     def _cleanup_tmp_user_data_dir(self) -> None:
         for retry in range(100):
             if self._tmp_user_data_dir and os.path.exists(
                     self._tmp_user_data_dir):
+                if sys.platform == 'win32':
+                    self.windows_rmdir(f'{self._tmp_user_data_dir}')
                 shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
             else:
                 break
@@ -179,5 +191,5 @@ class Launcher(launcher.Launcher):
                 pass
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir
-            self.waitForChromeToClose()
+            await self.waitForChromeToClose()
             self._cleanup_tmp_user_data_dir()
