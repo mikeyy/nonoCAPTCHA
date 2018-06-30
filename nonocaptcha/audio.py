@@ -27,7 +27,7 @@ class SolveAudio(Base):
             try:
                 answer = await self.get_audio_response()
             except BaseException:
-                return
+                raise
             else:
                 if not answer:
                     continue
@@ -38,8 +38,8 @@ class SolveAudio(Base):
             timeout = settings["wait_timeout"]["success_timeout"]
             try:
                 await self.check_detection(self.image_frame, timeout)
-            except:
-                pass
+            except asyncio.CancelledError:
+                raise
             else:
                 if self.try_again:
                     self.try_again = False
@@ -64,7 +64,7 @@ class SolveAudio(Base):
                 audio_url, self.proxy, binary=True, timeout=30
             )
         except asyncio.CancelledError:
-            return
+            raise
         except asyncio.TimeoutError:
             self.log("Download timed-out, trying again")
         else:

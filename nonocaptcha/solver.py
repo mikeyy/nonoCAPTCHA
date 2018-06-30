@@ -180,13 +180,15 @@ class Solver(Base):
         try:
             await self.goto_and_deface()
         except BaseException:
-            return
+            raise
 
         self.get_frames()
         await self.click_checkbox()
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
+        except asyncio.CancelledError:
+            raise
         except BaseException:
             return await self._solve()
         else:
@@ -237,6 +239,7 @@ class Solver(Base):
             )
         except BaseException:
             self.log("Audio button missing, aborting")
+            raise
         else:
             return True
 
