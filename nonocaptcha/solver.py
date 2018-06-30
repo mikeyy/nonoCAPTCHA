@@ -312,7 +312,8 @@ class Solver(Base):
 
     async def kill_chrome(self):
         if self.launcher.transport:
-            if not self.launcher.chromeClosed:
+            if (not self.launcher.transport.get_returncode() 
+                and not self.launcher.chromeClosed):
                 self.launcher.chromeClosed = True
                 if psutil.pid_exists(self.launcher.transport.get_pid()):
                     self.launcher.transport.terminate()
