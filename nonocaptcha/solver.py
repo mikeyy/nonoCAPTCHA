@@ -28,8 +28,9 @@ class ButtonMissing(Exception):
 
 
 class Solver(Base):
-    proc_count = 0
     browser = None
+    launcher = None
+    proc_count = 0
     proc = None
 
     def __init__(
@@ -78,7 +79,7 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             if self.browser:
                 await self.browser.close()
-            if self.launcher.proc:
+            if self.launcher:
                 await self.launcher.waitForChromeToClose()
         return result
 
