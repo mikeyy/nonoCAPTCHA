@@ -1,6 +1,10 @@
 History (Work in progress)
 =======
 ### Current Version (2018-06-30)
+* Redefine names of thrown exceptions better suited for invidual cases
+* Fix bugs
+
+### Version 1.4.13 (2018-06-30)
 * Fix issues with Windows directory removal
 
 ### Version 1.4.12 (2018-06-30)
