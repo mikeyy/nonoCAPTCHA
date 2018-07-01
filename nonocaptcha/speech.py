@@ -10,9 +10,10 @@ import json
 import os
 import re
 import struct
+import sys
+import tempfile
 import time
 import websockets
-import tempfile
 
 from io import StringIO, BytesIO
 from datetime import datetime
@@ -74,7 +75,10 @@ class Sphinx(object):
         config.set_string(
             "-var", os.path.join(self.MODEL_DIR, "en-us/variances")
         )
-        config.set_string('-logfn', '/dev/null')
+        null_path = "/dev/null"
+        if sys.platform == 'win32':
+            null_path = "NUL"
+        config.set_string('-logfn', null_path)
         return Decoder(config)
     
     async def get_text(self, mp3_filename):
