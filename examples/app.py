@@ -5,6 +5,7 @@ import shutil
 
 from aiohttp import web, ClientSession, ClientError
 from async_timeout import timeout
+from asyncio import TimeoutError, CancelledError
 from pathlib import Path
 
 from nonocaptcha import util
@@ -26,12 +27,9 @@ async def work(pageurl, sitekey, proxy):
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-    try:
-        result = await client.start()
-        if result:
-            return result
-    except asyncio.CancelledError:
-        return
+    result = await client.start()
+    if result:
+        return result
 
 
 async def get_solution(request):
@@ -51,7 +49,7 @@ async def get_solution(request):
                     result = await work(pageurl, sitekey, proxy)
                     if result:
                         break
-                except asyncio.CancelledError:
+                except CancelledError:
                     break
         if result:
             response = {'solution': result}

@@ -8,6 +8,9 @@ import random
 import signal
 import sys
 
+from async_timeout import timeout
+from asyncio import TimeoutError, CancelledError
+
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
 from config import settings
@@ -96,7 +99,12 @@ async def work():
     
     answer = None
     try:
-        answer = await client.start()
+        async with timeout(180):
+            answer = await client.start()
+    except TimeoutError:
+        pass
+    except CancelledError as e:
+        raise e
     finally:
         if sort_position:
             used_positions.remove(this_position)
