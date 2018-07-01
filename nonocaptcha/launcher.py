@@ -12,6 +12,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import time
 
 from async_timeout import timeout
 from pyppeteer import launcher
@@ -58,29 +59,23 @@ AUTOMATION_ARGS = [
 
 
 class Connection(connection.Connection):
+    closed = False
     async def _recv_loop(self):
         async with self._ws as connection:
             self._connected = True
             self.connection = connection
-            while self._connected:
+            while self._connected and not self.closed:
                 try:
                     resp = await self.connection.recv()
                     if resp:
                         self._on_message(resp)
                 except websockets.ConnectionClosed:
                     break
-                except asyncio.CancelledError:
-                    break
-                    
-    async def _async_send(self, msg: str) -> None:
-        async with timeout(5) as timer:
-            while not self._connected:
-                try:
-                    await asyncio.sleep(self._delay)
-                    if timer.expired: break
-                except asyncio.TimeoutError:
-                    break
-        
+
+    async def _async_send(self, msg: str):
+        while not self._connected and not self.closed:
+            await asyncio.sleep(self._delay)
+    
         try:
             await self.connection.send(msg)
         except:
@@ -157,7 +152,7 @@ class Launcher(launcher.Launcher):
             if self.options.get("handleSIGHUP", True):
                 signal.signal(signal.SIGHUP, _close_process)
 
-        connectionDelay = self.options.get("slowMo", 0)
+        connectionDelay = self.options.get("slowMo", 0.1)
         self.browserWSEndpoint = self._get_ws_endpoint()
         self.connection = Connection(self.browserWSEndpoint, connectionDelay)
         return await Browser.create(
@@ -180,6 +175,8 @@ class Launcher(launcher.Launcher):
                 if sys.platform == 'win32':
                     self.windows_rmdir(f'{self._tmp_user_data_dir}')
                 shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
+                if os.path.exists(self._tmp_user_data_dir):
+                    time.sleep(0.01)
             else:
                 break
         else:
@@ -197,7 +194,6 @@ class Launcher(launcher.Launcher):
                             stderr=subprocess.DEVNULL
                         )
                     self.proc.terminate()
-                    self.proc.kill()
                     await self.proc.wait()
 
     async def killChrome(self):
@@ -206,9 +202,9 @@ class Launcher(launcher.Launcher):
             try:
                 await self.connection.send('Browser.close')
                 await self.connection.dispose()
-            except BaseException:
-                # ignore errors on browser termination process
+            except:
                 pass
+        self.connection.closed = True
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir
             await self.waitForChromeToClose()
