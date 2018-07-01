@@ -180,7 +180,10 @@ class Launcher(launcher.Launcher):
             else:
                 break
         else:
-            raise IOError('Unable to remove Temporary User Data')
+            # Keeps causing issues, will fix later
+            # raise IOError('Unable to remove Temporary User Data')
+            pass
+
 
     async def waitForChromeToClose(self):
         if self.proc:
