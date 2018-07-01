@@ -4,7 +4,10 @@
 """Audio solving module."""
 
 import asyncio
+import os
 import random
+import shutil
+import sys
 import tempfile
 
 from asyncio import TimeoutError
@@ -64,10 +67,8 @@ class SolveAudio(Base):
         audio_url = await self.image_frame.evaluate(
             f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
-
         if not isinstance(audio_url, str):
             raise InvalidDownload('Audio url is not valid, aborting')
-
         self.log("Downloading audio file")
         timeout = settings["wait_timeout"]["load_timeout"]
         try:
@@ -81,20 +82,20 @@ class SolveAudio(Base):
             service = settings["speech_api"]["service"].lower()
             if service in ["azure", "sphinx"]:
                 speech = Azure() if service == "azure" else Sphinx()
-                with tempfile.NamedTemporaryFile(suffix="mp3") as tmpfile:
-                    await util.save_file(tmpfile.name, audio_data, binary=True)
-                    answer = await speech.get_text(tmpfile.name)
+                tmpd = tempfile.mkdtemp()
+                tmpf = os.path.join(tmpd, 'audio.mp3')
+                await util.save_file(tmpf, data=audio_data, binary=True)
+                speech = Sphinx()
+                answer = await speech.get_text(tmpf)
+                shutil.rmtree(tmpd)
             else:
                 speech = Amazon()
                 answer = await speech.get_text(audio_data)
-
             if answer:
                 self.log(f'Received answer "{answer}"')
                 return answer
-
         self.log("No answer, reloading")
         await self.click_reload_button()
-
         func = (
             f'"{audio_url}" !== '
             f'$(".rc-audiochallenge-tdownload-link").attr("href")'
