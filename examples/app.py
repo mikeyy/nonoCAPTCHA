@@ -1,10 +1,11 @@
 import asyncio
+import backoff
 import random
+import shutil
 
 from aiohttp import web, ClientSession, ClientError
 from async_timeout import timeout
-from collections import deque
-from functools import partial
+from pathlib import Path
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
@@ -24,15 +25,13 @@ def shuffle(i):
 async def work(pageurl, sitekey, proxy):
     # Chromium options and arguments
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-    with timeout(3*60) as timer:
-        try:
-            while not timer.expired:
-                client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-                result = await client.start()
-                if result:
-                    return result
-        except asyncio.CancelledError:
-            await client.kill_chrome()
+    client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+    try:
+        result = await client.start()
+        if result:
+            return result
+    except asyncio.CancelledError:
+        return
 
 
 async def get_solution(request):
@@ -44,8 +43,16 @@ async def get_solution(request):
     sitekey = params['sitekey']
     response = {'error': 'invalid request'}
     if pageurl and sitekey:
-        proxy = next(proxies)
-        result = await work(pageurl, sitekey, proxy)
+        result = None
+        async with timeout(3*60) as timer:
+            while not timer.expired:
+                try:
+                    proxy = next(proxies)
+                    result = await work(pageurl, sitekey, proxy)
+                    if result:
+                        break
+                except asyncio.CancelledError:
+                    break
         if result:
             response = {'solution': result}
         else:
@@ -82,6 +89,10 @@ async def cleanup_background_tasks(app):
 app.router.add_get('/get', get_solution)
 app.on_startup.append(start_background_tasks)
 app.on_cleanup.append(cleanup_background_tasks)
+
+home = Path.home()
+dir = f'{home}/.pyppeteer/.dev_profile'
+shutil.rmtree(dir, ignore_errors=True)
 
 if __name__ == '__main__':
     web.run_app(app, host='127.0.0.1', port=5000)
