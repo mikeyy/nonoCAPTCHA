@@ -24,7 +24,7 @@ __all__ = [
     "deserialize",
 ]
 
-
+# Decorator wraps blocking code in an executor to run async
 def threaded(func):
     @wraps(func)
     async def wrap(*args, **kwargs):
@@ -66,6 +66,7 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
         proxy = f"http://{proxy}"
 
     if sys.platform == "win32":
+        # SSL Doesn't work on aiohttp through ProactorLoop so we use requests
         return await get_page_win(url, proxy, binary, verify, timeout)
     else:
         async with aiohttp.ClientSession() as session:
