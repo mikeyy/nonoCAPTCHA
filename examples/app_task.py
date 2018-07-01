@@ -22,6 +22,7 @@ tasks = {}
 # Celery doesn't work with asyncio at the moment, here is some pseudotasking!
 # Don't use this, really. Once Celery v5 is released, an example will be here.
 
+
 def shuffle(i):
     random.shuffle(i)
     return i
@@ -69,13 +70,7 @@ async def work(pageurl, sitekey, task_id):
             if result:
                 break
 
-        tasks.update({
-            task_id:
-            {
-                'status': 'finished',
-                'solution': result
-            }
-        })
+        tasks.update({task_id: {"status": "finished", "solution": result}})
 
 
 @app.route("/get_task_result", methods=["GET", "POST"])
@@ -85,13 +80,13 @@ async def get_task_result():
         result = "Missing required argument `taskid`"
     else:
         if task_id not in tasks:
-            response = {'error': 'invalid task_id'}
+            response = {"error": "invalid task_id"}
         else:
-            status = tasks[task_id]['status']
-            response = {'task_id': task_id, 'status': status}
-            if 'solution' in tasks[task_id]:
-                solution = tasks[task_id]['solution']
-                response.update({'solution': solution})
+            status = tasks[task_id]["status"]
+            response = {"task_id": task_id, "status": status}
+            if "solution" in tasks[task_id]:
+                solution = tasks[task_id]["solution"]
+                response.update({"solution": solution})
         result = json.dumps(response)
     return Response(result, mimetype="text/json")
 
@@ -106,22 +101,17 @@ async def create_task():
     if not pageurl or not sitekey:
         result = "Missing `sitekey` or `pageurl`"
     else:
-        task_id = ''.join(
-            random.choice('23456789ABCDEFGHJKLMNPQRSTUVWXYZ')
-            for x in range(8)
+        task_id = "".join(
+            random.choice("23456789ABCDEFGHJKLMNPQRSTUVWXYZ") for x in range(8)
         )
-        tasks.update({
-            task_id: {
-                'status': 'processing',
-            }
-        })
+        tasks.update({task_id: {"status": "processing"}})
         asyncio.ensure_future(work(pageurl, sitekey, task_id))
-        result = json.dumps({'task_id': task_id})
+        result = json.dumps({"task_id": task_id})
     return Response(result, mimetype="text/json")
 
 
 home = Path.home()
-dir = f'{home}/.pyppeteer/.dev_profile'
+dir = f"{home}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 loop = asyncio.get_event_loop()

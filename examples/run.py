@@ -96,7 +96,7 @@ async def work():
     client = Solver(
         settings["pageurl"], settings["sitekey"], options=options, proxy=proxy
     )
-    
+
     answer = None
     try:
         async with timeout(180):
@@ -114,7 +114,7 @@ async def work():
 
 async def main():
     if proxy_src:
-        print('Proxies loading...')
+        print("Proxies loading...")
         while proxies is None:
             await asyncio.sleep(1)
 
@@ -135,7 +135,7 @@ async def main():
         )
 
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     loop = asyncio.ProactorEventLoop()
     asyncio.set_event_loop(loop)
 else:
