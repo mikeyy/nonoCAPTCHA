@@ -16,7 +16,6 @@ import sys
 from pyppeteer import launcher
 from pyppeteer import connection
 from pyppeteer.browser import Browser
-from pyppeteer.connection import Connection
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
@@ -56,6 +55,27 @@ AUTOMATION_ARGS = [
     '--use-mock-keychain',
 ]
 
+
+class Connection(connection.Connection):
+    async def _recv_loop(self) -> None:
+        async with self._ws as connection:
+            self._connected = True
+            self.connection = connection
+            while self._connected:
+                try:
+                    resp = await self.connection.recv()
+                    if resp:
+                        self._on_message(resp)
+                except websockets.ConnectionClosed:
+                    raise
+
+    async def _async_send(self, msg: str) -> None:
+        try:
+            while not self._connected:
+                await asyncio.sleep(self._delay)
+            await self.connection.send(msg)
+        except websockets.ConnectionClosed:
+            raise
 
 class Launcher(launcher.Launcher):
     def __init__(self, options, **kwargs):
@@ -143,7 +163,7 @@ class Launcher(launcher.Launcher):
                               stdout=subprocess.DEVNULL,
                               stderr=subprocess.DEVNULL)
 
-    def _cleanup_tmp_user_data_dir(self) -> None:
+    def _cleanup_tmp_user_data_dir(self):
         for retry in range(100):
             if self._tmp_user_data_dir and os.path.exists(
                     self._tmp_user_data_dir):
