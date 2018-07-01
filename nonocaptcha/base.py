@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import random
 
@@ -8,11 +9,13 @@ from nonocaptcha.helper import wait_between
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
 
+class SafePassage(Exception):
+    pass
 
 class Clicker:
     @staticmethod
     async def click_button(button):
-        click_delay = random.uniform(30, 130)
+        click_delay = random.uniform(30,170)
         await wait_between(500, 1500)
         await button.click(delay=click_delay / 1000)
 
@@ -79,9 +82,11 @@ class Base(Clicker):
 
 })()""" % wants_true
         try:
-            await frame.waitForFunction(func, timeout=timeout * 1000)
-        except BaseException:
-            raise
+            await frame.waitForFunction(
+                func, timeout=timeout * 1000, polling=1000
+            )
+        except asyncio.TimeoutError:
+            raise SafePassage()
         else:
             eval = "typeof parent.window.wasdetected !== 'undefined'"
             if await frame.evaluate(eval):

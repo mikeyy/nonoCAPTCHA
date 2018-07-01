@@ -11,11 +11,12 @@ import psutil
 import sys
 import time
 
+from asyncio import TimeoutError, CancelledError
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
 from config import settings
-from nonocaptcha.base import Base
+from nonocaptcha.base import Base, SafePassage
 from nonocaptcha.image import SolveImage
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.launcher import Launcher
@@ -63,6 +64,8 @@ class Solver(Base):
 
             self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
+        except CancelledError as e:
+            raise e
         except BaseException as e:
             self.log(f"{e} {type(e)}")
         finally:
@@ -100,22 +103,18 @@ class Solver(Base):
         jquery_js = await util.load_file(
             settings["data_files"]["jquery_js"]
         )
-
         override_js = await util.load_file(
             settings["data_files"]["override_js"]
         )
-
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
         navigator_config["webdriver"] = False
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
-
         await self.page.evaluateOnNewDocument(
             "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js)
         )
-
         return navigator_config["userAgent"]
 
     async def wait_for_deface(self):
@@ -124,6 +123,7 @@ class Solver(Base):
 
         Function x is an odd hack for multiline text, but it works.
         """
+
         html_code = await util.load_file(settings["data_files"]["deface_html"])
         deface_js = (
             ("""() => {
@@ -135,7 +135,6 @@ class Solver(Base):
     document.close();
 }
 """ % html_code) % self.sitekey)
-
         await self.page.evaluate(deface_js)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
@@ -144,7 +143,6 @@ class Solver(Base):
     });
     if(window.ready_eddy) return true;
 }"""
-
         timeout = settings["wait_timeout"]["deface_timeout"]
         await self.page.waitForFunction(func, timeout=timeout * 1000)
 
@@ -159,8 +157,8 @@ class Solver(Base):
                 self.url, timeout=timeout * 1000, waitUntil="documentloaded"
             )
             await self.wait_for_deface()
-        except BaseException:
-            raise BaseException("Problem defacing page")
+        except TimeoutError:
+            raise TimeoutError("Problem defacing page")
 
     async def solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio
@@ -177,7 +175,7 @@ class Solver(Base):
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
-        except BaseException:
+        except SafePassage:
             return await self._solve()
         else:
             code = await self.g_recaptcha_response()

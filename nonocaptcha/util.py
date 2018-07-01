@@ -29,7 +29,6 @@ def threaded(func):
         return await loop.run_in_executor(
             None, partial(func, *args, **kwargs)
         )
-
     return wrap
 
 

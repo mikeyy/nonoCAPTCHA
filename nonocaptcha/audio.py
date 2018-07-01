@@ -7,11 +7,19 @@ import asyncio
 import random
 import tempfile
 
+from asyncio import TimeoutError
+
 from config import settings
 from nonocaptcha import util
 from nonocaptcha.speech import Amazon, Azure, Sphinx
-from nonocaptcha.base import Base
+from nonocaptcha.base import Base, SafePassage
 
+
+class ReloadError(Exception):
+    pass
+
+class InvalidDownload(Exception):
+    pass
 
 class SolveAudio(Base):
     def __init__(self, page, proxy, proc_id):
@@ -27,7 +35,9 @@ class SolveAudio(Base):
         for i in range(5):
             try:
                 answer = await self.get_audio_response()
-            except BaseException:
+            except InvalidDownload:
+                raise
+            except ReloadError:
                 raise
             else:
                 if not answer:
@@ -39,7 +49,7 @@ class SolveAudio(Base):
             timeout = settings["wait_timeout"]["success_timeout"]
             try:
                 await self.check_detection(self.image_frame, timeout)
-            except BaseException:
+            except SafePassage:
                 pass
             else:
                 if self.try_again:
@@ -56,7 +66,7 @@ class SolveAudio(Base):
         )
 
         if not isinstance(audio_url, str):
-            raise BaseException('Audio url is not valid, aborting')
+            raise InvalidDownload('Audio url is not valid, aborting')
 
         self.log("Downloading audio file")
         timeout = settings["wait_timeout"]["load_timeout"]
@@ -64,7 +74,7 @@ class SolveAudio(Base):
             audio_data = await util.get_page(
                 audio_url, self.proxy, binary=True, timeout=timeout
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self.log("Download timed-out, trying again")
         else:
             answer = None
@@ -94,8 +104,8 @@ class SolveAudio(Base):
             await self.image_frame.waitForFunction(
                 func, timeout=timeout * 1000
             )
-        except BaseException:
-            raise
+        except TimeoutError:
+            raise ReloadError('Download link never updated')
         else:
             return
 
