@@ -57,25 +57,17 @@ AUTOMATION_ARGS = [
 
 
 class Connection(connection.Connection):
-    async def _recv_loop(self) -> None:
-        async with self._ws as connection:
-            self._connected = True
-            self.connection = connection
-            while self._connected:
-                try:
-                    resp = await self.connection.recv()
-                    if resp:
-                        self._on_message(resp)
-                except websockets.ConnectionClosed:
-                    raise
-
     async def _async_send(self, msg: str) -> None:
-        try:
-            while not self._connected:
+        while not self._connected:
+            try:
                 await asyncio.sleep(self._delay)
+            except websockets.ConnectionClosed:
+                self._connected = False
+                break
+
+        if not self._connected:
             await self.connection.send(msg)
-        except websockets.ConnectionClosed:
-            raise
+
 
 class Launcher(launcher.Launcher):
     def __init__(self, options, **kwargs):
