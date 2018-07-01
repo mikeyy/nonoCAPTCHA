@@ -5,10 +5,7 @@
 
 import asyncio
 import json
-import os
 import pathlib
-import psutil
-import sys
 import time
 
 from asyncio import TimeoutError, CancelledError
@@ -16,7 +13,7 @@ from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
 from config import settings
-from nonocaptcha.base import Base, Detected, SafePassage, Success, TryAgain
+from nonocaptcha.base import Base, Detected, SafePassage, Success
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
@@ -174,9 +171,8 @@ class Solver(Base):
             await self.is_blacklisted()
         
         await self.goto_and_deface()
-
         self.get_frames()
-        #await self.wait_for_checkbox()
+        # await self.wait_for_checkbox()
         await self.click_checkbox()
         timeout = settings["wait_timeout"]["success_timeout"]
         try:

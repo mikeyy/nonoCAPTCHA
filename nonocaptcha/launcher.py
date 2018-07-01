@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# !/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """Launcher module. Mostly consists of Pyppetter patches."""
@@ -14,7 +14,6 @@ import subprocess
 import sys
 import time
 
-from async_timeout import timeout
 from pyppeteer import launcher
 from pyppeteer import connection
 from pyppeteer.browser import Browser
@@ -23,31 +22,31 @@ from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
 
 DEFAULT_ARGS = [
-    #! = added in
-    '--cryptauth-http-host ""', #!
-    '--disable-affiliation-based-matching', #!
-    '--disable-answers-in-suggest', #!
-    '--disable-background-networking', 
+    # ! = added in
+    '--cryptauth-http-host ""', # !
+    '--disable-affiliation-based-matching', # !
+    '--disable-answers-in-suggest', # !
+    '--disable-background-networking',
     '--disable-background-timer-throttling',
     '--disable-browser-side-navigation',
-    '--disable-breakpad', #!
+    '--disable-breakpad', # !
     '--disable-client-side-phishing-detection',
     '--disable-default-apps',
-    '--disable-demo-mode', #!
-    '--disable-device-discovery-notifications', #!
+    '--disable-demo-mode', # !
+    '--disable-device-discovery-notifications', # !
     '--disable-extensions',
     '--disable-hang-monitor',
-    '--disable-java', #!
+    '--disable-java', # !
     '--disable-popup-blocking',
-    '--disable-preconnect', #!
+    '--disable-preconnect', # !
     '--disable-prompt-on-repost',
-    '--disable-reading-from-canvas',#!
+    '--disable-reading-from-canvas',# !
     '--disable-sync',
     '--disable-translate',
-    '--disable-web-security', #!
+    '--disable-web-security', # !
     '--metrics-recording-only',
     '--no-first-run',
-    '--no-sandbox', #!
+    '--no-sandbox', # !
     '--safebrowsing-disable-auto-update',
 ]
 

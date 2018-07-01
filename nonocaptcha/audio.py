@@ -3,11 +3,9 @@
 
 """Audio solving module."""
 
-import asyncio
 import os
 import random
 import shutil
-import sys
 import tempfile
 
 from asyncio import TimeoutError
@@ -15,7 +13,7 @@ from asyncio import TimeoutError
 from config import settings
 from nonocaptcha import util
 from nonocaptcha.speech import Amazon, Azure, Sphinx
-from nonocaptcha.base import Base, Detected, SafePassage, Success, TryAgain
+from nonocaptcha.base import Base, Detected, Success, TryAgain
 
 
 class ReloadError(Exception):

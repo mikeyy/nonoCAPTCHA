@@ -15,11 +15,9 @@ import tempfile
 import time
 import websockets
 
-from io import StringIO, BytesIO
 from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
-from pydub.silence import detect_nonsilent
 from pocketsphinx.pocketsphinx import *
 from sphinxbase.sphinxbase import *
 
@@ -131,7 +129,7 @@ class Amazon(object):
             f"{filename}"
         )
         # Send audio file URI to Transcribe
-        resp = await transcribe.start_transcription_job(
+        await transcribe.start_transcription_job(
             TranscriptionJobName=job_name,
             Media={'MediaFileUri': job_uri},
             MediaFormat='mp3',
@@ -174,7 +172,7 @@ class Azure(object):
     def mp3_to_wav(self, mp3_filename):
         wav_filename = mp3_filename.replace(".mp3", ".wav")
         sound = AudioSegment.from_mp3(mp3_filename)
-        wav = sound.export(wav_filename, format="wav")
+        sound.export(wav_filename, format="wav")
         return wav_filename
 
     @util.threaded
