@@ -83,11 +83,11 @@ class Sphinx(object):
         wav_filename = await self.mp3_to_wav(mp3_filename)
         async with aiofiles.open(wav_filename, 'rb') as stream:
             while True:
-              buf = await stream.read(1024)
-              if buf:
-                decoder.process_raw(buf, False, False)
-              else:
-                break
+                buf = await stream.read(1024)
+                if buf:
+                    decoder.process_raw(buf, False, False)
+                else:
+                    break
         decoder.end_utt()
         hyp = ' '.join([seg.word for seg in decoder.seg()])
         answer = ' '.join(re.sub(
