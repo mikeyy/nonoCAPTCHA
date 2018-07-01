@@ -69,6 +69,8 @@ class Connection(connection.Connection):
                         self._on_message(resp)
                 except websockets.ConnectionClosed:
                     break
+                except asyncio.CancelledError:
+                    break
                     
     async def _async_send(self, msg: str) -> None:
         async with timeout(5) as timer:
@@ -76,7 +78,7 @@ class Connection(connection.Connection):
                 try:
                     await asyncio.sleep(self._delay)
                     if timer.expired: break
-                except asyncio.CancelledError:
+                except asyncio.TimeoutError:
                     break
         
         try:
@@ -184,21 +186,19 @@ class Launcher(launcher.Launcher):
             raise IOError('Unable to remove Temporary User Data')
 
     async def waitForChromeToClose(self):
-        while not self.proc:
-            await asyncio.sleep(0.1)
-
-        if self.proc.returncode is None and not self.chromeClosed:
-            self.chromeClosed = True
-            if psutil.pid_exists(self.proc.pid):
-                if sys.platform == 'win32':
-                    subprocess.call(
-                        ["taskkill", "/pid {self.proc.pid} /T /F"],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
-                self.proc.terminate()
-                self.proc.kill()
-                await self.proc.wait()
+        if self.proc:
+            if self.proc.returncode is None and not self.chromeClosed:
+                self.chromeClosed = True
+                if psutil.pid_exists(self.proc.pid):
+                    if sys.platform == 'win32':
+                        subprocess.call(
+                            ["taskkill", "/pid {self.proc.pid} /T /F"],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL
+                        )
+                    self.proc.terminate()
+                    self.proc.kill()
+                    await self.proc.wait()
 
     async def killChrome(self):
         """Terminate chromium process."""
