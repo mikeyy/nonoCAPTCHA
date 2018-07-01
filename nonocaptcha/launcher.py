@@ -129,20 +129,6 @@ class Launcher(launcher.Launcher):
             self.connection, self.options, self.proc, self.killChrome
         )
 
-    async def waitForChromeToClose(self):
-        if self.proc.returncode is None and not self.chromeClosed:
-            self.chromeClosed = True
-            if psutil.pid_exists(self.proc.pid):
-                if sys.platform == 'win32':
-                    subprocess.call(
-                        ["taskkill", "/pid {self.proc.pid} /T /F"],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
-                self.proc.terminate()
-                self.proc.kill()
-                await self.proc.wait()
-
     def windows_rmdir(self, path):
         cmd_path = os.path.join(
                 os.environ['SYSTEMROOT'] if 'SYSTEMROOT' in os.environ 
@@ -163,6 +149,20 @@ class Launcher(launcher.Launcher):
                 break
         else:
             raise IOError('Unable to remove Temporary User Data')
+
+    async def waitForChromeToClose(self):
+        if self.proc.returncode is None and not self.chromeClosed:
+            self.chromeClosed = True
+            if psutil.pid_exists(self.proc.pid):
+                if sys.platform == 'win32':
+                    subprocess.call(
+                        ["taskkill", "/pid {self.proc.pid} /T /F"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL
+                    )
+                self.proc.terminate()
+                self.proc.kill()
+                await self.proc.wait()
 
     async def killChrome(self):
         """Terminate chromium process."""
