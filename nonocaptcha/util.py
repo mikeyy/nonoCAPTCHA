@@ -57,9 +57,9 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
                     if binary:
                         return await response.read()
                     return await response.text()
-        except BaseException as e:
+        except TimeoutError:
             await session.close()
-            raise BaseException(f'An error occured in get_page: {e}')
+            raise
 
 
 def serialize(obj, p):
