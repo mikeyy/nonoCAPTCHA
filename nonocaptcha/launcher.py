@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Launcher module. Mostly consists of Pyppetter patches."""
+
 import asyncio
 import atexit
 import psutil
