@@ -1,6 +1,6 @@
 History (Work in progress)
 =======
-### Current Version (2018-06-30)
+### Current Version (2018-07-1)
 * Redefine names of thrown exceptions better suited for invidual cases
 * Fix bugs
 
