@@ -1,6 +1,11 @@
 History (Work in progress)
 =======
 ### Current Version (2018-07-01)
+* Fix audio downloading and file saving in Windows
+* Pipe PocketSphinx logs to NUL under Windows
+* Change polling to 100ms for detection checking
+
+### Version 1.4.15 (2018-07-01)
 * Attempt to fix issues with ongoing issue with Windows directory removal
 * Possible fix for rare hanging on close
 * More redifinition of exception handling
