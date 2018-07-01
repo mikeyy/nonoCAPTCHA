@@ -61,7 +61,7 @@ class Solver(Base):
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
 
-            if settings['gmail']:
+            if settings["gmail"]:
                 await self.sign_in_to_google()
 
             self.log(f"Starting solver with proxy {self.proxy}")
@@ -102,9 +102,7 @@ class Solver(Base):
             false, inject jQuery.
         """
 
-        jquery_js = await util.load_file(
-            settings["data_files"]["jquery_js"]
-        )
+        jquery_js = await util.load_file(settings["data_files"]["jquery_js"])
         override_js = await util.load_file(
             settings["data_files"]["override_js"]
         )
@@ -128,7 +126,8 @@ class Solver(Base):
 
         html_code = await util.load_file(settings["data_files"]["deface_html"])
         deface_js = (
-            ("""() => {
+            (
+                """() => {
     var x = (function () {/*
         %s
     */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
@@ -136,7 +135,11 @@ class Solver(Base):
     document.write(x)
     document.close();
 }
-""" % html_code) % self.sitekey)
+"""
+                % html_code
+            )
+            % self.sitekey
+        )
         await self.page.evaluate(deface_js)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
@@ -169,7 +172,7 @@ class Solver(Base):
 
         if settings["check_blacklist"]:
             await self.is_blacklisted()
-        
+
         await self.goto_and_deface()
         self.get_frames()
         # await self.wait_for_checkbox()
@@ -265,32 +268,29 @@ class Solver(Base):
         self.log("Checking Google search for blacklist")
         timeout = settings["wait_timeout"]["load_timeout"]
         url = "https://www.google.com/search?q=my+ip&hl=en"
-        response = await util.get_page(
-            url, proxy=self.proxy, timeout=timeout
-        )
+        response = await util.get_page(url, proxy=self.proxy, timeout=timeout)
         detected_phrase = (
-            "Our systems have detected unusual traffic "
-            "from your computer"
+            "Our systems have detected unusual traffic " "from your computer"
         )
         if detected_phrase in response:
             raise Detected("IP has been blacklisted by Google")
 
     async def sign_in_to_google(self):
-        cookie_path = settings['data_files']['cookies']
+        cookie_path = settings["data_files"]["cookies"]
         if pathlib.Path(cookie_path).exists():
             self.gmail_accounts = await util.deserialize(cookie_path)
-        if settings['gmail'] not in self.gmail_accounts:
+        if settings["gmail"] not in self.gmail_accounts:
             url = "https://accounts.google.com/Login"
             page = await self.browser.newPage()
             await page.goto(url, waitUntil="documentloaded")
-            username = await page.querySelector('#identifierId')
-            await username.type(settings['gmail'])
-            button = await page.querySelector('#identifierNext')
+            username = await page.querySelector("#identifierId")
+            await username.type(settings["gmail"])
+            button = await page.querySelector("#identifierNext")
             await button.click()
             await asyncio.sleep(2)  # better way to do this...
-            password = await page.querySelector('#password')
-            await password.type(settings['gmail_password'])
-            button = await page.querySelector('#passwordNext')
+            password = await page.querySelector("#password")
+            await password.type(settings["gmail_password"])
+            button = await page.querySelector("#passwordNext")
             await button.click()
             await page.waitForNavigation()
             cookies = await page.cookies()

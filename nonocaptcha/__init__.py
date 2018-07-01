@@ -38,11 +38,14 @@ sys.path.append(os.getcwd())
 try:
     import config
 except ModuleNotFoundError:
-    print("Solver can't run without a config.py file!\n"
-          "An example (config.example.py) has been copied to your current "
-          "folder.")
+    print(
+        "Solver can't run without a config.py file!\n"
+        "An example (config.example.py) has been copied to your current "
+        "folder."
+    )
 
     import sys
     from shutil import copyfile
+
     copyfile(f"{__package_dir__}/config.example.py", "config.example.py")
     sys.exit(0)

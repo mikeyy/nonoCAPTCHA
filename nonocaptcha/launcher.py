@@ -23,42 +23,43 @@ from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
 DEFAULT_ARGS = [
     # ! = added in
-    '--cryptauth-http-host ""', # !
-    '--disable-affiliation-based-matching', # !
-    '--disable-answers-in-suggest', # !
-    '--disable-background-networking',
-    '--disable-background-timer-throttling',
-    '--disable-browser-side-navigation',
-    '--disable-breakpad', # !
-    '--disable-client-side-phishing-detection',
-    '--disable-default-apps',
-    '--disable-demo-mode', # !
-    '--disable-device-discovery-notifications', # !
-    '--disable-extensions',
-    '--disable-hang-monitor',
-    '--disable-java', # !
-    '--disable-popup-blocking',
-    '--disable-preconnect', # !
-    '--disable-prompt-on-repost',
-    '--disable-reading-from-canvas',# !
-    '--disable-sync',
-    '--disable-translate',
-    '--disable-web-security', # !
-    '--metrics-recording-only',
-    '--no-first-run',
-    '--no-sandbox', # !
-    '--safebrowsing-disable-auto-update',
+    '--cryptauth-http-host ""',  # !
+    "--disable-affiliation-based-matching",  # !
+    "--disable-answers-in-suggest",  # !
+    "--disable-background-networking",
+    "--disable-background-timer-throttling",
+    "--disable-browser-side-navigation",
+    "--disable-breakpad",  # !
+    "--disable-client-side-phishing-detection",
+    "--disable-default-apps",
+    "--disable-demo-mode",  # !
+    "--disable-device-discovery-notifications",  # !
+    "--disable-extensions",
+    "--disable-hang-monitor",
+    "--disable-java",  # !
+    "--disable-popup-blocking",
+    "--disable-preconnect",  # !
+    "--disable-prompt-on-repost",
+    "--disable-reading-from-canvas",  # !
+    "--disable-sync",
+    "--disable-translate",
+    "--disable-web-security",  # !
+    "--metrics-recording-only",
+    "--no-first-run",
+    "--no-sandbox",  # !
+    "--safebrowsing-disable-auto-update",
 ]
 
 AUTOMATION_ARGS = [
-    '--enable-automation',
-    '--password-store=basic',
-    '--use-mock-keychain',
+    "--enable-automation",
+    "--password-store=basic",
+    "--use-mock-keychain",
 ]
 
 
 class Connection(connection.Connection):
     closed = False
+
     async def _recv_loop(self):
         async with self._ws as connection:
             self._connected = True
@@ -74,7 +75,7 @@ class Connection(connection.Connection):
     async def _async_send(self, msg: str):
         while not self._connected and not self.closed:
             await asyncio.sleep(self._delay)
-    
+
         try:
             await self.connection.send(msg)
         except:
@@ -86,39 +87,39 @@ class Launcher(launcher.Launcher):
         """Make new launcher."""
         self.options = merge_dict(options, kwargs)
         self.port = get_free_port()
-        self.url = f'http://127.0.0.1:{self.port}'
+        self.url = f"http://127.0.0.1:{self.port}"
         self.chrome_args = []
         self.proc = None
 
-        if not self.options.get('ignoreDefaultArgs', False):
+        if not self.options.get("ignoreDefaultArgs", False):
             self.chrome_args.extend(DEFAULT_ARGS)
-            self.chrome_args.append(
-                f'--remote-debugging-port={self.port}',
-            )
+            self.chrome_args.append(f"--remote-debugging-port={self.port}")
 
         self.chromeClosed = True
-        if self.options.get('appMode', False):
-            self.options['headless'] = False
-        elif not self.options.get('ignoreDefaultArgs', False):
+        if self.options.get("appMode", False):
+            self.options["headless"] = False
+        elif not self.options.get("ignoreDefaultArgs", False):
             self.chrome_args.extend(AUTOMATION_ARGS)
 
         self._tmp_user_data_dir = None
         self._parse_args()
 
-        if self.options.get('devtools'):
-            self.chrome_args.append('--auto-open-devtools-for-tabs')
-            self.options['headless'] = False
+        if self.options.get("devtools"):
+            self.chrome_args.append("--auto-open-devtools-for-tabs")
+            self.options["headless"] = False
 
-        if 'headless' not in self.options or self.options.get('headless'):
-            self.chrome_args.extend([
-                '--headless',
-                '--disable-gpu',
-                '--hide-scrollbars',
-                '--mute-audio',
-            ])
+        if "headless" not in self.options or self.options.get("headless"):
+            self.chrome_args.extend(
+                [
+                    "--headless",
+                    "--disable-gpu",
+                    "--hide-scrollbars",
+                    "--mute-audio",
+                ]
+            )
 
-        if 'executablePath' in self.options:
-            self.exec = self.options['executablePath']
+        if "executablePath" in self.options:
+            self.exec = self.options["executablePath"]
         else:
             if not check_chromium():
                 download_chromium()
@@ -132,10 +133,11 @@ class Launcher(launcher.Launcher):
             *self.cmd,
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
-            env=env
+            env=env,
         )
         self.chromeClosed = False
         self.connection = None
+
         def _close_process(*args, **kwargs):
             if not self.chromeClosed:
                 asyncio.get_event_loop().run_until_complete(self.killChrome())
@@ -160,19 +162,24 @@ class Launcher(launcher.Launcher):
 
     def windows_rmdir(self, path):
         cmd_path = os.path.join(
-                os.environ['SYSTEMROOT'] if 'SYSTEMROOT' in os.environ 
-                else r'C:\Windows', 'System32', 'cmd.exe')
-        args = [cmd_path, '/C', 'rmdir', '/S', '/Q', path]
-        subprocess.check_call(args, env={},
-                              stdout=subprocess.DEVNULL,
-                              stderr=subprocess.DEVNULL)
+            os.environ["SYSTEMROOT"]
+            if "SYSTEMROOT" in os.environ
+            else r"C:\Windows",
+            "System32",
+            "cmd.exe",
+        )
+        args = [cmd_path, "/C", "rmdir", "/S", "/Q", path]
+        subprocess.check_call(
+            args, env={}, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
 
     def _cleanup_tmp_user_data_dir(self):
         for retry in range(100):
             if self._tmp_user_data_dir and os.path.exists(
-                    self._tmp_user_data_dir):
-                if sys.platform == 'win32':
-                    self.windows_rmdir(f'{self._tmp_user_data_dir}')
+                self._tmp_user_data_dir
+            ):
+                if sys.platform == "win32":
+                    self.windows_rmdir(f"{self._tmp_user_data_dir}")
                 shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
                 if os.path.exists(self._tmp_user_data_dir):
                     time.sleep(0.01)
@@ -183,17 +190,16 @@ class Launcher(launcher.Launcher):
             # raise IOError('Unable to remove Temporary User Data')
             pass
 
-
     async def waitForChromeToClose(self):
         if self.proc:
             if self.proc.returncode is None and not self.chromeClosed:
                 self.chromeClosed = True
                 if psutil.pid_exists(self.proc.pid):
-                    if sys.platform == 'win32':
+                    if sys.platform == "win32":
                         subprocess.call(
                             ["taskkill", "/pid {self.proc.pid} /T /F"],
                             stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL
+                            stderr=subprocess.DEVNULL,
                         )
                     self.proc.terminate()
                     await self.proc.wait()
@@ -202,7 +208,7 @@ class Launcher(launcher.Launcher):
         """Terminate chromium process."""
         if self.connection and self.connection._connected:
             try:
-                await self.connection.send('Browser.close')
+                await self.connection.send("Browser.close")
                 await self.connection.dispose()
             except:
                 pass

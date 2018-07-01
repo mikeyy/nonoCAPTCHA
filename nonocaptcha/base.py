@@ -29,7 +29,7 @@ class TryAgain(Exception):
 class Clicker:
     @staticmethod
     async def click_button(button):
-        click_delay = random.uniform(30,170)
+        click_delay = random.uniform(30, 170)
         await wait_between(500, 1500)
         await button.click(delay=click_delay / 1000)
 
@@ -66,7 +66,8 @@ class Base(Clicker):
         #    l = [f'if({i}) return true;' for i in wants_true]
         #    wants_true = '\n'.join(wants_true)
 
-        func = """(function() {
+        func = (
+            """(function() {
     %s
 
     checkbox_frame = parent.frames[0].document;
@@ -95,7 +96,9 @@ class Base(Clicker):
         return true;
     }
 
-})()""" % wants_true
+})()"""
+            % wants_true
+        )
         try:
             await frame.waitForFunction(
                 func, timeout=timeout * 1000, polling=100
@@ -110,9 +113,9 @@ class Base(Clicker):
             if await frame.evaluate(eval):
                 await frame.evaluate("parent.window.tryagain = false;")
                 raise TryAgain("Incorrect answer, trying again")
-            eval = 'parent.window.success === true'
+            eval = "parent.window.success === true"
             if await frame.evaluate(eval):
                 raise Success("Automation successful!")
 
     def log(self, message):
-        self.logger.debug(f'{self.proc_id} {message}')
+        self.logger.debug(f"{self.proc_id} {message}")

@@ -26,8 +26,8 @@ from nonocaptcha import util
 
 
 class Sphinx(object):
-    MODEL_DIR = settings['speech_api']['sphinx']["model_dir"]
-    
+    MODEL_DIR = settings["speech_api"]["sphinx"]["model_dir"]
+
     @util.threaded
     def mp3_to_wav(self, mp3_filename):
         wav_filename = mp3_filename.replace(".mp3", ".wav")
@@ -35,11 +35,11 @@ class Sphinx(object):
         sound = segment.set_channels(1).set_frame_rate(16000)
         # Strip a 30% from first and last of audio (it's just static)
         # Too much and the words don't fully complete
-        garbage = len(sound)/3
-        sound = sound[+garbage:len(sound)-garbage]
+        garbage = len(sound) / 3
+        sound = sound[+garbage : len(sound) - garbage]
         sound.export(wav_filename, format="wav")
         return wav_filename
-    
+
     @util.threaded
     def build_decoder(self):
         config = Decoder.default_config()
@@ -55,35 +55,27 @@ class Sphinx(object):
         config.set_string(
             "-tmat", os.path.join(self.MODEL_DIR, "en-us/transition_matrices")
         )
+        config.set_string("-hmm", os.path.join(self.MODEL_DIR, "en-us"))
+        config.set_string("-lm", os.path.join(self.MODEL_DIR, "en-us.lm.bin"))
+        config.set_string("-mdef", os.path.join(self.MODEL_DIR, "en-us/mdef"))
+        config.set_string("-mean", os.path.join(self.MODEL_DIR, "en-us/means"))
         config.set_string(
-            "-hmm", os.path.join(self.MODEL_DIR, "en-us")
-        )
-        config.set_string(
-            "-lm", os.path.join(self.MODEL_DIR, "en-us.lm.bin")
-        )
-        config.set_string(
-            "-mdef", os.path.join(self.MODEL_DIR, "en-us/mdef")
-        )
-        config.set_string(
-            "-mean", os.path.join(self.MODEL_DIR, "en-us/means")
-        )
-        config.set_string("-sendump", os.path.join(
-            self.MODEL_DIR, "en-us/sendump")
+            "-sendump", os.path.join(self.MODEL_DIR, "en-us/sendump")
         )
         config.set_string(
             "-var", os.path.join(self.MODEL_DIR, "en-us/variances")
         )
         null_path = "/dev/null"
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             null_path = "NUL"
-        config.set_string('-logfn', null_path)
+        config.set_string("-logfn", null_path)
         return Decoder(config)
-    
+
     async def get_text(self, mp3_filename):
         decoder = await self.build_decoder()
         decoder.start_utt()
         wav_filename = await self.mp3_to_wav(mp3_filename)
-        async with aiofiles.open(wav_filename, 'rb') as stream:
+        async with aiofiles.open(wav_filename, "rb") as stream:
             while True:
                 buf = await stream.read(1024)
                 if buf:
@@ -91,38 +83,38 @@ class Sphinx(object):
                 else:
                     break
         decoder.end_utt()
-        hyp = ' '.join([seg.word for seg in decoder.seg()])
-        answer = ' '.join(re.sub(
-            '<[^<]+?>|\[[^<]+?\]|\([^<]+?\)', ' ', hyp
-        ).split())
+        hyp = " ".join([seg.word for seg in decoder.seg()])
+        answer = " ".join(
+            re.sub("<[^<]+?>|\[[^<]+?\]|\([^<]+?\)", " ", hyp).split()
+        )
         return answer
 
 
 class Amazon(object):
-    ACCESS_KEY_ID = settings['speech_api']['amazon']['key_id']
-    SECRET_ACCESS_KEY = settings['speech_api']['amazon']['secret_access_key']
-    REGION_NAME = settings['speech_api']['amazon']['region']
-    S3_BUCKET = settings['speech_api']['amazon']['s3_bucket']
+    ACCESS_KEY_ID = settings["speech_api"]["amazon"]["key_id"]
+    SECRET_ACCESS_KEY = settings["speech_api"]["amazon"]["secret_access_key"]
+    REGION_NAME = settings["speech_api"]["amazon"]["region"]
+    S3_BUCKET = settings["speech_api"]["amazon"]["s3_bucket"]
 
     async def get_text(self, audio_data):
         session = aiobotocore.get_session()
         upload = session.create_client(
-            's3',
+            "s3",
             region_name=self.REGION_NAME,
             aws_secret_access_key=self.SECRET_ACCESS_KEY,
-            aws_access_key_id=self.ACCESS_KEY_ID
-        )                          
+            aws_access_key_id=self.ACCESS_KEY_ID,
+        )
         transcribe = session.create_client(
-            'transcribe', 
+            "transcribe",
             region_name=self.REGION_NAME,
             aws_secret_access_key=self.SECRET_ACCESS_KEY,
-            aws_access_key_id=self.ACCESS_KEY_ID
+            aws_access_key_id=self.ACCESS_KEY_ID,
         )
         filename = f"{uuid4().hex}.mp3"
         # Upload audio file to bucket
-        await upload.put_object(Bucket=self.S3_BUCKET,
-                                Key=filename,
-                                Body=audio_data)
+        await upload.put_object(
+            Bucket=self.S3_BUCKET, Key=filename, Body=audio_data
+        )
         job_name = uuid4().hex
         job_uri = (
             f"https://s3.{self.REGION_NAME}.amazonaws.com/{self.S3_BUCKET}/"
@@ -131,9 +123,9 @@ class Amazon(object):
         # Send audio file URI to Transcribe
         await transcribe.start_transcription_job(
             TranscriptionJobName=job_name,
-            Media={'MediaFileUri': job_uri},
-            MediaFormat='mp3',
-            LanguageCode='en-US'
+            Media={"MediaFileUri": job_uri},
+            MediaFormat="mp3",
+            LanguageCode="en-US",
         )
         # Wait 90 seconds for transcription
         timeout = 90
@@ -141,32 +133,32 @@ class Amazon(object):
             status = await transcribe.get_transcription_job(
                 TranscriptionJobName=job_name
             )
-            if(
-                status['TranscriptionJob']['TranscriptionJobStatus'] in
-                ['COMPLETED', 'FAILED']
-            ):
+            if status["TranscriptionJob"]["TranscriptionJobStatus"] in [
+                "COMPLETED",
+                "FAILED",
+            ]:
                 break
             await asyncio.sleep(5)
         # Delete audio file from bucket
         await upload.delete_object(Bucket=self.S3_BUCKET, Key=filename)
-        if 'TranscriptFileUri' in status['TranscriptionJob']['Transcript']:
-            transcript_uri = (
-                status['TranscriptionJob']['Transcript']['TranscriptFileUri']
-            )
+        if "TranscriptFileUri" in status["TranscriptionJob"]["Transcript"]:
+            transcript_uri = status["TranscriptionJob"]["Transcript"][
+                "TranscriptFileUri"
+            ]
             data = json.loads(await util.get_page(transcript_uri))
-            transcript = data['results']['transcripts'][0]['transcript']
+            transcript = data["results"]["transcripts"][0]["transcript"]
             return transcript
 
         # Delete audio file
         await upload.delete_object(Bucket=self.S3_BUCKET, Key=filename)
-        
+
         # Close clients
         await upload._endpoint._aio_session.close()
         await transcribe._endpoint._aio_session.close()
 
 
 class Azure(object):
-    SUB_KEY = settings['speech_api']['azure']["api_subkey"]
+    SUB_KEY = settings["speech_api"]["azure"]["api_subkey"]
 
     @util.threaded
     def mp3_to_wav(self, mp3_filename):
@@ -180,7 +172,7 @@ class Azure(object):
         pattern = "^\r\n"  # header separator is an empty line
         m = re.search(pattern, response, re.M)
         return json.loads(
-            response[m.end():]
+            response[m.end() :]
         )  # assuming that content type is json
 
     @util.threaded

@@ -12,6 +12,7 @@ import sys
 from functools import partial, wraps
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 __all__ = [
@@ -20,7 +21,7 @@ __all__ = [
     "get_page",
     "threaded",
     "serialize",
-    "deserialize"
+    "deserialize",
 ]
 
 
@@ -29,9 +30,8 @@ def threaded(func):
     async def wrap(*args, **kwargs):
         loop = asyncio.get_event_loop()
 
-        return await loop.run_in_executor(
-            None, partial(func, *args, **kwargs)
-        )
+        return await loop.run_in_executor(None, partial(func, *args, **kwargs))
+
     return wrap
 
 
@@ -55,7 +55,7 @@ def get_page_win(url, proxy=None, binary=False, verify=False, timeout=300):
     with requests.Session() as session:
         response = session.get(
             url, proxies=proxies, verify=verify, timeout=timeout
-            )
+        )
         if binary:
             return response.content
         return response.text
@@ -65,7 +65,7 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
     if proxy:
         proxy = f"http://{proxy}"
 
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         return await get_page_win(url, proxy, binary, verify, timeout)
     else:
         async with aiohttp.ClientSession() as session:
@@ -79,7 +79,7 @@ async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
 
 def serialize(obj, p):
     """Must be synchronous to prevent corrupting data"""
-    with open(p, 'wb') as f:
+    with open(p, "wb") as f:
         pickle.dump(obj, f)
 
 

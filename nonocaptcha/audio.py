@@ -66,7 +66,7 @@ class SolveAudio(Base):
             f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
         if not isinstance(audio_url, str):
-            raise InvalidDownload('Audio url is not valid, aborting')
+            raise InvalidDownload("Audio url is not valid, aborting")
         self.log("Downloading audio file")
         timeout = settings["wait_timeout"]["load_timeout"]
         try:
@@ -81,7 +81,7 @@ class SolveAudio(Base):
             if service in ["azure", "sphinx"]:
                 speech = Azure() if service == "azure" else Sphinx()
                 tmpd = tempfile.mkdtemp()
-                tmpf = os.path.join(tmpd, 'audio.mp3')
+                tmpf = os.path.join(tmpd, "audio.mp3")
                 await util.save_file(tmpf, data=audio_data, binary=True)
                 speech = Sphinx()
                 answer = await speech.get_text(tmpf)
@@ -104,7 +104,7 @@ class SolveAudio(Base):
                 func, timeout=timeout * 1000
             )
         except TimeoutError:
-            raise ReloadError('Download link never updated')
+            raise ReloadError("Download link never updated")
         else:
             return
 
