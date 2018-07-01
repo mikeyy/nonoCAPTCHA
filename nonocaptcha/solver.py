@@ -63,10 +63,6 @@ class Solver(Base):
 
             self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
-        except asyncio.TimeoutError:
-            raise
-        except asyncio.CancelledError:
-            raise
         except BaseException as e:
             self.log(f"{e} {type(e)}")
         finally:
@@ -75,6 +71,8 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             if self.browser:
                 await self.browser.close()
+            if self.launcher.proc:
+                await self.launcher.waitForChromeToClose()
         return result
 
     async def get_new_browser(self):
@@ -162,8 +160,7 @@ class Solver(Base):
             )
             await self.wait_for_deface()
         except BaseException:
-            self.log("Problem defacing page")
-            raise
+            raise BaseException("Problem defacing page")
 
     async def solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio
@@ -171,22 +168,15 @@ class Solver(Base):
         """
 
         if settings["check_blacklist"]:
-            self.log("Checking Google search for blacklist")
-            if await self.is_blacklisted():
-                return
+            await self.is_blacklisted()
         
-        try:
-            await self.goto_and_deface()
-        except BaseException:
-            raise
+        await self.goto_and_deface()
 
         self.get_frames()
         await self.click_checkbox()
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
-        except asyncio.CancelledError:
-            raise
         except BaseException:
             return await self._solve()
         else:
@@ -236,8 +226,7 @@ class Solver(Base):
                 "$('#recaptcha-audio-button').length", timeout=timeout * 1000
             )
         except BaseException:
-            self.log("Audio button missing, aborting")
-            raise
+            raise BaseException("Audio button missing, aborting")
         else:
             return True
 
@@ -263,21 +252,18 @@ class Solver(Base):
         return code
 
     async def is_blacklisted(self):
-        try:
-            timeout = settings["wait_timeout"]["load_timeout"]
-            url = "https://www.google.com/search?q=my+ip&hl=en"
-            response = await util.get_page(
-                url, proxy=self.proxy, timeout=timeout
-            )
-            detected_phrase = (
-                "Our systems have detected unusual traffic "
-                "from your computer"
-            )
-            if detected_phrase in response:
-                self.log("IP has been blacklisted by Google")
-                return 1
-        except BaseException:
-            raise
+        self.log("Checking Google search for blacklist")
+        timeout = settings["wait_timeout"]["load_timeout"]
+        url = "https://www.google.com/search?q=my+ip&hl=en"
+        response = await util.get_page(
+            url, proxy=self.proxy, timeout=timeout
+        )
+        detected_phrase = (
+            "Our systems have detected unusual traffic "
+            "from your computer"
+        )
+        if detected_phrase in response:
+            raise BaseException("IP has been blacklisted by Google")
 
     async def sign_in_to_google(self):
         cookie_path = settings['data_files']['cookies']

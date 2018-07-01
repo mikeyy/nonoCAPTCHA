@@ -11,6 +11,7 @@ import sys
 from pyppeteer import launcher
 from pyppeteer import connection
 from pyppeteer.browser import Browser
+from pyppeteer.connection import Connection
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
@@ -51,24 +52,6 @@ AUTOMATION_ARGS = [
 ]
 
 
-class Connection(connection.Connection):
-    async def _recv_loop(self):
-        async with self._ws as connection:
-            self._connected = True
-            self.connection = connection
-            while self._connected:
-                try:
-                    resp = await self.connection.recv()
-                    if resp:
-                        self._on_message(resp)
-                except asyncio.CancelledError:
-                    raise
-                except asyncio.TimeoutError:
-                    raise
-                except websockets.ConnectionClosed:
-                    break
-
-
 class Launcher(launcher.Launcher):
     def __init__(self, options, **kwargs):
         """Make new launcher."""
@@ -76,6 +59,7 @@ class Launcher(launcher.Launcher):
         self.port = get_free_port()
         self.url = f'http://127.0.0.1:{self.port}'
         self.chrome_args = []
+        self.proc = None
 
         if not self.options.get('ignoreDefaultArgs', False):
             self.chrome_args.extend(DEFAULT_ARGS)
