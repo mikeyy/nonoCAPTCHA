@@ -18,8 +18,10 @@ from nonocaptcha.base import Base, Detected, SafePassage, Success, TryAgain
 class ReloadError(Exception):
     pass
 
+
 class InvalidDownload(Exception):
     pass
+
 
 class SolveAudio(Base):
     def __init__(self, page, proxy, proc_id):
