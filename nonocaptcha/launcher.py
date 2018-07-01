@@ -65,8 +65,7 @@ class Connection(connection.Connection):
                 self._connected = False
                 break
 
-        if not self._connected:
-            await self.connection.send(msg)
+        await self.connection.send(msg)
 
 
 class Launcher(launcher.Launcher):
