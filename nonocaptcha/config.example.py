@@ -56,9 +56,9 @@ settings = {
         "load_timeout": 30,  # Seconds to wait for page to load
         "deface_timeout": 30,  # Seconds to wait for page to be defaced
         "success_timeout": 5,  # Seconds to wait due to checkbox animation
-        "audio_button_timeout": 10,  # Seconds to wait for audio button
-        "audio_link_timeout": 10,  # Seconds to wait for the audio link,
+        "audio_button_timeout": 5,  # Seconds to wait for audio button
+        "audio_link_timeout": 5,  # Seconds to wait for the audio link,
         # not the download!
-        "reload_timeout": 10,  # Seconds to wait for audio reload
+        "reload_timeout": 5,  # Seconds to wait for audio reload
     },
 }
