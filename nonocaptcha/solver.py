@@ -16,11 +16,15 @@ from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
 from config import settings
-from nonocaptcha.base import Base, SafePassage
-from nonocaptcha.image import SolveImage
+from nonocaptcha.base import Base, Detected, SafePassage, Success, TryAgain
 from nonocaptcha.audio import SolveAudio
+from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
 from nonocaptcha import util
+
+
+class ButtonMissing(Exception):
+    pass
 
 
 class Solver(Base):
@@ -171,16 +175,18 @@ class Solver(Base):
         await self.goto_and_deface()
 
         self.get_frames()
+        #await self.wait_for_checkbox()
         await self.click_checkbox()
         timeout = settings["wait_timeout"]["success_timeout"]
         try:
             await self.check_detection(self.checkbox_frame, timeout=timeout)
+        except Detected:
+            raise
         except SafePassage:
             return await self._solve()
-        else:
+        except Success:
             code = await self.g_recaptcha_response()
             if code:
-                self.log("One-click successful")
                 return f"OK|{code}"
 
     async def _solve(self):
@@ -191,17 +197,27 @@ class Solver(Base):
             solve = self.image.solve_by_image
         else:
             self.audio = SolveAudio(self.page, self.proxy, self.proc_id)
-            if not await self.wait_for_audio_button():
-                return
-            if not await self.click_audio_button():
-                return
+            await self.wait_for_audio_button()
+            await self.click_audio_button()
             solve = self.audio.solve_by_audio
 
-        if await solve():
+        try:
+            await solve()
+        except Success:
             code = await self.g_recaptcha_response()
             if code:
-                self.log("Audio response successful")
                 return f"OK|{code}"
+
+    async def wait_for_checkbox(self):
+        """Wait for audio button to appear."""
+
+        timeout = settings["wait_timeout"]["audio_button_timeout"]
+        try:
+            await self.image_frame.waitForFunction(
+                "$('#recaptcha-anchor').length", timeout=timeout * 1000
+            )
+        except ButtonMissing:
+            raise ButtonMissing("Checkbox missing, aborting")
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
@@ -223,10 +239,8 @@ class Solver(Base):
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-audio-button').length", timeout=timeout * 1000
             )
-        except BaseException:
-            raise BaseException("Audio button missing, aborting")
-        else:
-            return True
+        except ButtonMissing:
+            raise ButtonMissing("Audio button missing, aborting")
 
     async def click_audio_button(self):
         """Click audio button after it appears."""
@@ -241,9 +255,10 @@ class Solver(Base):
         timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.check_detection(self.image_frame, timeout)
-        finally:
-            if not self.detected:
-                return True
+        except Detected:
+            raise
+        except SafePassage:
+            pass
 
     async def g_recaptcha_response(self):
         code = await self.page.evaluate("$('#g-recaptcha-response').val()")
@@ -261,7 +276,7 @@ class Solver(Base):
             "from your computer"
         )
         if detected_phrase in response:
-            raise BaseException("IP has been blacklisted by Google")
+            raise Detected("IP has been blacklisted by Google")
 
     async def sign_in_to_google(self):
         cookie_path = settings['data_files']['cookies']

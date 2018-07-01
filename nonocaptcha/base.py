@@ -9,8 +9,22 @@ from nonocaptcha.helper import wait_between
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
 
+
+class Detected(Exception):
+    pass
+
+
 class SafePassage(Exception):
     pass
+
+
+class Success(Exception):
+    pass
+
+
+class TryAgain(Exception):
+    pass
+
 
 class Clicker:
     @staticmethod
@@ -77,6 +91,7 @@ class Base(Clicker):
 
     var checkbox_anchor = $("#recaptcha-anchor", checkbox_frame);
     if(checkbox_anchor.attr("aria-checked") === "true"){
+        parent.window.success = true;
         return true;
     }
 
@@ -88,15 +103,16 @@ class Base(Clicker):
         except asyncio.TimeoutError:
             raise SafePassage()
         else:
-            eval = "typeof parent.window.wasdetected !== 'undefined'"
+            eval = "parent.window.wasdetected === true;"
             if await frame.evaluate(eval):
-                self.log("Automation detected")
-                self.detected = True
+                raise Detected("Automation detected")
             eval = "parent.window.tryagain === true"
             if await frame.evaluate(eval):
-                self.log("Incorrect answer, trying again")
                 await frame.evaluate("parent.window.tryagain = false;")
-                self.try_again = True
+                raise TryAgain("Incorrect answer, trying again")
+            eval = 'parent.window.success === true'
+            if await frame.evaluate(eval):
+                raise Success("Automation successful!")
 
     def log(self, message):
         self.logger.debug(f'{self.proc_id} {message}')

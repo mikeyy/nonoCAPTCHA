@@ -12,7 +12,7 @@ from asyncio import TimeoutError
 from config import settings
 from nonocaptcha import util
 from nonocaptcha.speech import Amazon, Azure, Sphinx
-from nonocaptcha.base import Base, SafePassage
+from nonocaptcha.base import Base, Detected, SafePassage, Success, TryAgain
 
 
 class ReloadError(Exception):
@@ -49,14 +49,12 @@ class SolveAudio(Base):
             timeout = settings["wait_timeout"]["success_timeout"]
             try:
                 await self.check_detection(self.image_frame, timeout)
-            except SafePassage:
-                pass
-            else:
-                if self.try_again:
-                    self.try_again = False
-                    continue
-                if not self.detected:
-                    return True
+            except TryAgain:
+                continue
+            except Detected:
+                raise
+            except Success:
+                raise
 
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
