@@ -13,6 +13,7 @@ import signal
 import subprocess
 import sys
 
+from async_timeout import timeout
 from pyppeteer import launcher
 from pyppeteer import connection
 from pyppeteer.browser import Browser
@@ -57,15 +58,31 @@ AUTOMATION_ARGS = [
 
 
 class Connection(connection.Connection):
+    async def _recv_loop(self):
+        async with self._ws as connection:
+            self._connected = True
+            self.connection = connection
+            while self._connected:
+                try:
+                    resp = await self.connection.recv()
+                    if resp:
+                        self._on_message(resp)
+                except websockets.ConnectionClosed:
+                    break
+                    
     async def _async_send(self, msg: str) -> None:
-        while not self._connected:
-            try:
-                await asyncio.sleep(self._delay)
-            except websockets.ConnectionClosed:
-                self._connected = False
-                break
-
-        await self.connection.send(msg)
+        async with timeout(5) as timer:
+            while not self._connected:
+                try:
+                    await asyncio.sleep(self._delay)
+                    if timer.expired: break
+                except asyncio.CancelledError:
+                    break
+        
+        try:
+            await self.connection.send(msg)
+        except:
+            pass
 
 
 class Launcher(launcher.Launcher):
@@ -167,6 +184,9 @@ class Launcher(launcher.Launcher):
             raise IOError('Unable to remove Temporary User Data')
 
     async def waitForChromeToClose(self):
+        while not self.proc:
+            await asyncio.sleep(0.1)
+
         if self.proc.returncode is None and not self.chromeClosed:
             self.chromeClosed = True
             if psutil.pid_exists(self.proc.pid):
