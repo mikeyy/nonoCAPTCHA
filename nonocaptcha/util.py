@@ -7,9 +7,13 @@ import aiohttp
 import aiofiles
 import asyncio
 import pickle
+import requests
+import sys
 from async_timeout import timeout as async_timeout
 from functools import partial, wraps
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 __all__ = [
     "save_file",
@@ -44,22 +48,34 @@ async def load_file(file, binary=False):
         return await f.read()
 
 
+@threaded
+def get_page_win(url, proxy=None, binary=False, verify=False, timeout=300):
+    proxies = None
+    if proxy:
+        proxies = {"http": proxy, "https": proxy}
+    with requests.Session() as session:
+        response = session.get(
+            url, proxies=proxies, verify=verify, timeout=timeout
+            )
+        if binary:
+            return response.content
+        return response.text
+
+
 async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
     if proxy:
         proxy = f"http://{proxy}"
 
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with async_timeout(timeout) as cm:
-                async with session.get(
-                    url, proxy=proxy, verify_ssl=verify
-                ) as response:
-                    if binary:
-                        return await response.read()
-                    return await response.text()
-        except TimeoutError:
-            await session.close()
-            raise
+    if sys.platform == 'win32':
+        return await get_page_win(url, proxy, binary, verify, timeout)
+    else:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url, proxy=proxy, verify_ssl=verify, timeout=timeout
+            ) as response:
+                if binary:
+                    return await response.read()
+                return await response.text()
 
 
 def serialize(obj, p):
