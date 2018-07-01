@@ -25,12 +25,18 @@ def shuffle(i):
 
 async def work(pageurl, sitekey, proxy):
     # Chromium options and arguments
-    options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-    client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-    result = await client.start()
-    if result:
-        return result
-
+    try:
+        options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+        result = await client.start()
+        if result:
+            return result
+    except CancelledError:
+        # Let's make sure Chrome closes after ungraceful exit
+        if client.launcher:
+            if not client.launcher.chromeClosed:
+                await client.launcher.waitForChromeToClose()
+        raise
 
 async def get_solution(request):
     while not proxies:
@@ -42,7 +48,7 @@ async def get_solution(request):
     response = {"error": "invalid request"}
     if pageurl and sitekey:
         result = None
-        async with timeout(3 * 60) as timer:
+        async with timeout(3*60) as timer:
             while not timer.expired:
                 try:
                     proxy = next(proxies)
@@ -51,11 +57,9 @@ async def get_solution(request):
                     )
                     if result:
                         break
+                except TimeoutError:
+                    break
                 except CancelledError:
-                    # Let's make sure Chrome closes after ungraceful exit
-                    if client.launcher:
-                        if not client.launcher.chromeClosed:
-                            await client.launcher.waitForChromeToClose()
                     break
         if result:
             response = {"solution": result}
