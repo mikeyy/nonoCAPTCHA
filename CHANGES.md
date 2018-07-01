@@ -1,6 +1,11 @@
 History (Work in progress)
 =======
 ### Current Version (2018-07-01)
+* Attempt to fix issues with ongoing issue with Windows directory removal
+* Possible fix for rare hanging on close
+* More redifinition of exception handling
+
+### Version 1.4.14 (2018-07-01)
 * Redefine names of thrown exceptions better suited for invidual cases
 * Fix bugs
 
