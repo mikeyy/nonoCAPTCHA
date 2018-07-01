@@ -9,7 +9,6 @@ import asyncio
 import pickle
 import requests
 import sys
-from async_timeout import timeout as async_timeout
 from functools import partial, wraps
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
