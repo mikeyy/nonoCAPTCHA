@@ -130,7 +130,6 @@ class Launcher(launcher.Launcher):
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
             env=env,
-            preexec_fn=os.setsid
         )
         self.chromeClosed = False
         self.connection = None
@@ -199,7 +198,7 @@ class Launcher(launcher.Launcher):
                     for proc in process.children(recursive=True):
                         try:
                             proc.kill()
-                        except OSError:
+                        except psutil._exceptions.NoSuchProces:
                             pass
                     process.kill()
                     self.proc.terminate()

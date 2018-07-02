@@ -1,5 +1,11 @@
 History (Work in progress)
 =======
+### Current Version (2018-07-02)
+* Fix bugs
+
+### Verison 1.4.19 (2018-07-02)
+* Fix mp3_to_wav()
+
 ### Verison 1.4.18 (2018-07-02)
 * Add requests to requirements.txt
 
