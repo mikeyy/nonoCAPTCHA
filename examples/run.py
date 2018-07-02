@@ -101,10 +101,12 @@ async def work():
     try:
         async with timeout(180):
             answer = await client.start()
-    except TimeoutError:
-        pass
-    except CancelledError as e:
-        raise e
+    except CancelledError:
+        # Let's make sure Chrome closes after ungraceful exit
+        if client.launcher:
+            if not client.launcher.chromeClosed:
+                await client.launcher.waitForChromeToClose()
+        raise
     finally:
         if sort_position:
             used_positions.remove(this_position)
@@ -145,4 +147,7 @@ proxy_src = settings["proxy_source"]
 if proxy_src:
     asyncio.ensure_future(get_proxies())
 
-loop.run_until_complete(main())
+try:
+    loop.run_until_complete(main())
+except KeyboardInterrupt:
+    raise

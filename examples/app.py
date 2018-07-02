@@ -24,8 +24,8 @@ def shuffle(i):
 
 
 async def work(pageurl, sitekey, proxy):
-    # Chromium options and arguments
     try:
+        # Chromium options and arguments
         options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
         client = Solver(pageurl, sitekey, options=options, proxy=proxy)
         result = await client.start()
@@ -48,12 +48,14 @@ async def get_solution(request):
     response = {"error": "invalid request"}
     if pageurl and sitekey:
         result = None
-        async with timeout(3*60) as timer:
+        # raises CancelledError
+        async with timeout(10) as timer:
             while not timer.expired:
                 try:
                     proxy = next(proxies)
+                    # raises TimeoutError
                     result = await asyncio.wait_for(
-                        work(pageurl, sitekey, proxy), timeout=120
+                        work(pageurl, sitekey, proxy), timeout=15
                     )
                     if result:
                         break
