@@ -5,8 +5,8 @@
 
 import asyncio
 import atexit
-import psutil
 import os
+import psutil
 import websockets
 import shutil
 import signal
@@ -58,13 +58,11 @@ AUTOMATION_ARGS = [
 
 
 class Connection(connection.Connection):
-    closed = False
-
     async def _recv_loop(self):
         async with self._ws as connection:
             self._connected = True
             self.connection = connection
-            while self._connected and not self.closed:
+            while self._connected:
                 try:
                     resp = await self.connection.recv()
                     if resp:
@@ -73,13 +71,11 @@ class Connection(connection.Connection):
                     break
 
     async def _async_send(self, msg: str):
-        while not self._connected and not self.closed:
+        while not self._connected:
             await asyncio.sleep(self._delay)
-
-        try:
-            await self.connection.send(msg)
-        except:
-            pass
+        
+        # Ignore errors on ungraceful exits
+        await self.connection.send(msg)
 
 
 class Launcher(launcher.Launcher):
@@ -134,6 +130,7 @@ class Launcher(launcher.Launcher):
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.DEVNULL,
             env=env,
+            preexec_fn=os.setsid
         )
         self.chromeClosed = False
         self.connection = None
@@ -160,59 +157,60 @@ class Launcher(launcher.Launcher):
             self.connection, self.options, self.proc, self.killChrome
         )
 
-    def windows_rmdir(self, path):
-        cmd_path = os.path.join(
-            os.environ["SYSTEMROOT"]
-            if "SYSTEMROOT" in os.environ
-            else r"C:\Windows",
-            "System32",
-            "cmd.exe",
-        )
-        args = [cmd_path, "/C", "rmdir", "/S", "/Q", path]
-        subprocess.check_call(
-            args, env={}, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+
 
     def _cleanup_tmp_user_data_dir(self):
+        def windows(path):
+            cmd_path = os.path.join(
+                os.environ["SYSTEMROOT"]
+                if "SYSTEMROOT" in os.environ
+                else r"C:\Windows",
+                "System32",
+                "cmd.exe",
+            )
+            args = [cmd_path, "/C", "rmdir", "/S", "/Q", path]
+            subprocess.check_call(
+                args, env={}, 
+                stdout=subprocess.DEVNULL, 
+                stderr=subprocess.DEVNULL
+            )
+
         for retry in range(100):
             if self._tmp_user_data_dir and os.path.exists(
                 self._tmp_user_data_dir
             ):
                 if sys.platform == "win32":
-                    self.windows_rmdir(f"{self._tmp_user_data_dir}")
-                shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
+                    windows(f"{self._tmp_user_data_dir}")
+                else:
+                    shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
                 if os.path.exists(self._tmp_user_data_dir):
                     time.sleep(0.01)
             else:
                 break
         else:
-            # Keeps causing issues, will fix later
-            # raise IOError('Unable to remove Temporary User Data')
-            pass
+            raise IOError('Unable to remove Temporary User Data')
 
     async def waitForChromeToClose(self):
         if self.proc:
             if self.proc.returncode is None and not self.chromeClosed:
                 self.chromeClosed = True
                 if psutil.pid_exists(self.proc.pid):
-                    if sys.platform == "win32":
-                        subprocess.call(
-                            ["taskkill", "/pid {self.proc.pid} /T /F"],
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL,
-                        )
+                    process = psutil.Process(self.proc.pid)
+                    for proc in process.children(recursive=True):
+                        try:
+                            proc.kill()
+                        except OSError:
+                            pass
+                    process.kill()
                     self.proc.terminate()
-                    await self.proc.wait()
+                    await self.proc.communicate()
 
     async def killChrome(self):
         """Terminate chromium process."""
         if self.connection and self.connection._connected:
-            try:
-                await self.connection.send("Browser.close")
-                await self.connection.dispose()
-            except:
-                pass
-        self.connection.closed = True
+            await self.connection.send("Browser.close")
+            await self.connection.dispose()
+
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir
             await self.waitForChromeToClose()
