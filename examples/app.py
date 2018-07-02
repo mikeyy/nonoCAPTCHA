@@ -49,13 +49,13 @@ async def get_solution(request):
     if pageurl and sitekey:
         result = None
         # raises CancelledError
-        async with timeout(10) as timer:
+        async with timeout(3*60) as timer:
             while not timer.expired:
                 try:
                     proxy = next(proxies)
                     # raises TimeoutError
                     result = await asyncio.wait_for(
-                        work(pageurl, sitekey, proxy), timeout=15
+                        work(pageurl, sitekey, proxy), timeout=180
                     )
                     if result:
                         break
@@ -104,6 +104,10 @@ app.on_cleanup.append(cleanup_background_tasks)
 home = Path.home()
 dir = f"{home}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
+
+if sys.platform == "win32":
+    loop = asyncio.ProactorEventLoop()
+    asyncio.set_event_loop(loop)
 
 if __name__ == "__main__":
     web.run_app(app, host="127.0.0.1", port=5000)
