@@ -76,8 +76,6 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             if self.browser:
                 await self.browser.close()
-            if self.launcher:
-                await self.launcher.waitForChromeToClose()
         return result
 
     async def get_new_browser(self):
