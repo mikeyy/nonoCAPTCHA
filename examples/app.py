@@ -2,6 +2,7 @@ import asyncio
 import backoff
 import random
 import shutil
+import sys
 
 from aiohttp import web, ClientSession, ClientError
 from async_timeout import timeout
