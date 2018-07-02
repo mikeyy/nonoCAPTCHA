@@ -25,20 +25,21 @@ from config import settings
 from nonocaptcha import util
 
 
+@util.threaded
+def mp3_to_wav(self, mp3_filename):
+    wav_filename = mp3_filename.replace(".mp3", ".wav")
+    segment = AudioSegment.from_mp3(mp3_filename)
+    sound = segment.set_channels(1).set_frame_rate(16000)
+    # Strip a 30% from first and last of audio (it's just static)
+    # Too much and the words don't fully complete
+    garbage = len(sound) / 3
+    sound = sound[+garbage : len(sound) - garbage]
+    sound.export(wav_filename, format="wav")
+    return wav_filename
+
+
 class Sphinx(object):
     MODEL_DIR = settings["speech_api"]["sphinx"]["model_dir"]
-
-    @util.threaded
-    def mp3_to_wav(self, mp3_filename):
-        wav_filename = mp3_filename.replace(".mp3", ".wav")
-        segment = AudioSegment.from_mp3(mp3_filename)
-        sound = segment.set_channels(1).set_frame_rate(16000)
-        # Strip a 30% from first and last of audio (it's just static)
-        # Too much and the words don't fully complete
-        garbage = len(sound) / 3
-        sound = sound[+garbage : len(sound) - garbage]
-        sound.export(wav_filename, format="wav")
-        return wav_filename
 
     @util.threaded
     def build_decoder(self):
@@ -74,7 +75,7 @@ class Sphinx(object):
     async def get_text(self, mp3_filename):
         decoder = await self.build_decoder()
         decoder.start_utt()
-        wav_filename = await self.mp3_to_wav(mp3_filename)
+        wav_filename = await mp3_to_wav(mp3_filename)
         async with aiofiles.open(wav_filename, "rb") as stream:
             while True:
                 buf = await stream.read(1024)
@@ -161,13 +162,6 @@ class Azure(object):
     SUB_KEY = settings["speech_api"]["azure"]["api_subkey"]
 
     @util.threaded
-    def mp3_to_wav(self, mp3_filename):
-        wav_filename = mp3_filename.replace(".mp3", ".wav")
-        sound = AudioSegment.from_mp3(mp3_filename)
-        sound.export(wav_filename, format="wav")
-        return wav_filename
-
-    @util.threaded
     def extract_json_body(self, response):
         pattern = "^\r\n"  # header separator is an empty line
         m = re.search(pattern, response, re.M)
@@ -204,7 +198,7 @@ class Azure(object):
             await websocket.send(message)
 
     async def get_text(self, mp3_filename):
-        wav_filename = await self.mp3_to_wav(mp3_filename)
+        wav_filename = await mp3_to_wav(mp3_filename)
         conn_id = uuid4().hex
         url = (
             f"wss://speech.platform.bing.com/speech/recognition/dictation/cogn"
