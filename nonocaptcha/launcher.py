@@ -198,7 +198,7 @@ class Launcher(launcher.Launcher):
                     for proc in process.children(recursive=True):
                         try:
                             proc.kill()
-                        except psutil._exceptions.NoSuchProces:
+                        except psutil._exceptions.NoSuchProcess:
                             pass
                     process.kill()
                     self.proc.terminate()

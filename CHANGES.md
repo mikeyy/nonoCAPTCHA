@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-07-02)
+* Fix typo in kill process
+
+### Current Version (2018-07-02)
 * Fix bugs
 
 ### Verison 1.4.19 (2018-07-02)
