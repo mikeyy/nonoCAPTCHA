@@ -26,7 +26,7 @@ from nonocaptcha import util
 
 
 @util.threaded
-def mp3_to_wav(self, mp3_filename):
+def mp3_to_wav(mp3_filename):
     wav_filename = mp3_filename.replace(".mp3", ".wav")
     segment = AudioSegment.from_mp3(mp3_filename)
     sound = segment.set_channels(1).set_frame_rate(16000)
