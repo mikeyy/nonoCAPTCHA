@@ -1,6 +1,12 @@
 History (Work in progress)
 =======
 ### Verison 1.4.22 (2018-07-02)
+* Made more adjustments to the way exits are handled
+* Resolutions.json is deprecated, update your configs.
+* Removed OK| before the reCAPTCHA solution
+* Update deface.html with nonoCAPTCHA title
+
+### Verison 1.4.22 (2018-07-02)
 * Fix Exception thrown while killing non-existent process
 
 ### Verison 1.4.22 (2018-07-02)
