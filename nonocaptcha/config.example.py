@@ -49,7 +49,6 @@ settings = {
         "override_js": f"{package_dir}/data/override.js",
         "jquery_js": f"{package_dir}/data/jquery.js",
         "deface_html": f"{package_dir}/data/deface.html",
-        "resolutions_json": f"{package_dir}/data/resolutions.json",
         "cookies": f"{package_dir}/data/cookie_jar/google_accounts"  # Stores cookies
     },
     "wait_timeout": {
