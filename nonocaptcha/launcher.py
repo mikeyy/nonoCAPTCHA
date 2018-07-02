@@ -75,7 +75,10 @@ class Connection(connection.Connection):
             await asyncio.sleep(self._delay)
         
         # Ignore errors on ungraceful exits
-        await self.connection.send(msg)
+        try:
+            await self.connection.send(msg)
+        except asyncio.streams.IncompleteReadError:
+            pass
 
 
 class Launcher(launcher.Launcher):
@@ -196,11 +199,15 @@ class Launcher(launcher.Launcher):
                 if psutil.pid_exists(self.proc.pid):
                     process = psutil.Process(self.proc.pid)
                     for proc in process.children(recursive=True):
-                        try:
-                            proc.kill()
-                        except psutil._exceptions.NoSuchProcess:
-                            pass
-                    process.kill()
+                            try:
+                                proc.kill()
+                            except psutil._exceptions.NoSuchProcess:
+                                pass
+                    try:
+                        process.kill()
+                    except psutil._exceptions.NoSuchProcess:
+                        pass
+
                     self.proc.terminate()
                     await self.proc.communicate()
 
