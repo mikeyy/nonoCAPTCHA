@@ -157,7 +157,7 @@ class Solver(Base):
         try:
             timeout = settings["wait_timeout"]["load_timeout"]
             await self.page.goto(
-                self.url, timeout=timeout * 1000, waitUntil="documentloaded"
+                self.url, timeout=timeout * 1000, waitUntil="load"
             )
             await self.wait_for_deface()
         except TimeoutError:
