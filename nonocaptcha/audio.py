@@ -12,7 +12,7 @@ from asyncio import TimeoutError
 
 from config import settings
 from nonocaptcha import util
-from nonocaptcha.speech import Amazon, Azure, Sphinx
+from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech
 from nonocaptcha.base import Base, Detected, Success, TryAgain
 
 
@@ -79,11 +79,13 @@ class SolveAudio(Base):
             answer = None
             service = settings["speech_api"]["service"].lower()
             if service in ["azure", "sphinx"]:
-                speech = Azure() if service == "azure" else Sphinx()
+                if service == "azure":
+                    speech = Azure()
+                elif service == "spinx":
+                    speech = Sphinx()
                 tmpd = tempfile.mkdtemp()
                 tmpf = os.path.join(tmpd, "audio.mp3")
                 await util.save_file(tmpf, data=audio_data, binary=True)
-                speech = Sphinx()
                 answer = await speech.get_text(tmpf)
                 shutil.rmtree(tmpd)
             else:
