@@ -81,7 +81,7 @@ class SolveAudio(Base):
             if service in ["azure", "sphinx"]:
                 if service == "azure":
                     speech = Azure()
-                elif service == "spinx":
+                elif service == "sphinx":
                     speech = Sphinx()
                 tmpd = tempfile.mkdtemp()
                 tmpf = os.path.join(tmpd, "audio.mp3")
