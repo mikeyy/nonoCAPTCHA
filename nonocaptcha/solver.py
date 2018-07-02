@@ -185,7 +185,7 @@ class Solver(Base):
         except Success:
             code = await self.g_recaptcha_response()
             if code:
-                return f"OK|{code}"
+                return code
 
     async def _solve(self):
         # Coming soon...
@@ -204,7 +204,7 @@ class Solver(Base):
         except Success:
             code = await self.g_recaptcha_response()
             if code:
-                return f"OK|{code}"
+                return code
 
     async def wait_for_checkbox(self):
         """Wait for audio button to appear."""
