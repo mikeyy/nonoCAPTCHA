@@ -79,6 +79,8 @@ class Connection(connection.Connection):
             await self.connection.send(msg)
         except asyncio.streams.IncompleteReadError:
             pass
+        except ConnectionResetError:
+            pass
 
 
 class Launcher(launcher.Launcher):
@@ -139,7 +141,7 @@ class Launcher(launcher.Launcher):
 
         def _close_process(*args, **kwargs):
             if not self.chromeClosed:
-                asyncio.get_event_loop().run_until_complete(self.killChrome())
+                asyncio.wait(asyncio.ensure_future(self.killChrome()))
 
         # dont forget to close browser process
         atexit.register(_close_process)
@@ -158,8 +160,6 @@ class Launcher(launcher.Launcher):
         return await Browser.create(
             self.connection, self.options, self.proc, self.killChrome
         )
-
-
 
     def _cleanup_tmp_user_data_dir(self):
         def windows(path):
@@ -199,14 +199,10 @@ class Launcher(launcher.Launcher):
                 if psutil.pid_exists(self.proc.pid):
                     process = psutil.Process(self.proc.pid)
                     for proc in process.children(recursive=True):
-                            try:
-                                proc.kill()
-                            except psutil._exceptions.NoSuchProcess:
-                                pass
-                    try:
-                        process.kill()
-                    except psutil._exceptions.NoSuchProcess:
-                        pass
+                        try:
+                            proc.kill()
+                        except psutil._exceptions.NoSuchProcess:
+                            pass
 
                     self.proc.terminate()
                     await self.proc.communicate()
