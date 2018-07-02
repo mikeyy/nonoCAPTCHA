@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-02)
+### Verison 1.4.18 (2018-07-02)
+* Add requests to requirements.txt
+
+### Verison 1.4.17 (2018-07-02)
 * Increase polling to 500ms for detection checking
 * Recursively kill child processes of Chrome
 

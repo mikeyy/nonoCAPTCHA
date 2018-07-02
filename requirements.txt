@@ -12,6 +12,7 @@ psutil==5.4.6
 pydub==0.22.1
 pyee==5.0.0
 pyppeteer==0.0.17
+requests==2.19.1
 six==1.11.0
 user-agent==0.1.9
 websockets==5.0.1
