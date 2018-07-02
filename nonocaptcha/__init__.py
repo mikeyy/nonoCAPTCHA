@@ -4,7 +4,7 @@
 import os.path
 import sys
 
-version_info = (1, 4, 178
+version_info = (1, 4, 18)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
