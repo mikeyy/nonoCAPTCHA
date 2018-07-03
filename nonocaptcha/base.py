@@ -101,7 +101,7 @@ class Base(Clicker):
         )
         try:
             await frame.waitForFunction(
-                func, timeout=timeout * 1000, polling=500
+                func, timeout=timeout * 1000, polling=50
             )
         except asyncio.TimeoutError:
             raise SafePassage()
