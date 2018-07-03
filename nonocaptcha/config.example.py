@@ -42,10 +42,11 @@ settings = {
         },
         "sphinx": {
             "model_dir": "pocketsphinx/model/" # Directory for the trained model files
-                                                    # It's large so download it from https://github.com/mikeyy/nonoCAPTCHA
+                                               # Download from https://github.com/mikeyy/nonoCAPTCHA
         },
         "deepspeech": {
-            "model_dir": "deepspeech/models/"
+            "model_dir": "deepspeech/models/" # Large download (1.31Gb)
+                                              # https://github.com/mozilla/DeepSpeech/releases/download/v0.1.1/deepspeech-0.1.1-models.tar.gz
         }
     },
     "data_files": {
