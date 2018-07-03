@@ -48,7 +48,7 @@ class DeepSpeech(object):
                     'deepspeech', 
                     os.path.join(MODEL_DIR, "output_graph.pb"), 
                     wav_filename,
-                    os.path.join(MODEL_DIR, "alphabet.txt",
+                    os.path.join(MODEL_DIR, "alphabet.txt"),
                     os.path.join(MODEL_DIR, "lm.binary"), 
                     os.path.join(MODEL_DIR, "trie")
                 ],
