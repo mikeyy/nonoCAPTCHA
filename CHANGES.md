@@ -1,8 +1,13 @@
 History (Work in progress)
 =======
-### Verison 1.4.22 (2018-07-02)
+### Current Verison (2018-07-02)
+* Add support for Mozilla's DeepSpeech
+* Deface as soon as page loads except instead waiting for document
+* Fix bugs
+
+### Verison 1.4.23 (2018-07-02)
 * Made more adjustments to the way exits are handled
-* Resolutions.json is deprecated, update your configs.
+* Resolutions.json is deprecated, update your configs
 * Removed OK| before the reCAPTCHA solution
 * Update deface.html with nonoCAPTCHA title
 
