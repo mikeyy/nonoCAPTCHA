@@ -46,11 +46,11 @@ class DeepSpeech(object):
         proc = await asyncio.create_subprocess_exec(
                 *[
                     'deepspeech', 
-                    os.path.join(MODEL_DIR, "output_graph.pb"), 
+                    os.path.join(self.MODEL_DIR, "output_graph.pb"), 
                     wav_filename,
-                    os.path.join(MODEL_DIR, "alphabet.txt"),
-                    os.path.join(MODEL_DIR, "lm.binary"), 
-                    os.path.join(MODEL_DIR, "trie")
+                    os.path.join(self.MODEL_DIR, "alphabet.txt"),
+                    os.path.join(self.MODEL_DIR, "lm.binary"), 
+                    os.path.join(self.MODEL_DIR, "trie")
                 ],
                 stdout=asyncio.subprocess.PIPE,
             )
