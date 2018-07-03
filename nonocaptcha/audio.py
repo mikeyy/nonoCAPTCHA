@@ -61,12 +61,16 @@ class SolveAudio(Base):
 
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
+        
+        try:
+            audio_url = await self.image_frame.evaluate(
+                f'$(".rc-audiochallenge-tdownload-link").attr("href")'
+            )
+            if not isinstance(audio_url, str):
+                raise InvalidDownload("Audio url is not valid, aborting")
+        except asyncio.CancelledError:
+            raise InvalidDownload("Audio url not found, aborting")
 
-        audio_url = await self.image_frame.evaluate(
-            f'$(".rc-audiochallenge-tdownload-link").attr("href")'
-        )
-        if not isinstance(audio_url, str):
-            raise InvalidDownload("Audio url is not valid, aborting")
         self.log("Downloading audio file")
         timeout = settings["wait_timeout"]["load_timeout"]
         try:
