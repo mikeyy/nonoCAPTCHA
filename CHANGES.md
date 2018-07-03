@@ -1,6 +1,10 @@
 History (Work in progress)
 =======
 ### Current Verison (2018-07-03)
+* speech.py
+    * Remove playback left behind from debugging
+    
+### Current Verison (2018-07-03)
 * audio.py
     * Fix change from InvalidDownload to DownloadError
 

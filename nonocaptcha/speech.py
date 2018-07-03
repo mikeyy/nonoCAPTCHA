@@ -18,7 +18,6 @@ import websockets
 from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
-from pydub.playback import play
 from pocketsphinx.pocketsphinx import *
 from sphinxbase.sphinxbase import *
 
@@ -35,7 +34,6 @@ def mp3_to_wav(mp3_filename):
     # Too much and the words don't fully complete
     garbage = len(sound) / 4
     sound = sound[+garbage : len(sound) - garbage]
-    play(sound)
     sound.export(wav_filename, format="wav")
     return wav_filename
 
