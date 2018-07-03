@@ -3,17 +3,17 @@ History (Work in progress)
 ### Current Verison (2018-07-03)
 * Fix typo on DefaceError
 
-### 1.5.3 (2018-07-03)
+### Verison 1.5.3 (2018-07-03)
 * Fix bugs
 
-### 1.5.2 (2018-07-03)
+### Verison 1.5.2 (2018-07-03)
 * Remove deepspeech from requirements.txt since it makes Windows install fail
 
-### 1.5.1 (2018-07-03)
+### Verison 1.5.1 (2018-07-03)
 * Revert back to documentloaded
 * Don't open a new tab
 
-### 1.5.0 (2018-07-02)
+### Verison 1.5.0 (2018-07-02)
 * Add support for Mozilla's DeepSpeech
 * Deface as soon as page loads except instead waiting for document
 * Fix bugs
