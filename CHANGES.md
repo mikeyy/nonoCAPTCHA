@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Verison (2018-07-03)
+* Fix bug
+
+### Version 1.5.6 (2018-07-03) 
 * speech.py
     * Remove playback left behind from debugging
     
