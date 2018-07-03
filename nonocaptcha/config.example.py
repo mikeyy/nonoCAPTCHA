@@ -45,7 +45,8 @@ settings = {
                                                # Download from https://github.com/mikeyy/nonoCAPTCHA
         },
         "deepspeech": {
-            "model_dir": "deepspeech/models/" # Large download (1.31Gb)
+            "model_dir": "deepspeech/models/" # pip install deepspeech (*nix only)
+                                              # Large download (1.31Gb)
                                               # https://github.com/mozilla/DeepSpeech/releases/download/v0.1.1/deepspeech-0.1.1-models.tar.gz
         }
     },
