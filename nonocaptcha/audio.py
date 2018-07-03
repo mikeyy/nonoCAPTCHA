@@ -20,7 +20,7 @@ class ReloadError(Exception):
     pass
 
 
-class InvalidDownload(Exception):
+class DownloadError(Exception):
     pass
 
 
@@ -67,9 +67,9 @@ class SolveAudio(Base):
                 f'$(".rc-audiochallenge-tdownload-link").attr("href")'
             )
             if not isinstance(audio_url, str):
-                raise InvalidDownload("Audio url is not valid, aborting")
+                raise DownloadError("Audio url is not valid, aborting")
         except asyncio.CancelledError:
-            raise InvalidDownload("Audio url not found, aborting")
+            raise DownloadError("Audio url not found, aborting")
 
         self.log("Downloading audio file")
         timeout = settings["wait_timeout"]["load_timeout"]

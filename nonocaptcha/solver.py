@@ -21,7 +21,10 @@ from nonocaptcha.launcher import Launcher
 from nonocaptcha import util
 
 
-class ButtonMissing(Exception):
+class ButtonError(Exception):
+    pass
+    
+class DefaceError(Exception):
     pass
 
 
@@ -163,7 +166,7 @@ class Solver(Base):
             )
             await self.wait_for_deface()
         except TimeoutError:
-            raise TimeoutError("Problem defacing page")
+            raise DefacetError("Problem defacing page")
 
     async def solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio
@@ -216,8 +219,8 @@ class Solver(Base):
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-anchor').length", timeout=timeout * 1000
             )
-        except ButtonMissing:
-            raise ButtonMissing("Checkbox missing, aborting")
+        except ButtonError:
+            raise ButtonError("Checkbox missing, aborting")
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
@@ -239,8 +242,8 @@ class Solver(Base):
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-audio-button').length", timeout=timeout * 1000
             )
-        except ButtonMissing:
-            raise ButtonMissing("Audio button missing, aborting")
+        except ButtonError:
+            raise ButtonError("Audio button missing, aborting")
 
     async def click_audio_button(self):
         """Click audio button after it appears."""

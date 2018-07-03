@@ -112,7 +112,8 @@ class Base(Clicker):
             eval = "parent.window.tryagain === true"
             if await frame.evaluate(eval):
                 await frame.evaluate("parent.window.tryagain = false;")
-                raise TryAgain("Incorrect answer, trying again")
+                self.log("Incorrect answer, trying again")
+                raise TryAgain()
             eval = "parent.window.success === true"
             if await frame.evaluate(eval):
                 raise Success("Automation successful!")
