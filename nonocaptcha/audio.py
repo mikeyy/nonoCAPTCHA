@@ -8,7 +8,7 @@ import random
 import shutil
 import tempfile
 
-from asyncio import TimeoutError
+from asyncio import TimeoutError, CancelledError
 
 from config import settings
 from nonocaptcha import util
@@ -68,7 +68,7 @@ class SolveAudio(Base):
             )
             if not isinstance(audio_url, str):
                 raise DownloadError("Audio url is not valid, aborting")
-        except asyncio.CancelledError:
+        except CancelledError:
             raise DownloadError("Audio url not found, aborting")
 
         self.log("Downloading audio file")
