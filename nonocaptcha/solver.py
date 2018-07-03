@@ -166,7 +166,7 @@ class Solver(Base):
             )
             await self.wait_for_deface()
         except TimeoutError:
-            raise DefacetError("Problem defacing page")
+            raise DefaceError("Problem defacing page")
 
     async def solve(self):
         """Clicks checkbox, on failure it will attempt to solve the audio
