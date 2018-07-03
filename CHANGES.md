@@ -1,6 +1,10 @@
 History (Work in progress)
 =======
 ### Current Verison (2018-07-02)
+* Revert back to documentloaded
+* Don't open a new tab
+
+### Current Verison (2018-07-02)
 * Add support for Mozilla's DeepSpeech
 * Deface as soon as page loads except instead waiting for document
 * Fix bugs
