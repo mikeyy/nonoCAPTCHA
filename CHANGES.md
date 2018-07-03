@@ -1,6 +1,6 @@
 History (Work in progress)
 =======
-### Current Verison (2018-07-02)
+### Current Verison (2018-07-03)
 * Revert back to documentloaded
 * Don't open a new tab
 
