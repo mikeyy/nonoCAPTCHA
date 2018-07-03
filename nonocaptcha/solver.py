@@ -7,6 +7,7 @@ import asyncio
 import json
 import pathlib
 import time
+import sys
 
 from asyncio import TimeoutError, CancelledError
 from pyppeteer.util import merge_dict
@@ -57,7 +58,8 @@ class Solver(Base):
         start = time.time()
         try:
             self.browser = await self.get_new_browser()
-            self.page = await self.browser.newPage()
+            target = [t for t in self.browser.targets() if await t.page()][0]
+            self.page = await target.page()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
 
@@ -157,7 +159,7 @@ class Solver(Base):
         try:
             timeout = settings["wait_timeout"]["load_timeout"]
             await self.page.goto(
-                self.url, timeout=timeout * 1000, waitUntil="load"
+                self.url, timeout=timeout * 1000, waitUntil="documentloaded"
             )
             await self.wait_for_deface()
         except TimeoutError:
