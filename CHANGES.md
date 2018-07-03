@@ -1,40 +1,53 @@
 History (Work in progress)
 =======
 ### Current Verison (2018-07-03)
-* Fix typo on DefaceError
+* audio.py
+    * Fix change from InvalidDownload to DownloadError
+
+### Verison 1.5.4 (2018-07-03)
+* solver.py
+    * Fix typo on DefaceError
 
 ### Verison 1.5.3 (2018-07-03)
 * Fix bugs
 
 ### Verison 1.5.2 (2018-07-03)
-* Remove deepspeech from requirements.txt since it makes Windows install fail
+* requirements.txt
+    * Remove deepspeech since it makes Windows install fail
 
 ### Verison 1.5.1 (2018-07-03)
-* Revert back to documentloaded
-* Don't open a new tab
+* solver.py
+    * Revert back to documentloaded
+    * Don't open a new tab
 
 ### Verison 1.5.0 (2018-07-02)
 * Add support for Mozilla's DeepSpeech
-* Deface as soon as page loads except instead waiting for document
+* solver.py
+    * Deface as soon as page loads except instead waiting for document
 * Fix bugs
 
 ### Verison 1.4.23 (2018-07-02)
 * Made more adjustments to the way exits are handled
 * Resolutions.json is deprecated, update your configs
-* Removed OK| before the reCAPTCHA solution
-* Update deface.html with nonoCAPTCHA title
+* solver.py
+    * Removed OK| before the reCAPTCHA solution
+* data/
+    * Update deface.html with nonoCAPTCHA title
 
 ### Verison 1.4.22 (2018-07-02)
-* Fix Exception thrown while killing non-existent process
+* launcher.py
+    * Fix Exception thrown while killing non-existent process
 
 ### Verison 1.4.22 (2018-07-02)
-* Fix typo in kill process
+* launcher.py
+    * Fix typo in kill process
 
 ### Verison 1.4.21 (2018-07-02)
 * Fix bugs
 
 ### Verison 1.4.19 (2018-07-02)
-* Fix mp3_to_wav()
+* speech.py
+    * Fix mp3_to_wav()
 
 ### Verison 1.4.18 (2018-07-02)
 * Add requests to requirements.txt
