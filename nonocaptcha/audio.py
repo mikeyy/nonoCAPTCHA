@@ -38,7 +38,7 @@ class SolveAudio(Base):
         for i in range(5):
             try:
                 answer = await self.get_audio_response()
-            except InvalidDownload:
+            except DownloadError:
                 raise
             except ReloadError:
                 raise
