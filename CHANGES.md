@@ -1,9 +1,12 @@
 History (Work in progress)
 =======
 ### Current Verison (2018-07-03)
+* Fix typo on DefaceError
+
+### 1.5.3 (2018-07-03)
 * Fix bugs
 
-### 1.6.2 (2018-07-03)
+### 1.5.2 (2018-07-03)
 * Remove deepspeech from requirements.txt since it makes Windows install fail
 
 ### 1.5.1 (2018-07-03)
