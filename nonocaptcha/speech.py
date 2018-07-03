@@ -40,20 +40,18 @@ def mp3_to_wav(mp3_filename):
 
 class DeepSpeech(object):
     MODEL_DIR = settings["speech_api"]["deepspeech"]["model_dir"]
-    MODEL = os.path.join(MODEL_DIR, "output_graph.pb")
-    ALPHABET = os.path.join(MODEL_DIR, "alphabet.txt")
-    LM = os.path.join(MODEL_DIR, "lm.binary")
-    TRIE = os.path.join(MODEL_DIR, "trie")
 
     async def get_text(self, mp3_filename):
         wav_filename = await mp3_to_wav(mp3_filename)
         proc = await asyncio.create_subprocess_exec(
-                *['deepspeech', 
-                self.MODEL, 
-                wav_filename,
-                self.ALPHABET,
-                self.LM, 
-                self.TRIE],
+                *[
+                    'deepspeech', 
+                    os.path.join(MODEL_DIR, "output_graph.pb"), 
+                    wav_filename,
+                    os.path.join(MODEL_DIR, "alphabet.txt",
+                    os.path.join(MODEL_DIR, "lm.binary"), 
+                    os.path.join(MODEL_DIR, "trie")
+                ],
                 stdout=asyncio.subprocess.PIPE,
             )
         if not proc.returncode:
