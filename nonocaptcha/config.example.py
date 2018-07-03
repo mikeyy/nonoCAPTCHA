@@ -30,7 +30,7 @@ settings = {
     "gmail": "",  # Leave blank to ignore
     "gmail_password": "",  # Signing into google increases probability of success
     "speech_api": {
-        "service": "amazon",
+        "service": "deepspeech",
         "amazon": {
             "key_id": "",
             "secret_access_key": "",
@@ -43,6 +43,9 @@ settings = {
         "sphinx": {
             "model_dir": "pocketsphinx/model/" # Directory for the trained model files
                                                     # It's large so download it from https://github.com/mikeyy/nonoCAPTCHA
+        },
+        "deepspeech": {
+            "model_dir": "deepspeech/models/"
         }
     },
     "data_files": {

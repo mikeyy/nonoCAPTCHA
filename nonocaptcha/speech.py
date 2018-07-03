@@ -32,10 +32,36 @@ def mp3_to_wav(mp3_filename):
     sound = segment.set_channels(1).set_frame_rate(16000)
     # Strip a 30% from first and last of audio (it's just static)
     # Too much and the words don't fully complete
-    garbage = len(sound) / 3
+    garbage = len(sound) / 3.3
     sound = sound[+garbage : len(sound) - garbage]
     sound.export(wav_filename, format="wav")
     return wav_filename
+
+
+class DeepSpeech(object):
+    MODEL_DIR = settings["speech_api"]["deepspeech"]["model_dir"]
+    MODEL = os.path.join(MODEL_DIR, "output_graph.pb")
+    ALPHABET = os.path.join(MODEL_DIR, "alphabet.txt")
+    LM = os.path.join(MODEL_DIR, "lm.binary")
+    TRIE = os.path.join(MODEL_DIR, "trie")
+
+    async def get_text(self, mp3_filename):
+        wav_filename = await mp3_to_wav(mp3_filename)
+        proc = await asyncio.create_subprocess_exec(
+                *['deepspeech', 
+                self.MODEL, 
+                wav_filename,
+                self.ALPHABET,
+                self.LM, 
+                self.TRIE],
+                stdout=asyncio.subprocess.PIPE,
+            )
+        if not proc.returncode:
+            data = await proc.stdout.readline()
+            result = data.decode('ascii').rstrip()
+            await proc.wait()
+            if result:
+                return result
 
 
 class Sphinx(object):

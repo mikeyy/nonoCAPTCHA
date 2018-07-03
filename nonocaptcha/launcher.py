@@ -210,8 +210,13 @@ class Launcher(launcher.Launcher):
     async def killChrome(self):
         """Terminate chromium process."""
         if self.connection and self.connection._connected:
-            await self.connection.send("Browser.close")
-            await self.connection.dispose()
+            try:
+                await self.connection.send("Browser.close")
+                await self.connection.dispose()
+            except asyncio.streams.IncompleteReadError:
+                pass
+            except ConnectionResetError:
+                pass
 
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir

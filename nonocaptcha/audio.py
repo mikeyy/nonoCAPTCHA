@@ -78,11 +78,13 @@ class SolveAudio(Base):
         else:
             answer = None
             service = settings["speech_api"]["service"].lower()
-            if service in ["azure", "sphinx"]:
+            if service in ["azure", "sphinx", "deepspeech"]:
                 if service == "azure":
                     speech = Azure()
                 elif service == "sphinx":
                     speech = Sphinx()
+                else:
+                    speech = DeepSpeech()
                 tmpd = tempfile.mkdtemp()
                 tmpf = os.path.join(tmpd, "audio.mp3")
                 await util.save_file(tmpf, data=audio_data, binary=True)
