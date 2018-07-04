@@ -28,25 +28,6 @@ def shuffle(i):
     random.shuffle(i)
     return i
 
-''' async with timeout(3*60) as timer:
-        while not timer.expired:
-            try:
-                proxy = next(proxies)
-                proc = await asyncio.create_subprocess_exec(
-                        *['python', 'solve.py', pageurl, sitekey, proxy],
-                        stdout=asyncio.subprocess.PIPE,
-                    )
-                if not proc.returncode:
-                    data = await proc.stdout.readline()
-                    result = data.decode('ascii').rstrip()
-                    await proc.wait()
-                    if result:
-                        return result
-            except CancelledError:
-                break
-
-    proc.terminate()
-    await proc.communicate()'''
 
 async def work(pageurl, sitekey):
     async with timeout(60) as timer:
