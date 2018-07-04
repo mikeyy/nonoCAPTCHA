@@ -30,9 +30,7 @@ def mp3_to_wav(mp3_filename):
     wav_filename = mp3_filename.replace(".mp3", ".wav")
     segment = AudioSegment.from_mp3(mp3_filename)
     sound = segment.set_channels(1).set_frame_rate(16000)
-    # Strip 60% from first and last of audio (it's just static)
-    # Too much and the words don't fully complete
-    garbage = len(sound) / 4
+    garbage = len(sound) / 3.5
     sound = sound[+garbage : len(sound) - garbage]
     sound.export(wav_filename, format="wav")
     return wav_filename
