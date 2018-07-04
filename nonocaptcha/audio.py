@@ -10,7 +10,6 @@ import tempfile
 
 from asyncio import TimeoutError, CancelledError
 
-from config import settings
 from nonocaptcha import util
 from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech
 from nonocaptcha.base import Base, Detected, Success, TryAgain
@@ -49,9 +48,10 @@ class SolveAudio(Base):
             await self.type_audio_response(answer)
             await self.click_verify()
 
-            timeout = settings["wait_timeout"]["success_timeout"]
             try:
-                await self.check_detection(self.image_frame, timeout)
+                await self.check_detection(
+                    self.image_frame, self.animation_timeout
+                )
             except TryAgain:
                 continue
             except Detected:
@@ -72,16 +72,18 @@ class SolveAudio(Base):
             raise DownloadError("Audio url not found, aborting")
 
         self.log("Downloading audio file")
-        timeout = settings["wait_timeout"]["load_timeout"]
         try:
             audio_data = await util.get_page(
-                audio_url, self.proxy, binary=True, timeout=timeout
+                audio_url,
+                self.proxy,
+                binary=True,
+                timeout=self.page_load_timeout
             )
         except TimeoutError:
             self.log("Download timed-out, trying again")
         else:
             answer = None
-            service = settings["speech_api"]["service"].lower()
+            service = self.speech_service.lower()
             if service in ["azure", "sphinx", "deepspeech"]:
                 if service == "azure":
                     speech = Azure()
@@ -106,10 +108,9 @@ class SolveAudio(Base):
             f'"{audio_url}" !== '
             f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
-        timeout = settings["wait_timeout"]["reload_timeout"]
         try:
             await self.image_frame.waitForFunction(
-                func, timeout=timeout * 1000
+                func, timeout=self.animation_timeout
             )
         except TimeoutError:
             raise ReloadError("Download link never updated")
@@ -123,7 +124,7 @@ class SolveAudio(Base):
         await response_input.type(text=answer, delay=length)
 
     async def click_verify(self):
-        if settings["keyboard_traverse"]:
+        if self.keyboard_traverse:
             response_input = await self.image_frame.J("#audio-response")
             self.log("Pressing Enter")
             await response_input.press("Enter")

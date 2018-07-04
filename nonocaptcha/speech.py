@@ -21,7 +21,7 @@ from pydub import AudioSegment
 from pocketsphinx.pocketsphinx import *
 from sphinxbase.sphinxbase import *
 
-from config import settings
+from nonocaptcha import settings
 from nonocaptcha import util
 
 
@@ -37,7 +37,7 @@ def mp3_to_wav(mp3_filename):
 
 
 class DeepSpeech(object):
-    MODEL_DIR = settings["speech_api"]["deepspeech"]["model_dir"]
+    MODEL_DIR = settings["speech"]["deepspeech"]["model_dir"]
 
     async def get_text(self, mp3_filename):
         wav_filename = await mp3_to_wav(mp3_filename)
@@ -61,7 +61,7 @@ class DeepSpeech(object):
 
 
 class Sphinx(object):
-    MODEL_DIR = settings["speech_api"]["sphinx"]["model_dir"]
+    MODEL_DIR = settings["speech"]["pocketsphinx"]["model_dir"]
 
     @util.threaded
     def build_decoder(self):
@@ -114,10 +114,10 @@ class Sphinx(object):
 
 
 class Amazon(object):
-    ACCESS_KEY_ID = settings["speech_api"]["amazon"]["key_id"]
-    SECRET_ACCESS_KEY = settings["speech_api"]["amazon"]["secret_access_key"]
-    REGION_NAME = settings["speech_api"]["amazon"]["region"]
-    S3_BUCKET = settings["speech_api"]["amazon"]["s3_bucket"]
+    ACCESS_KEY_ID = settings["speech"]["amazon"]["secret_key_id"]
+    SECRET_ACCESS_KEY = settings["speech"]["amazon"]["secret_access_key"]
+    REGION_NAME = settings["speech"]["amazon"]["region"]
+    S3_BUCKET = settings["speech"]["amazon"]["s3_bucket"]
 
     async def get_text(self, audio_data):
         session = aiobotocore.get_session()
@@ -181,7 +181,7 @@ class Amazon(object):
 
 
 class Azure(object):
-    SUB_KEY = settings["speech_api"]["azure"]["api_subkey"]
+    SUB_KEY = settings["speech"]["azure"]["api_subkey"]
 
     @util.threaded
     def extract_json_body(self, response):

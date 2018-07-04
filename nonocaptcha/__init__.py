@@ -17,17 +17,15 @@ __author__ = ", ".join(
     "{} <{}>".format(name, email) for name, email in authors
 )
 
-package_info = "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio"
-
-__package_dir__ = os.path.dirname(os.path.abspath(__file__))
-
+package_info = (
+    "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio"
+)
 __maintainer__ = __author__
 
 __all__ = (
     "__author__",
     "__author__",
     "__license__",
-    "__package_dir__",
     "__maintainer__",
     "__version__",
     "version_info",
@@ -36,16 +34,19 @@ __all__ = (
 sys.path.append(os.getcwd())
 
 try:
-    import config
-except ModuleNotFoundError:
+    import yaml
+    with open("config.yml", 'r') as f:
+        settings = yaml.load(f)
+        package_dir = os.path.dirname(os.path.abspath(__file__))
+except FileNotFoundError:
     print(
-        "Solver can't run without a config.py file!\n"
-        "An example (config.example.py) has been copied to your current "
+        "Solver can't run without a configuration file!\n"
+        "An example (config.example.yaml) has been copied to your current "
         "folder."
     )
 
     import sys
     from shutil import copyfile
 
-    copyfile(f"{__package_dir__}/config.example.py", "config.example.py")
+    copyfile(f"{__package_dir__}/config.example.yaml", "config.example.yaml")
     sys.exit(0)

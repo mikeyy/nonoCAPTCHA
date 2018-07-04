@@ -1,10 +1,11 @@
 import asyncio
 import logging
+import os
 import random
+import yaml
 
-from config import settings
+from nonocaptcha import settings, package_dir
 from nonocaptcha.helper import wait_between
-
 
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
@@ -36,17 +37,26 @@ class Clicker:
 
 class Base(Clicker):
     logger = logging.getLogger(__name__)
-    if settings["debug"]:
+    if settings["main"]["debug"]:
         logger.setLevel("DEBUG")
     proc_id = 0
     detected = False
     try_again = False
 
+    headless = settings["main"]["headless"]
+    keyboard_traverse = settings["main"]["keyboard_traverse"]
+    page_load_timeout = (settings["main"]["timeout"]["page_load"] * 1000)
+    deface_timeout = (settings["main"]["timeout"]["deface"] * 1000)
+    animation_timeout = (settings["main"]["timeout"]["animation"] * 1000)
+    speech_service = settings["speech"]["service"]
+    deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
+    jquery_data = os.path.join(package_dir, settings["data"]["jquery"])
+    override_data = os.path.join(package_dir, settings["data"]["override_js"])
+    
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
         )
-
         self.image_frame = next(
             frame for frame in self.page.frames if "api2/bframe" in frame.url
         )
@@ -101,7 +111,7 @@ class Base(Clicker):
         )
         try:
             await frame.waitForFunction(
-                func, timeout=timeout * 1000, polling=50
+                func, timeout=timeout, polling=50
             )
         except asyncio.TimeoutError:
             raise SafePassage()
