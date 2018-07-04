@@ -1,7 +1,11 @@
 History (Work in progress)
 =======
-### Current Verison (2018-07-03)
-* Fix bug
+### Current Verison (2018-07-04)
+* Fix bugs
+* Update requirements
+
+### Version 1.5.7 (2018-07-03)
+* Fix bugs
 
 ### Version 1.5.6 (2018-07-03) 
 * speech.py
