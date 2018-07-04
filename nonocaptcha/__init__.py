@@ -17,7 +17,7 @@ __author__ = ", ".join(
     "{} <{}>".format(name, email) for name, email in authors
 )
 
-package_info = "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio from multiple services"
+package_info = "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio"
 
 __package_dir__ = os.path.dirname(os.path.abspath(__file__))
 
