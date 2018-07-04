@@ -84,10 +84,10 @@ class SolveAudio(Base):
         else:
             answer = None
             service = self.speech_service.lower()
-            if service in ["azure", "sphinx", "deepspeech"]:
+            if service in ["azure", "pocketsphinx", "deepspeech"]:
                 if service == "azure":
                     speech = Azure()
-                elif service == "sphinx":
+                elif service == "pocketsphinx":
                     speech = Sphinx()
                 else:
                     speech = DeepSpeech()
