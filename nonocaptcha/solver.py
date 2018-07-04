@@ -46,7 +46,7 @@ class Solver(Base):
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
-        self.proxy = proxy
+        self.proxy = f'{self.proxy_protocol}://{proxy}'
         self.proxy_auth = proxy_auth
 
         self.proc_id = self.proc_count
@@ -82,7 +82,7 @@ class Solver(Base):
 
         chrome_args = []
         if self.proxy:
-            chrome_args.append(f"--proxy-server=http://{self.proxy}")
+            chrome_args.append(f"--proxy-server={self.proxy}")
 
         args = self.options.pop("args")
         args.extend(chrome_args)
