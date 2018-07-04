@@ -1,9 +1,9 @@
 main:
     debug: true
     headless: true
-    keyboard_traverse: false
+    keyboard_traverse: false 
     proxy:
-        protocol:
+        protocol: http
         source: 
     timeout:
         page_load: 30
