@@ -58,7 +58,7 @@ aiomisc
 aiohttp
 
 # Config file
-config.yaml
+config.yml
 
 # Mac's DS_Store
 .DS_Store
