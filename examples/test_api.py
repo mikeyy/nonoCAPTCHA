@@ -11,23 +11,19 @@ from nonocaptcha import util
 from nonocaptcha.solver import Solver
 from config import settings
 
-count = 100
-
-sem = asyncio.Semaphore(count)
-
+count = 10
 
 async def work():
-    async with sem:
-        start = time.time()
-        pageurl = settings["pageurl"]
-        sitekey = settings["sitekey"]
-        result = await util.get_page(
-            f"http://localhost:5000/get?"
-            f"pageurl={pageurl}&sitekey={sitekey}"
-        )
-        end = time.time()
-        elapsed = end - start
-        return (elapsed, result)
+    start = time.time()
+    pageurl = settings["pageurl"]
+    sitekey = settings["sitekey"]
+    result = await util.get_page(
+        f"http://localhost:5000/get?"
+        f"pageurl={pageurl}&sitekey={sitekey}"
+    )
+    end = time.time()
+    elapsed = end - start
+    return (elapsed, result)
 
 
 async def main():
