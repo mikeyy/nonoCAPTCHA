@@ -5,7 +5,7 @@ async-timeout==3.0.0
 pocketsphinx==0.1.15
 psutil==5.4.6
 pydub==0.22.1
-pyppeteer==0.0.18
+pyppeteer==0.0.17
 pyyaml==3.12
 requests==2.19.1
 user-agent==0.1.9
