@@ -11,15 +11,17 @@ import sys
 from async_timeout import timeout
 from asyncio import TimeoutError, CancelledError
 
+from nonocaptcha import settings
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
-from config import settings
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 # Max browsers to open
 threads = 1
+pageurl = settings["run"]["pageurl"]
+sitekey = settings["run"]["sitekey"]
 
 sort_position = True
 if sort_position:
@@ -52,8 +54,6 @@ def shuffle(i):
 
 
 proxies = None
-
-
 async def get_proxies():
     global proxies
     while True:
@@ -94,7 +94,10 @@ async def work():
         proxy = None
 
     client = Solver(
-        settings["pageurl"], settings["sitekey"], options=options, proxy=proxy
+        pageurl,
+        sitekey,
+        options=options,
+        proxy=proxy
     )
 
     answer = None
@@ -143,7 +146,7 @@ if sys.platform == "win32":
 else:
     loop = asyncio.get_event_loop()
 
-proxy_src = settings["proxy_source"]
+proxy_src = settings["proxy"]["source"]
 if proxy_src:
     asyncio.ensure_future(get_proxies())
 
