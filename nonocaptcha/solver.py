@@ -13,7 +13,6 @@ from asyncio import TimeoutError, CancelledError
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
-from config import settings
 from nonocaptcha.base import Base, Detected, SafePassage, Success
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.image import SolveImage
@@ -23,7 +22,8 @@ from nonocaptcha import util
 
 class ButtonError(Exception):
     pass
-    
+  
+  
 class DefaceError(Exception):
     pass
 
@@ -49,8 +49,6 @@ class Solver(Base):
         self.proxy = proxy
         self.proxy_auth = proxy_auth
 
-        self.headless = settings["headless"]
-        self.gmail_accounts = {}
         self.proc_id = self.proc_count
         type(self).proc_count += 1
 
@@ -66,13 +64,8 @@ class Solver(Base):
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
 
-            if settings["gmail"]:
-                await self.sign_in_to_google()
-
             self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
-        except CancelledError as e:
-            raise e
         except BaseException as e:
             self.log(f"{e} {type(e)}")
         finally:
@@ -84,8 +77,7 @@ class Solver(Base):
         return result
 
     async def get_new_browser(self):
-        """Get new browser, set arguments from options, proxy,
-        and random window size if headless.
+        """Get new browser, set proxy and arguments from options
         """
 
         chrome_args = []
@@ -105,10 +97,8 @@ class Solver(Base):
             false, inject jQuery.
         """
 
-        jquery_js = await util.load_file(settings["data_files"]["jquery_js"])
-        override_js = await util.load_file(
-            settings["data_files"]["override_js"]
-        )
+        jquery_js = await util.load_file(self.jquery_data)
+        override_js = await util.load_file(self.override_data)
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
@@ -127,7 +117,7 @@ class Solver(Base):
         Function x is an odd hack for multiline text, but it works.
         """
 
-        html_code = await util.load_file(settings["data_files"]["deface_html"])
+        html_code = await util.load_file(self.deface_data)
         deface_js = (
             (
                 """() => {
@@ -149,10 +139,11 @@ class Solver(Base):
     $(frame).load( function() {
         window.ready_eddy = true;
     });
-    if(window.ready_eddy) return true;
+    if(window.ready_eddy){
+        return true;
+    }
 }"""
-        timeout = settings["wait_timeout"]["deface_timeout"]
-        await self.page.waitForFunction(func, timeout=timeout * 1000)
+        await self.page.waitForFunction(func, timeout=self.deface_timeout)
 
     async def goto_and_deface(self):
         """Open tab and deface page"""
@@ -160,9 +151,10 @@ class Solver(Base):
         user_agent = await self.cloak_navigator()
         await self.page.setUserAgent(user_agent)
         try:
-            timeout = settings["wait_timeout"]["load_timeout"]
             await self.page.goto(
-                self.url, timeout=timeout * 1000, waitUntil="documentloaded"
+                self.url,
+                timeout=self.page_load_timeout,
+                waitUntil="documentloaded"
             )
             await self.wait_for_deface()
         except TimeoutError:
@@ -173,16 +165,14 @@ class Solver(Base):
         file
         """
 
-        if settings["check_blacklist"]:
-            await self.is_blacklisted()
-
         await self.goto_and_deface()
         self.get_frames()
-        # await self.wait_for_checkbox()
+        await self.wait_for_checkbox()
         await self.click_checkbox()
-        timeout = settings["wait_timeout"]["success_timeout"]
         try:
-            await self.check_detection(self.checkbox_frame, timeout=timeout)
+            await self.check_detection(
+                self.checkbox_frame, timeout=self.animation_timeout
+            )
         except Detected:
             raise
         except SafePassage:
@@ -214,10 +204,10 @@ class Solver(Base):
     async def wait_for_checkbox(self):
         """Wait for audio button to appear."""
 
-        timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
-            await self.image_frame.waitForFunction(
-                "$('#recaptcha-anchor').length", timeout=timeout * 1000
+            await self.checkbox_frame.waitForFunction(
+                "$('#recaptcha-anchor').length",
+                timeout=self.animation_timeout
             )
         except ButtonError:
             raise ButtonError("Checkbox missing, aborting")
@@ -225,7 +215,7 @@ class Solver(Base):
     async def click_checkbox(self):
         """Click checkbox on page load."""
 
-        if settings["keyboard_traverse"]:
+        if self.keyboard_traverse:
             self.body = await self.page.J("body")
             await self.body.press("Tab")
             await self.body.press("Enter")
@@ -237,10 +227,10 @@ class Solver(Base):
     async def wait_for_audio_button(self):
         """Wait for audio button to appear."""
 
-        timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
             await self.image_frame.waitForFunction(
-                "$('#recaptcha-audio-button').length", timeout=timeout * 1000
+                "$('#recaptcha-audio-button').length",
+                timeout=self.animation_timeout
             )
         except ButtonError:
             raise ButtonError("Audio button missing, aborting")
@@ -248,16 +238,18 @@ class Solver(Base):
     async def click_audio_button(self):
         """Click audio button after it appears."""
 
-        if not settings["keyboard_traverse"]:
+        if self.keyboard_traverse:
+            await self.body.press("Enter")
+        else:
             self.log("Clicking audio button")
             audio_button = await self.image_frame.J("#recaptcha-audio-button")
             await self.click_button(audio_button)
-        else:
-            await self.body.press("Enter")
 
-        timeout = settings["wait_timeout"]["audio_button_timeout"]
         try:
-            await self.check_detection(self.image_frame, timeout)
+            await self.check_detection(
+                self.image_frame,
+                self.animation_timeout
+            )
         except Detected:
             raise
         except SafePassage:
@@ -266,43 +258,3 @@ class Solver(Base):
     async def g_recaptcha_response(self):
         code = await self.page.evaluate("$('#g-recaptcha-response').val()")
         return code
-
-    async def is_blacklisted(self):
-        self.log("Checking Google search for blacklist")
-        timeout = settings["wait_timeout"]["load_timeout"]
-        url = "https://www.google.com/search?q=my+ip&hl=en"
-        response = await util.get_page(url, proxy=self.proxy, timeout=timeout)
-        detected_phrase = (
-            "Our systems have detected unusual traffic " "from your computer"
-        )
-        if detected_phrase in response:
-            raise Detected("IP has been blacklisted by Google")
-
-    async def sign_in_to_google(self):
-        cookie_path = settings["data_files"]["cookies"]
-        if pathlib.Path(cookie_path).exists():
-            self.gmail_accounts = await util.deserialize(cookie_path)
-        if settings["gmail"] not in self.gmail_accounts:
-            url = "https://accounts.google.com/Login"
-            page = await self.browser.newPage()
-            await page.goto(url, waitUntil="documentloaded")
-            username = await page.querySelector("#identifierId")
-            await username.type(settings["gmail"])
-            button = await page.querySelector("#identifierNext")
-            await button.click()
-            await asyncio.sleep(2)  # better way to do this...
-            password = await page.querySelector("#password")
-            await password.type(settings["gmail_password"])
-            button = await page.querySelector("#passwordNext")
-            await button.click()
-            await page.waitForNavigation()
-            cookies = await page.cookies()
-            self.gmail_accounts[settings["gmail"]] = cookies
-            util.serialize(self.gmail_accounts, cookie_path)
-            await page.close()
-        await self.load_cookies()
-
-    async def load_cookies(self, account=settings["gmail"]):
-        cookies = self.gmail_accounts[account]
-        for c in cookies:
-            await self.page.setCookie(c)
