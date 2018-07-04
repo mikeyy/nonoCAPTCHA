@@ -24,6 +24,7 @@ from pyppeteer.util import download_chromium, merge_dict, get_free_port
 DEFAULT_ARGS = [
     # ! = added in
     '--cryptauth-http-host ""',  # !
+    "--disable-accelerated-2d-canvas", #!
     "--disable-affiliation-based-matching",  # !
     "--disable-answers-in-suggest",  # !
     "--disable-background-networking",
@@ -67,7 +68,11 @@ class Connection(connection.Connection):
                     resp = await self.connection.recv()
                     if resp:
                         self._on_message(resp)
+                except asyncio.streams.IncompleteReadError:
+                    break
                 except websockets.ConnectionClosed:
+                    break
+                except ConnectionResetError:
                     break
 
     async def _async_send(self, msg: str):
@@ -78,6 +83,8 @@ class Connection(connection.Connection):
         try:
             await self.connection.send(msg)
         except asyncio.streams.IncompleteReadError:
+            pass
+        except websockets.ConnectionClosed:
             pass
         except ConnectionResetError:
             pass
@@ -214,6 +221,8 @@ class Launcher(launcher.Launcher):
                 await self.connection.send("Browser.close")
                 await self.connection.dispose()
             except asyncio.streams.IncompleteReadError:
+                pass
+            except websockets.exceptions.ConnectionClosed:
                 pass
             except ConnectionResetError:
                 pass
