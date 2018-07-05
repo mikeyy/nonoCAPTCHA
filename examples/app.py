@@ -20,11 +20,10 @@ proxy_source = settings["proxy"]["source"]
 dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
-threads = 10
 app = web.Application()
 loop = asyncio.get_event_loop()
 asyncio.get_child_watcher().attach_loop(loop)
-executor = ThreadPoolExecutor(threads)
+executor = ThreadPoolExecutor(100)
 
 def shuffle(i):
     random.shuffle(i)
@@ -32,15 +31,17 @@ def shuffle(i):
 
 
 async def work(pageurl, sitekey):
-    async with timeout(180):
+    async with timeout(30) as timer:
         proxy = random.choice(proxies)
         # Chromium options and arguments
         options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
         client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-        result = await client.start()
-        if result:
-            return result
-
+        try:
+            result = await client.start()
+            if result:
+                return result
+        except CancelledError:
+            return
 
 def pre_work(pageurl, sitekey):
     fut = asyncio.run_coroutine_threadsafe(work(pageurl, sitekey), loop=loop)
