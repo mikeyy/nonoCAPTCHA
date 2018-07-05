@@ -1,14 +1,14 @@
 import asyncio
 import random
-import shutil
 import signal
+import shutil
 import sys
 import subprocess
 
 from aiohttp import web, ClientSession, ClientError
 from async_timeout import timeout
 from asyncio import TimeoutError, CancelledError
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 
@@ -20,7 +20,11 @@ proxy_source = settings["proxy"]["source"]
 dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
+threads = 10
 app = web.Application()
+loop = asyncio.get_event_loop()
+asyncio.get_child_watcher().attach_loop(loop)
+executor = ThreadPoolExecutor(threads)
 
 def shuffle(i):
     random.shuffle(i)
@@ -28,23 +32,20 @@ def shuffle(i):
 
 
 async def work(pageurl, sitekey):
-    async with timeout(60) as timer:
-        while not timer.expired:
-            try:
-                proxy = next(proxies)
-                # Chromium options and arguments
-                options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-                client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-                result = await client.start()
-                if result:
-                    return result
-            except CancelledError:
-                break
+    async with timeout(180):
+        proxy = random.choice(proxies)
+        # Chromium options and arguments
+        options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+        result = await client.start()
+        if result:
+            return result
 
-    if client.launcher:
-        if not client.launcher.chromeClosed:
-            await client.launcher.waitForChromeToClose()
 
+def pre_work(pageurl, sitekey):
+    fut = asyncio.run_coroutine_threadsafe(work(pageurl, sitekey), loop=loop)
+    result = fut.result()
+    return result
 
 async def get_solution(request):
     while not proxies:
@@ -54,7 +55,10 @@ async def get_solution(request):
     sitekey = params["sitekey"]
     response = {"error": "invalid request"}
     if pageurl and sitekey:
-        result = await work(pageurl, sitekey)
+        sub_loop = partial(pre_work, pageurl, sitekey)
+        result = await loop.run_in_executor(
+            executor, sub_loop
+        )
         if result:
             response = {"solution": result}
         else:
@@ -78,7 +82,7 @@ async def load_proxies():
         except:
             continue
         else:
-            proxies = iter(shuffle(result.strip().split("\n")))
+            proxies = shuffle(result.strip().split("\n"))
             print('Proxies loaded')
             await asyncio.sleep(10 * 60)
 
@@ -104,4 +108,4 @@ app.on_startup.append(start_background_tasks)
 app.on_cleanup.append(cleanup_background_tasks)
 
 if __name__ == "__main__":
-    web.run_app(app, host="127.0.0.1", port=5000)
+    web.run_app(app, host="127.0.0.1", port=8000)
