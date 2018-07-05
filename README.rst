@@ -73,20 +73,30 @@ If you would like to use it in your own script
 .. code:: python
 
    import asyncio
+   from nonocaptcha import settings
    from nonocaptcha.solver import Solver
-   from config import settings
 
+   pageurl = settings["run"]["pageurl"]
+   sitekey = settings["run"]["sitekey"]
+
+   proxy = "127.0.0.1:1000""
+   auth_details = {
+        "username": "user",
+        "password": "pass"
+    }
+   args = ["--timeout 5"]
+   options = {"ignoreHTTPSErrors": True, "args": args}
    client = Solver(
-       settings['pageurl'],
-       settings['sitekey'],
+       pageurl,
+       sitekey,
        options=options,
        proxy=proxy,
-       proxy_auth=auth_details(),
+       proxy_auth=auth_details,
    )
 
-   answer = asyncio.get_event_loop().run_until_complete(client.start())
-   if answer:
-       print(answer)
+   solution = asyncio.get_event_loop().run_until_complete(client.start())
+   if solution:
+       print(solution)
 
 Or use the included async script app.py/run.py
 
