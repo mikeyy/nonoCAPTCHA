@@ -91,7 +91,7 @@ If you would like to use it in your own script
         sitekey,
         options=options,
         proxy=proxy,
-       proxy_auth=auth_details,
+        proxy_auth=auth_details,
    )
 
    solution = asyncio.get_event_loop().run_until_complete(client.start())
