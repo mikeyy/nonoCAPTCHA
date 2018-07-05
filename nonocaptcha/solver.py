@@ -46,7 +46,7 @@ class Solver(Base):
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
-        self.proxy = f'{self.proxy_protocol}://{proxy}'
+        self.proxy = f'{self.proxy_protocol}://{proxy}' if proxy else proxy
         self.proxy_auth = proxy_auth
 
         self.proc_id = self.proc_count
