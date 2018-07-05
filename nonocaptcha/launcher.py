@@ -206,7 +206,10 @@ class Launcher(launcher.Launcher):
                 if psutil.pid_exists(self.proc.pid):
                     process = psutil.Process(self.proc.pid)
                     for proc in process.children(recursive=True):
-                        proc.send_signal(signal.SIGTERM)
+                        try:
+                            proc.send_signal(signal.SIGTERM)
+                        except psutil._exceptions.NoSuchProcess:
+                            pass
                     self.proc.terminate()
                     await self.proc.wait()
 
