@@ -25,13 +25,14 @@ loop = asyncio.get_event_loop()
 asyncio.get_child_watcher().attach_loop(loop)
 executor = ThreadPoolExecutor(100)
 
+
 def shuffle(i):
     random.shuffle(i)
     return i
 
 
 async def work(pageurl, sitekey):
-    async with timeout(30) as timer:
+    async with timeout(180) as timer:
         proxy = random.choice(proxies)
         # Chromium options and arguments
         options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
@@ -44,9 +45,11 @@ async def work(pageurl, sitekey):
             return
 
 def pre_work(pageurl, sitekey):
-    fut = asyncio.run_coroutine_threadsafe(work(pageurl, sitekey), loop=loop)
-    result = fut.result()
+    result = asyncio.run_coroutine_threadsafe(
+        work(pageurl, sitekey), loop=loop
+    ).result()
     return result
+
 
 async def get_solution(request):
     while not proxies:
