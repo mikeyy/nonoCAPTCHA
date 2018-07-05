@@ -55,19 +55,29 @@ class Solver(Base):
     async def start(self):
         """Begin solving"""
         result = None
+        # Set start time
         start = time.time()
         try:
+            # Start a new browser with supplied options and arguments
             self.browser = await self.get_new_browser()
+            # Search for frame with paging
             target = [t for t in self.browser.targets() if await t.page()][0]
+            # Assign page for handling
             self.page = await target.page()
             if self.proxy_auth:
+                # Authenticate the proxy with details provided
                 await self.page.authenticate(self.proxy_auth)
-
+            # Go to page with emulated device properties
+            await self.goto()
+            # Deface the page with reCAPTCHA widget and sitekey
+            await self.deface()
             self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
         except BaseException as e:
+            # Log Exceptions
             self.log(f"{e} {type(e)}")
         finally:
+            # Set end time
             end = time.time()
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
@@ -79,12 +89,15 @@ class Solver(Base):
         """Get a new browser, set proxy and arguments"""
         chrome_args = []
         if self.proxy:
+            # Append set proxy to Chrome arguments
             chrome_args.append(f"--proxy-server={self.proxy}")
 
         args = self.options.pop("args")
         args.extend(chrome_args)
+        # Update Chrome arguments with headless setting
         self.options.update({"headless": self.headless, "args": args})
-
+        
+        # Apply arguments to Chrome Launcher
         self.launcher = Launcher(self.options)
         browser = await self.launcher.launch()
         return browser
@@ -93,14 +106,20 @@ class Solver(Base):
         """Emulate another browser's navigator properties and set webdriver
            false, inject jQuery.
         """
+        # Load jQuery Javascript
         jquery_js = await util.load_file(self.jquery_data)
+        # Load override javascript
         override_js = await util.load_file(self.override_data)
+        # Generate navigator properties of another device and browser
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
+        # Set webdriver false to hide that we are automating
         navigator_config["webdriver"] = False
+        # Dump dictionary values into json format
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
+        # Execute all into one Javascript function
         await self.page.evaluateOnNewDocument(
             "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js)
         )
@@ -140,7 +159,7 @@ class Solver(Base):
 }"""
         await self.page.waitForFunction(func, timeout=self.deface_timeout)
 
-    async def goto_and_deface(self):
+    async def goto(self):
         """Open tab and deface page"""
         user_agent = await self.cloak_navigator()
         await self.page.setUserAgent(user_agent)
@@ -150,6 +169,11 @@ class Solver(Base):
                 timeout=self.page_load_timeout,
                 waitUntil="documentloaded"
             )
+        except TimeoutError:
+            raise PageLoadError("Problem loading page")
+            
+    async def deface(self):
+        try:
             await self.wait_for_deface()
         except TimeoutError:
             raise DefaceError("Problem defacing page")
@@ -158,7 +182,6 @@ class Solver(Base):
         """Click checkbox, on failure it will attempt to decipher the audio
            file
         """
-        await self.goto_and_deface()
         self.get_frames()
         await self.wait_for_checkbox()
         await self.click_checkbox()
