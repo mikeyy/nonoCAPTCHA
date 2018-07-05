@@ -79,7 +79,7 @@ If you would like to use it in your own script
    pageurl = settings["run"]["pageurl"]
    sitekey = settings["run"]["sitekey"]
 
-   proxy = "127.0.0.1:1000""
+   proxy = "127.0.0.1:1000"
    auth_details = {
         "username": "user",
         "password": "pass"
