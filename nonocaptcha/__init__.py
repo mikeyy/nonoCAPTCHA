@@ -4,7 +4,7 @@
 import os.path
 import sys
 
-version_info = (1, 5, 8)
+version_info = (1, 6, 0)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
@@ -32,12 +32,12 @@ __all__ = (
 )
 
 sys.path.append(os.getcwd())
+package_dir = os.path.dirname(os.path.abspath(__file__))
 
 try:
     import yaml
-    with open("config.yml", 'r') as f:
+    with open("config.yaml", 'r') as f:
         settings = yaml.load(f)
-        package_dir = os.path.dirname(os.path.abspath(__file__))
 except FileNotFoundError:
     print(
         "Solver can't run without a configuration file!\n"
@@ -48,5 +48,5 @@ except FileNotFoundError:
     import sys
     from shutil import copyfile
 
-    copyfile(f"{__package_dir__}/config.example.yaml", "config.example.yaml")
+    copyfile(f"{package_dir}/config.example.yaml", "config.example.yaml")
     sys.exit(0)
