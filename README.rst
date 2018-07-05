@@ -94,8 +94,8 @@ If you would like to use it in your own script
         proxy_auth=auth_details,
     )
 
-   solution = asyncio.get_event_loop().run_until_complete(client.start())
-   if solution:
+    solution = asyncio.get_event_loop().run_until_complete(client.start())
+    if solution:
        print(solution)
 
 Or use the included async script app.py/run.py
