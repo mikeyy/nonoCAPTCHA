@@ -7,16 +7,15 @@ import asyncio
 import random
 import time
 
-from nonocaptcha import util
+from nonocaptcha import util, settings
 from nonocaptcha.solver import Solver
-from config import settings
 
 count = 10
+pageurl = settings["run"]["pageurl"]
+sitekey = settings["run"]["sitekey"]
 
 async def work():
     start = time.time()
-    pageurl = settings["pageurl"]
-    sitekey = settings["sitekey"]
     result = await util.get_page(
         f"http://localhost:5000/get?"
         f"pageurl={pageurl}&sitekey={sitekey}"

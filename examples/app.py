@@ -12,14 +12,12 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from pathlib import Path
 
-from nonocaptcha import util
+from nonocaptcha import util, settings
 from nonocaptcha.solver import Solver
-from config import settings
 
-proxy_source = settings["proxy_source"]
+proxy_source = settings["proxy"]["source"]
 
-home = Path.home()
-dir = f"{home}/.pyppeteer/.dev_profile"
+dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 app = web.Application()

@@ -11,12 +11,8 @@ import sys
 from async_timeout import timeout
 from asyncio import TimeoutError, CancelledError
 
-from nonocaptcha import settings
-from nonocaptcha import util
+from nonocaptcha import util, settings
 from nonocaptcha.solver import Solver
-
-signal.signal(signal.SIGINT, signal.SIG_DFL)
-
 
 # Max browsers to open
 threads = 1
@@ -97,8 +93,7 @@ class Run(object):
             if client.launcher:
                 if not client.launcher.chromeClosed:
                     await client.launcher.waitForChromeToClose()
-            raise
-        else:
+        finally:
             if sort_position:
                 used_positions.remove(this_position)
             if answer:
@@ -109,7 +104,7 @@ class Run(object):
             print("Proxies loading...")
             while self.proxies is None:
                 await asyncio.sleep(1)
-    
+
         tasks = [asyncio.ensure_future(self.work()) for i in range(threads)]
         completed, pending = await asyncio.wait(
             tasks, return_when=asyncio.FIRST_COMPLETED
@@ -131,8 +126,6 @@ if sys.platform == "win32":
     asyncio.set_event_loop(loop)
 else:
     loop = asyncio.get_event_loop()
-        
-try:
-    loop.run_until_complete(Run(loop).main())
-except KeyboardInterrupt:
-    raise
+
+loop.run_until_complete(Run(loop).main())
+
