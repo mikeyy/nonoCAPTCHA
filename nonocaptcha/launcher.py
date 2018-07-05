@@ -207,7 +207,7 @@ class Launcher(launcher.Launcher):
                     process = psutil.Process(self.proc.pid)
                     for proc in process.children(recursive=True):
                         try:
-                            proc.send_signal(signal.SIGTERM)
+                            proc.terminate()
                         except psutil._exceptions.NoSuchProcess:
                             pass
                     self.proc.terminate()
