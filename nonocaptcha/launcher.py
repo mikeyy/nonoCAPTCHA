@@ -17,6 +17,7 @@ import time
 from pyppeteer import launcher
 from pyppeteer import connection
 from pyppeteer.browser import Browser
+from pyppeteer.errors import NetworkError
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
@@ -224,6 +225,8 @@ class Launcher(launcher.Launcher):
             except websockets.exceptions.ConnectionClosed:
                 pass
             except ConnectionResetError:
+                pass
+            except NetworkError:
                 pass
 
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
