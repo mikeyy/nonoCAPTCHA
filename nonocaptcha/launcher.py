@@ -206,13 +206,9 @@ class Launcher(launcher.Launcher):
                 if psutil.pid_exists(self.proc.pid):
                     process = psutil.Process(self.proc.pid)
                     for proc in process.children(recursive=True):
-                        try:
-                            proc.kill()
-                        except psutil._exceptions.NoSuchProcess:
-                            pass
-
-                    self.proc.kill()
-                    await self.proc.communicate()
+                        proc.send_signal(signal.SIGTERM)
+                    self.proc.terminate()
+                    await self.proc.wait()
 
     async def killChrome(self):
         """Terminate chromium process."""
