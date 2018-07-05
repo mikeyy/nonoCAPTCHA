@@ -54,7 +54,6 @@ class Solver(Base):
 
     async def start(self):
         """Begin solving"""
-
         result = None
         start = time.time()
         try:
@@ -77,9 +76,7 @@ class Solver(Base):
         return result
 
     async def get_new_browser(self):
-        """Get new browser, set proxy and arguments from options
-        """
-
+        """Get a new browser, set proxy and arguments"""
         chrome_args = []
         if self.proxy:
             chrome_args.append(f"--proxy-server={self.proxy}")
@@ -94,9 +91,8 @@ class Solver(Base):
 
     async def cloak_navigator(self):
         """Emulate another browser's navigator properties and set webdriver
-            false, inject jQuery.
+           false, inject jQuery.
         """
-
         jquery_js = await util.load_file(self.jquery_data)
         override_js = await util.load_file(self.override_data)
         navigator_config = generate_navigator_js(
@@ -112,11 +108,10 @@ class Solver(Base):
 
     async def wait_for_deface(self):
         """Overwrite current page with reCAPTCHA widget and wait for image
-        iframe to load on document before continuing.
+           iframe to load on document before continuing.
 
-        Function x is an odd hack for multiline text, but it works.
+           Function x is an odd hack for multiline text, but it works.
         """
-
         html_code = await util.load_file(self.deface_data)
         deface_js = (
             (
@@ -147,7 +142,6 @@ class Solver(Base):
 
     async def goto_and_deface(self):
         """Open tab and deface page"""
-
         user_agent = await self.cloak_navigator()
         await self.page.setUserAgent(user_agent)
         try:
@@ -161,10 +155,9 @@ class Solver(Base):
             raise DefaceError("Problem defacing page")
 
     async def solve(self):
-        """Clicks checkbox, on failure it will attempt to solve the audio
-        file
+        """Click checkbox, on failure it will attempt to decipher the audio
+           file
         """
-
         await self.goto_and_deface()
         self.get_frames()
         await self.wait_for_checkbox()
@@ -203,7 +196,6 @@ class Solver(Base):
 
     async def wait_for_checkbox(self):
         """Wait for audio button to appear."""
-
         try:
             await self.checkbox_frame.waitForFunction(
                 "$('#recaptcha-anchor').length",
@@ -214,7 +206,6 @@ class Solver(Base):
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
-
         if self.keyboard_traverse:
             self.body = await self.page.J("body")
             await self.body.press("Tab")
@@ -226,7 +217,6 @@ class Solver(Base):
 
     async def wait_for_audio_button(self):
         """Wait for audio button to appear."""
-
         try:
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-audio-button').length",
@@ -237,7 +227,6 @@ class Solver(Base):
 
     async def click_audio_button(self):
         """Click audio button after it appears."""
-
         if self.keyboard_traverse:
             await self.body.press("Enter")
         else:
