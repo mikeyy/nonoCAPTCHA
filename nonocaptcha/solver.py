@@ -28,6 +28,10 @@ class DefaceError(Exception):
     pass
 
 
+class PageError(Exception):
+    pass
+
+
 class Solver(Base):
     browser = None
     launcher = None
@@ -131,6 +135,7 @@ class Solver(Base):
 
            Function x is an odd hack for multiline text, but it works.
         """
+        # Load HTML code for defacing
         html_code = await util.load_file(self.deface_data)
         deface_js = (
             (
@@ -147,6 +152,7 @@ class Solver(Base):
             )
             % self.sitekey
         )
+        # Overwrite current page with deface HTML
         await self.page.evaluate(deface_js)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
@@ -156,24 +162,27 @@ class Solver(Base):
     if(window.ready_eddy){
         return true;
     }
-}"""
+}"""    # Wait for image iFrame to load before continuing
         await self.page.waitForFunction(func, timeout=self.deface_timeout)
 
     async def goto(self):
         """Open tab and deface page"""
         user_agent = await self.cloak_navigator()
+        # Set brower's user agent from emulated navigator properties
         await self.page.setUserAgent(user_agent)
         try:
+            # Go to page and wait for document to be ready
             await self.page.goto(
                 self.url,
                 timeout=self.page_load_timeout,
                 waitUntil="documentloaded"
             )
         except TimeoutError:
-            raise PageLoadError("Problem loading page")
+            raise PageError("Problem loading page")
             
     async def deface(self):
         try:
+            # Wait for page to fully deface
             await self.wait_for_deface()
         except TimeoutError:
             raise DefaceError("Problem defacing page")
@@ -182,18 +191,25 @@ class Solver(Base):
         """Click checkbox, on failure it will attempt to decipher the audio
            file
         """
+        # Get checkbox and image frame for handling
         self.get_frames()
+        # Wait for checkbox to appear
         await self.wait_for_checkbox()
+        # Click on checkbox
         await self.click_checkbox()
         try:
+            # Check for "Try again later..." modal
             await self.check_detection(
                 self.checkbox_frame, timeout=self.animation_timeout
             )
         except Detected:
+            # We were detected
             raise
         except SafePassage:
+            # Image frame appeared, let's try to solve it by audio (or image)
             return await self._solve()
         except Success:
+            # We were successful on just clicking the checkbox, return the code
             code = await self.g_recaptcha_response()
             if code:
                 return code
