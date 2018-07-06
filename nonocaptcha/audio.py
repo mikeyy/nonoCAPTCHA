@@ -31,44 +31,59 @@ class SolveAudio(Base):
 
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
-
+        
+        # Get checkbox and image frames
         self.get_frames()
-
+        
+        # Try five times to solve the audio before manual failing
         for i in range(5):
             try:
+                # Get the audio response
                 answer = await self.get_audio_response()
             except DownloadError:
+                # There was an error downloading the audio
                 raise
             except ReloadError:
+                # A problem reloading the audio after incorrect answer occured
                 raise
             else:
+                # Start from the top again if no answer resulted
                 if not answer:
                     continue
-
+            
+            # Type the response we received
             await self.type_audio_response(answer)
+            # Click verify
             await self.click_verify()
 
             try:
+                # Check if we were detected
                 await self.check_detection(
                     self.image_frame, self.animation_timeout
                 )
             except TryAgain:
+                # Incorrect answer, start from the top
                 continue
             except Detected:
+                # We were detected
                 raise
             except Success:
+                # Audio response successful
                 raise
 
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
         
         try:
+            # Get the audio url with jQuery selector
             audio_url = await self.image_frame.evaluate(
                 f'$(".rc-audiochallenge-tdownload-link").attr("href")'
             )
             if not isinstance(audio_url, str):
+                # Audio url isn't a string, abort
                 raise DownloadError("Audio url is not valid, aborting")
         except CancelledError:
+            # Odd, no URL is here, abort
             raise DownloadError("Audio url not found, aborting")
 
         self.log("Downloading audio file")
@@ -84,6 +99,7 @@ class SolveAudio(Base):
         else:
             answer = None
             service = self.speech_service.lower()
+            # Which service was supplied in the configuration?
             if service in ["azure", "pocketsphinx", "deepspeech"]:
                 if service == "azure":
                     speech = Azure()
@@ -91,12 +107,16 @@ class SolveAudio(Base):
                     speech = Sphinx()
                 else:
                     speech = DeepSpeech()
+                # Make a temporary directory to store the audio file, mp3->wav
                 tmpd = tempfile.mkdtemp()
                 tmpf = os.path.join(tmpd, "audio.mp3")
                 await util.save_file(tmpf, data=audio_data, binary=True)
+                # Get the text from the earlier supplied service
                 answer = await speech.get_text(tmpf)
+                # Remove created directory
                 shutil.rmtree(tmpd)
             else:
+                # Use Amazon if no other services were supplied
                 speech = Amazon()
                 answer = await speech.get_text(audio_data)
             if answer:
@@ -109,6 +129,7 @@ class SolveAudio(Base):
             f'$(".rc-audiochallenge-tdownload-link").attr("href")'
         )
         try:
+            # Wait for the audio url to actually change before continuing
             await self.image_frame.waitForFunction(
                 func, timeout=self.animation_timeout
             )
