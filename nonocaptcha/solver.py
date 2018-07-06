@@ -71,11 +71,11 @@ class Solver(Base):
             if self.proxy_auth:
                 # Authenticate the proxy with details provided
                 await self.page.authenticate(self.proxy_auth)
+            self.log(f"Starting solver with proxy {self.proxy}")
             # Go to page with emulated device properties
             await self.goto()
             # Deface the page with reCAPTCHA widget and sitekey
             await self.deface()
-            self.log(f"Starting solver with proxy {self.proxy}")
             result = await self.solve()
         except BaseException as e:
             # Log Exceptions
