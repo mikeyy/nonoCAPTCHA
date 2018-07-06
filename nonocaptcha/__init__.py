@@ -36,7 +36,7 @@ package_dir = os.path.dirname(os.path.abspath(__file__))
 
 try:
     import yaml
-    with open("config.yaml", 'r') as f:
+    with open("nonocaptcha.yaml", 'r') as f:
         settings = yaml.load(f)
 except FileNotFoundError:
     print(
@@ -48,5 +48,7 @@ except FileNotFoundError:
     import sys
     from shutil import copyfile
 
-    copyfile(f"{package_dir}/config.example.yaml", "config.example.yaml")
+    copyfile(
+        f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml"
+    )
     sys.exit(0)
