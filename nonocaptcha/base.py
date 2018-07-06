@@ -81,8 +81,8 @@ class Base(Clicker):
             """(function() {
     %s
 
-    checkbox_frame = parent.frames[0].document;
-    image_frame = parent.frames[1].document;
+    checkbox_frame = $("iframe[src*='api2/anchor']").context;
+    image_frame = $("iframe[src*='api2/bframe']").context;
 
     var bot_header = $(".rc-doscaptcha-header-text", image_frame)
     if(bot_header.length){
