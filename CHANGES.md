@@ -1,6 +1,11 @@
 History (Work in progress)
 =======
 ### Current Version (2018-07-04)
+* solver.py & audio.py
+    * Add comments line by line
+* Fix bugs
+
+### Version 1.6.0 (2018-07-04)
 * Switch configuration file to YAML format
 * Clean-up requirements.txt
 * Downgrade back to pyppeteer 0.0.17 due to frame issues
