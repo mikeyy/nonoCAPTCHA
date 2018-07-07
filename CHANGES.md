@@ -1,6 +1,8 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-04)
+### Current Version
+* Add proxy management
+    * example usage is provided in examples/run.py
 * solver.py & audio.py
     * Add comments line by line
 * Fix bugs
