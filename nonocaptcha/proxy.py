@@ -5,6 +5,7 @@ import asyncio
 from peewee import *
 from playhouse.apsw_ext import *
 
+
 database_filename = "proxy.db"
 database = db = APSWDatabase(
     database_filename, pragmas=(("synchronous", "off"),)
@@ -59,14 +60,17 @@ class ProxyDB(object):
                 Proxy.insert_many(row).execute()
 
     async def get(self):
-        async with self._lock:
-            proxy = Proxy.get(
-                (Proxy.active == False)
-                & (Proxy.alive == True)
-                & (Proxy.last_banned <= time.time())
-                & (Proxy.last_used <= time.time())
-            ).proxy
-            self.set_active(proxy)
+        try:
+            async with self._lock:
+                proxy = Proxy.get(
+                    (Proxy.active == False)
+                    & (Proxy.alive == True)
+                    & (Proxy.last_banned <= time.time())
+                    & (Proxy.last_used <= time.time())
+                ).proxy
+                self.set_active(proxy)
+        except Proxy.DoesNotExist:
+            return
         return proxy
 
     def set_active(self, proxy):
