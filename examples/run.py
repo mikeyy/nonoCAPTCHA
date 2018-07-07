@@ -12,15 +12,15 @@ from async_timeout import timeout
 from asyncio import TimeoutError, CancelledError
 
 from nonocaptcha import util, settings
+from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 # Max browsers to open
 threads = 1
-sort_position = False
+sort_position = True
 pageurl = settings["run"]["pageurl"]
 sitekey = settings["run"]["sitekey"]
 proxy_source = settings["proxy"]["source"]
-
 
 def shuffle(i):
     random.shuffle(i)
@@ -49,13 +49,14 @@ if sort_position:
 
 
 class Run(object):
-    proxies = None
     def __init__(self, loop):
+        self.proxies = proxy.ProxyDB()
         if proxy_source:
             asyncio.ensure_future(self.get_proxies(), loop=loop)
 
     async def get_proxies(self):
         while True:
+            print("Proxies loading...")
             protos = ["http://", "https://"]
             if any(p in proxy_source for p in protos):
                 f = util.get_page
@@ -63,7 +64,8 @@ class Run(object):
                 f = util.load_file
     
             result = await f(proxy_source)
-            self.proxies = iter(shuffle(result.strip().split("\n")))
+            self.proxies.add(result.split('\n'))
+            print("Proxies loaded.")
             await asyncio.sleep(10 * 60)
 
     async def work(self):
@@ -78,14 +80,13 @@ class Run(object):
                 ]
             )
         options = {"ignoreHTTPSErrors": True, "args": args}
-        proxy = next(self.proxies) if proxy_source else None
+        proxy = await self.proxies.get() if proxy_source else None
         client = Solver(
             pageurl,
             sitekey,
             options=options,
             proxy=proxy
         )
-        answer = None
         try:
             async with timeout(180):
                 answer = await client.start()
@@ -94,6 +95,7 @@ class Run(object):
                 if not client.launcher.chromeClosed:
                     await client.launcher.waitForChromeToClose()
         finally:
+            self.proxies.set_used(proxy)
             if sort_position:
                 used_positions.remove(this_position)
             if answer:
@@ -101,7 +103,6 @@ class Run(object):
 
     async def main(self):
         if proxy_source:
-            print("Proxies loading...")
             while self.proxies is None:
                 await asyncio.sleep(1)
 
