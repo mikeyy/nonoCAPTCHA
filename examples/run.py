@@ -50,7 +50,7 @@ if sort_position:
 
 class Run(object):
     def __init__(self, loop):
-        self.proxies = proxy.ProxyDB()
+        self.proxies = ProxyDB()
         if proxy_source:
             asyncio.ensure_future(self.get_proxies(), loop=loop)
 
