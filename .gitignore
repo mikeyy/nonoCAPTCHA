@@ -58,7 +58,7 @@ aiomisc
 aiohttp
 
 # Config file
-config.yaml
+nonocaptcha.yaml
 
 # Mac's DS_Store
 .DS_Store
