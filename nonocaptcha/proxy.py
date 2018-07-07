@@ -1,7 +1,9 @@
-from peewee import *
-from playhouse.apsw_ext import *
 import time
 import os
+import asyncio
+
+from peewee import *
+from playhouse.apsw_ext import *
 
 database_filename = "proxy.db"
 database = db = APSWDatabase(
@@ -29,8 +31,8 @@ class Proxy(Model):
 # if os.path.exists(database_filename): os.remove(database_filename)
 init_db(database_filename)
 
-
 class ProxyDB(object):
+    _lock = asyncio.Lock()
     def __init__(self, last_used_timeout=300, last_banned_timeout=300):
         self.last_used_timeout = last_used_timeout
         self.last_banned_timeout = last_banned_timeout
@@ -56,14 +58,15 @@ class ProxyDB(object):
             for row in chunks(rows, 100):
                 Proxy.insert_many(row).execute()
 
-    def get(self):
-        proxy = Proxy.get(
-            (Proxy.active == False)
-            & (Proxy.alive == True)
-            & (Proxy.last_banned <= time.time())
-            & (Proxy.last_used <= time.time())
-        )
-        self.set_active(proxy.proxy)
+    async def get(self):
+        async with self._lock:
+            proxy = Proxy.get(
+                (Proxy.active == False)
+                & (Proxy.alive == True)
+                & (Proxy.last_banned <= time.time())
+                & (Proxy.last_used <= time.time())
+            ).proxy
+            self.set_active(proxy)
         return proxy
 
     def set_active(self, proxy):
