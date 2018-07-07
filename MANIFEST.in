@@ -1,2 +1,4 @@
 include nonocaptcha/data/*.*
-include LICENSE
+include README.rst
+include setup.py
+include CHANGES.md
