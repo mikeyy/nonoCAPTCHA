@@ -40,9 +40,6 @@ class Base(Clicker):
     if settings["main"]["debug"]:
         logger.setLevel("DEBUG")
     proc_id = 0
-    detected = False
-    try_again = False
-
     headless = settings["main"]["headless"]
     keyboard_traverse = settings["main"]["keyboard_traverse"]
     proxy_protocol = settings["proxy"]["protocol"]
@@ -81,8 +78,8 @@ class Base(Clicker):
             """(function() {
     %s
 
-    checkbox_frame = $("iframe[src*='api2/anchor']").context;
-    image_frame = $("iframe[src*='api2/bframe']").context;
+    checkbox_frame = parent.window.$("iframe[src*='api2/anchor']").contents();
+    image_frame = parent.window.$("iframe[src*='api2/bframe']").contents();
 
     var bot_header = $(".rc-doscaptcha-header-text", image_frame)
     if(bot_header.length){
