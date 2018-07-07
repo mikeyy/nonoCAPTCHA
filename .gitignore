@@ -71,3 +71,6 @@ build.sh
 
 # pyenv
 .python-version
+
+# proxy database
+proxy.db
