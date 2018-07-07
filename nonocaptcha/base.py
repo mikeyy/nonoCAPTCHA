@@ -5,7 +5,6 @@ import random
 import yaml
 
 from nonocaptcha import settings, package_dir
-from nonocaptcha.helper import wait_between
 
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
