@@ -83,7 +83,7 @@ class ProxyDB(object):
         ).where(Proxy.proxy == proxy)
         return query.execute()
 
-    def update_proxy_banned(self, proxy):
+    def set_banned(self, proxy):
         query = Proxy.update(
             last_banned=time.time() + self.last_banned_timeout, active=False
         ).where(Proxy.proxy == proxy)

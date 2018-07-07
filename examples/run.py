@@ -89,17 +89,20 @@ class Run(object):
         )
         try:
             async with timeout(180):
-                answer = await client.start()
+                result = await client.start()
         except CancelledError:
             if client.launcher:
                 if not client.launcher.chromeClosed:
                     await client.launcher.waitForChromeToClose()
         finally:
-            self.proxies.set_used(proxy)
             if sort_position:
                 used_positions.remove(this_position)
-            if answer:
-                return answer
+
+            if result == "detected":
+                self.proxies.set_banned(proxy)
+            else:
+                self.proxies.set_used(proxy) 
+                return result
 
     async def main(self):
         if proxy_source:

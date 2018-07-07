@@ -77,6 +77,8 @@ class Solver(Base):
             # Deface the page with reCAPTCHA widget and sitekey
             await self.deface()
             result = await self.solve()
+        except Detected:
+            result = "detected"
         except BaseException as e:
             # Log Exceptions
             self.log(f"{e} {type(e)}")
