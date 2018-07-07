@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
-### Current Version
+### Current Version (2018-07-04)
+* Fix nonocaptcha.example.yaml inclusion
+
+### Version 1.7.0 (2018-07-04)
 * Add proxy management
     * example usage is provided in examples/run.py
 * solver.py & audio.py
