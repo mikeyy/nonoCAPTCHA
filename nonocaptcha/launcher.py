@@ -208,10 +208,10 @@ class Launcher(launcher.Launcher):
                     process = psutil.Process(self.proc.pid)
                     for proc in process.children(recursive=True):
                         try:
-                            proc.terminate()
+                            proc.kill()
                         except psutil._exceptions.NoSuchProcess:
                             pass
-                    self.proc.terminate()
+                    self.proc.kill()
                     await self.proc.wait()
 
     async def killChrome(self):
