@@ -1,7 +1,6 @@
 aiobotocore==0.9.2
 aiofiles==0.3.2
 aiohttp==3.3.2
-apsw==3.9.2.post1
 async-timeout==3.0.0
 peewee==3.5.2
 pocketsphinx==0.1.15

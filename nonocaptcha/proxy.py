@@ -3,11 +3,10 @@ import os
 import asyncio
 
 from peewee import *
-from playhouse.apsw_ext import *
 
 
 database_filename = "proxy.db"
-database = db = APSWDatabase(
+database = db = SqliteDatabase(
     database_filename, pragmas=(("synchronous", "off"),)
 )
 
@@ -29,7 +28,7 @@ class Proxy(Model):
     last_banned = IntegerField(default=0)
 
 
-# if os.path.exists(database_filename): os.remove(database_filename)
+#if os.path.exists(database_filename): os.remove(database_filename)
 init_db(database_filename)
 
 class ProxyDB(object):
