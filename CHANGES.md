@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-07-08)
+* Fix nonocaptcha.example.yaml keys
+
+### Version 1.7.2 (2018-07-08)
 * Remove APSW dependency in Proxy database for Windows compatibility
 
 ### Version 1.7.1 (2018-07-08)

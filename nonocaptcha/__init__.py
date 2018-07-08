@@ -4,7 +4,7 @@
 import os.path
 import sys
 
-version_info = (1, 7, 2)
+version_info = (1, 7, 3)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
@@ -41,8 +41,7 @@ try:
 except FileNotFoundError:
     print(
         "Solver can't run without a configuration file!\n"
-        "An example (config.example.yaml) has been copied to your current "
-        "folder."
+        "An example (nonocaptcha.example.yaml) has been copied to your folder."
     )
 
     import sys
