@@ -158,7 +158,7 @@ class CDPSession(connection.CDPSession, EventEmitter):
             raise NetworkError("connection unexpectedly closed")
         return await callback
 
-    def _on_message(self, msg: str) -> None:
+    def _on_message(self, msg):
         obj = json.loads(msg)
         _id = obj.get('id')
         if _id and _id in self._callbacks:
@@ -178,6 +178,7 @@ class CDPSession(connection.CDPSession, EventEmitter):
                     raise NetworkError("connection unexpectedly closed")
         else:
             self.emit(obj.get('method'), obj.get('params'))
+
 
 class Launcher(launcher.Launcher):
     def __init__(self, options, **kwargs):
