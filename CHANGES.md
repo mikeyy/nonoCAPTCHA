@@ -1,9 +1,12 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-04)
+### Current Version (2018-07-08)
+* Remove APSW dependency in Proxy database for Windows compatibility
+
+### Version 1.7.1 (2018-07-08)
 * Fix nonocaptcha.example.yaml inclusion
 
-### Version 1.7.0 (2018-07-04)
+### Version 1.7.0 (2018-07-08)
 * Add proxy management
     * example usage is provided in examples/run.py
 * solver.py & audio.py
