@@ -72,10 +72,7 @@ class Base(Clicker):
         #    l = [f'if({i}) return true;' for i in wants_true]
         #    wants_true = '\n'.join(wants_true)
 
-        func = (
-            """(function() {
-    %s
-
+        func = """(function() {
     checkbox_frame = parent.window.$("iframe[src*='api2/anchor']").contents();
     image_frame = parent.window.$("iframe[src*='api2/bframe']").contents();
 
@@ -103,8 +100,6 @@ class Base(Clicker):
     }
 
 })()"""
-            % wants_true
-        )
         try:
             await frame.waitForFunction(
                 func, timeout=timeout, polling=50
@@ -112,17 +107,15 @@ class Base(Clicker):
         except asyncio.TimeoutError:
             raise SafePassage()
         else:
-            eval = "parent.window.wasdetected === true;"
-            if await frame.evaluate(eval):
-                raise Detected("Automation detected")
-            eval = "parent.window.tryagain === true"
-            if await frame.evaluate(eval):
+            if await frame.evaluate("parent.window.wasdetected === true;"):
+                status = "detected"
+            elif await frame.evaluate("parent.window.tryagain === true"):
                 await frame.evaluate("parent.window.tryagain = false;")
-                self.log("Incorrect answer, trying again")
-                raise TryAgain()
-            eval = "parent.window.success === true"
-            if await frame.evaluate(eval):
-                raise Success("Automation successful!")
+                status = 'try_again'
+            elif await frame.evaluate("parent.window.success === true"):
+                status = 'success'
+            
+            return {'status': status}
 
     def log(self, message):
         self.logger.debug(f"{self.proc_id} {message}")

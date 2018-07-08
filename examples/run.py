@@ -97,12 +97,14 @@ class Run(object):
         finally:
             if sort_position:
                 used_positions.remove(this_position)
-
-            if result == "detected":
-                self.proxies.set_banned(proxy)
-            else:
-                self.proxies.set_used(proxy) 
-                return result
+            
+            if result:
+                if result['status'] == "detected":
+                    self.proxies.set_banned(proxy)
+                else:
+                    self.proxies.set_used(proxy)
+                    if result['status'] == "success":
+                        return result['code']
 
     async def main(self):
         if proxy_source:

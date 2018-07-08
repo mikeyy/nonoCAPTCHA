@@ -59,31 +59,20 @@ class Solver(Base):
     async def start(self):
         """Begin solving"""
         result = None
-        # Set start time
         start = time.time()
         try:
-            # Start a new browser with supplied options and arguments
             self.browser = await self.get_new_browser()
-            # Search for frame with paging
             target = [t for t in self.browser.targets() if await t.page()][0]
-            # Assign page for handling
             self.page = await target.page()
             if self.proxy_auth:
-                # Authenticate the proxy with details provided
                 await self.page.authenticate(self.proxy_auth)
             self.log(f"Starting solver with proxy {self.proxy}")
-            # Go to page with emulated device properties
             await self.goto()
-            # Deface the page with reCAPTCHA widget and sitekey
             await self.deface()
             result = await self.solve()
-        except Detected:
-            result = "detected"
         except BaseException as e:
-            # Log Exceptions
             self.log(f"{e} {type(e)}")
         finally:
-            # Set end time
             end = time.time()
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
@@ -95,15 +84,10 @@ class Solver(Base):
         """Get a new browser, set proxy and arguments"""
         chrome_args = []
         if self.proxy:
-            # Append set proxy to Chrome arguments
             chrome_args.append(f"--proxy-server={self.proxy}")
-
         args = self.options.pop("args")
         args.extend(chrome_args)
-        # Update Chrome arguments with headless setting
         self.options.update({"headless": self.headless, "args": args})
-        
-        # Apply arguments to Chrome Launcher
         self.launcher = Launcher(self.options)
         browser = await self.launcher.launch()
         return browser
@@ -112,20 +96,14 @@ class Solver(Base):
         """Emulate another browser's navigator properties and set webdriver
            false, inject jQuery.
         """
-        # Load jQuery Javascript
         jquery_js = await util.load_file(self.jquery_data)
-        # Load override javascript
         override_js = await util.load_file(self.override_data)
-        # Generate navigator properties of another device and browser
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
-        # Set webdriver false to hide that we are automating
         navigator_config["webdriver"] = False
-        # Dump dictionary values into json format
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
-        # Execute all into one Javascript function
         await self.page.evaluateOnNewDocument(
             "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js)
         )
@@ -137,7 +115,6 @@ class Solver(Base):
 
            Function x is an odd hack for multiline text, but it works.
         """
-        # Load HTML code for defacing
         html_code = await util.load_file(self.deface_data)
         deface_js = (
             (
@@ -154,7 +131,6 @@ class Solver(Base):
             )
             % self.sitekey
         )
-        # Overwrite current page with deface HTML
         await self.page.evaluate(deface_js)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
@@ -164,16 +140,14 @@ class Solver(Base):
     if(window.ready_eddy){
         return true;
     }
-}"""    # Wait for image iFrame to load before continuing
+}"""
         await self.page.waitForFunction(func, timeout=self.deface_timeout)
 
     async def goto(self):
-        """Open tab and deface page"""
+        """Navigate to address"""
         user_agent = await self.cloak_navigator()
-        # Set brower's user agent from emulated navigator properties
         await self.page.setUserAgent(user_agent)
         try:
-            # Go to page and wait for document to be ready
             await self.page.goto(
                 self.url,
                 timeout=self.page_load_timeout,
@@ -184,7 +158,6 @@ class Solver(Base):
             
     async def deface(self):
         try:
-            # Wait for page to fully deface
             await self.wait_for_deface()
         except TimeoutError:
             raise DefaceError("Problem defacing page")
@@ -193,28 +166,23 @@ class Solver(Base):
         """Click checkbox, on failure it will attempt to decipher the audio
            file
         """
-        # Get checkbox and image frame for handling
         self.get_frames()
-        # Wait for checkbox to appear
         await self.wait_for_checkbox()
-        # Click on checkbox
         await self.click_checkbox()
         try:
-            # Check for "Try again later..." modal
-            await self.check_detection(
+            result = await self.check_detection(
                 self.checkbox_frame, timeout=self.animation_timeout
             )
-        except Detected:
-            # We were detected
-            raise
         except SafePassage:
-            # Image frame appeared, let's try to solve it by audio (or image)
             return await self._solve()
-        except Success:
-            # We were successful on just clicking the checkbox, return the code
-            code = await self.g_recaptcha_response()
-            if code:
-                return code
+        else:
+            if result['status'] == "success":
+                code = await self.g_recaptcha_response()
+                if code:
+                    result['code'] = code
+                    return result
+            else:
+                return result
 
     async def _solve(self):
         # Coming soon...
@@ -225,15 +193,20 @@ class Solver(Base):
         else:
             self.audio = SolveAudio(self.page, self.proxy, self.proc_id)
             await self.wait_for_audio_button()
-            await self.click_audio_button()
+            result = await self.click_audio_button()
+            if result:
+                if result['status'] == "detected":
+                    return result
             solve = self.audio.solve_by_audio
 
-        try:
-            await solve()
-        except Success:
+        result = await solve()
+        if result['status'] == "success":
             code = await self.g_recaptcha_response()
             if code:
-                return code
+                result['code'] = code
+                return result
+        else:
+            return result
 
     async def wait_for_checkbox(self):
         """Wait for audio button to appear."""
@@ -276,14 +249,15 @@ class Solver(Base):
             await self.click_button(audio_button)
 
         try:
-            await self.check_detection(
+            result = await self.check_detection(
                 self.image_frame,
                 self.animation_timeout
             )
-        except Detected:
-            raise
         except SafePassage:
             pass
+        else:
+            return result
+        
 
     async def g_recaptcha_response(self):
         code = await self.page.evaluate("$('#g-recaptcha-response').val()")
