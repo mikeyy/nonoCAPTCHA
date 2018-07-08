@@ -72,21 +72,22 @@ class ProxyDB(object):
             return
         return proxy
 
-    def set_active(self, proxy, is_active=True):
-        query = Proxy.update(active=is_active).where(Proxy.proxy == proxy)
-        return query.execute()
-
     def set_used(self, proxy):
         query = Proxy.update(
             last_used=time.time() + self.last_used_timeout, active=False
         ).where(Proxy.proxy == proxy)
         self.set_active(proxy, is_active=False)
         return query.execute()
+        
+    def set_active(self, proxy, is_active=True):
+        query = Proxy.update(active=is_active).where(Proxy.proxy == proxy)
+        return query.execute()
 
     def set_banned(self, proxy):
         query = Proxy.update(
             last_banned=time.time() + self.last_banned_timeout, active=False
         ).where(Proxy.proxy == proxy)
+        self.set_active(proxy, is_active=False)
         return query.execute()
 
     def loaded_count(self):
