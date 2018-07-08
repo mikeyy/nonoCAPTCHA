@@ -28,11 +28,13 @@ class Proxy(Model):
     last_banned = IntegerField(default=0)
 
 
-#if os.path.exists(database_filename): os.remove(database_filename)
+# if os.path.exists(database_filename): os.remove(database_filename)
 init_db(database_filename)
+
 
 class ProxyDB(object):
     _lock = asyncio.Lock()
+
     def __init__(self, last_used_timeout=300, last_banned_timeout=300):
         self.last_used_timeout = last_used_timeout
         self.last_banned_timeout = last_banned_timeout
@@ -61,13 +63,19 @@ class ProxyDB(object):
     async def get(self):
         try:
             async with self._lock:
-                proxy = Proxy.get(
-                    (Proxy.active == False)
-                    & (Proxy.alive == True)
-                    & (Proxy.last_banned <= time.time())
-                    & (Proxy.last_used <= time.time())
-                ).proxy
-                self.set_active(proxy)
+                proxy = (
+                    Proxy.select(Proxy.proxy)
+                    .where(
+                        (Proxy.active == False)
+                        & (Proxy.alive == True)
+                        & (Proxy.last_banned <= time.time())
+                        & (Proxy.last_used <= time.time())
+                    )
+                    .order_by(fn.Random())
+                    .limit(1)[0]
+                    .proxy
+                )
+                self.set_active(proxy, is_active=True)
         except Proxy.DoesNotExist:
             return
         return proxy
@@ -76,10 +84,9 @@ class ProxyDB(object):
         query = Proxy.update(
             last_used=time.time() + self.last_used_timeout, active=False
         ).where(Proxy.proxy == proxy)
-        self.set_active(proxy, is_active=False)
         return query.execute()
-        
-    def set_active(self, proxy, is_active=True):
+
+    def set_active(self, proxy, is_active):
         query = Proxy.update(active=is_active).where(Proxy.proxy == proxy)
         return query.execute()
 
@@ -87,7 +94,6 @@ class ProxyDB(object):
         query = Proxy.update(
             last_banned=time.time() + self.last_banned_timeout, active=False
         ).where(Proxy.proxy == proxy)
-        self.set_active(proxy, is_active=False)
         return query.execute()
 
     def loaded_count(self):
