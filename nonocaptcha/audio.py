@@ -12,7 +12,7 @@ from asyncio import TimeoutError, CancelledError
 
 from nonocaptcha import util
 from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech
-from nonocaptcha.base import Base, Detected, Success, TryAgain
+from nonocaptcha.base import Base, TryAgain
 
 
 class ReloadError(Exception):

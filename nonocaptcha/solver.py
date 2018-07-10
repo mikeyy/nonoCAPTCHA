@@ -13,7 +13,7 @@ from asyncio import TimeoutError, CancelledError
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
-from nonocaptcha.base import Base, Detected, SafePassage, Success
+from nonocaptcha.base import Base, SafePassage
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
