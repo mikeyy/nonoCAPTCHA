@@ -170,9 +170,7 @@ class Solver(Base):
         await self.wait_for_checkbox()
         await self.click_checkbox()
         try:
-            result = await self.check_detection(
-                self.checkbox_frame, timeout=self.animation_timeout
-            )
+            result = await self.check_detection(self.animation_timeout)
         except SafePassage:
             return await self._solve()
         else:
@@ -248,9 +246,7 @@ class Solver(Base):
             await self.click_button(audio_button)
 
         try:
-            result = await self.check_detection(
-                self.image_frame, self.animation_timeout
-            )
+            result = await self.check_detection(self.animation_timeout)
         except SafePassage:
             pass
         else:

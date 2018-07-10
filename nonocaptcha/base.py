@@ -53,16 +53,9 @@ class Base(Clicker):
         reload_button = await self.image_frame.J("#recaptcha-reload-button")
         await self.click_button(reload_button)
 
-    async def check_detection(self, frame, timeout, wants_true=""):
+    async def check_detection(self, timeout):
         """Checks if "Try again later", "please solve more" modal appears
         or success"""
-
-        if wants_true:
-            wants_true = f"if({wants_true}) return true;"
-
-        # if isinstance(wants_true, list):
-        #    l = [f'if({i}) return true;' for i in wants_true]
-        #    wants_true = '\n'.join(wants_true)
 
         func = """(function() {
     checkbox_frame = parent.window.$("iframe[src*='api2/anchor']").contents();
@@ -93,17 +86,17 @@ class Base(Clicker):
 
 })()"""
         try:
-            await frame.waitForFunction(func, timeout=timeout)
+            await self.page.waitForFunction(func, timeout=timeout)
         except asyncio.TimeoutError:
             raise SafePassage()
         else:
-            if await frame.evaluate("parent.window.wasdetected === true;"):
+            if await self.page.evaluate("parent.window.wasdetected === true;"):
                 status = "detected"
-            elif await frame.evaluate("parent.window.tryagain === true"):
-                await frame.evaluate("parent.window.tryagain = false;")
-                raise TryAgain()
-            elif await frame.evaluate("parent.window.success === true"):
+            elif await self.page.evaluate("parent.window.success === true"):
                 status = "success"
+            elif await self.page.evaluate("parent.window.tryagain === true"):
+                await self.page.evaluate("parent.window.tryagain = false;")
+                raise TryAgain()
 
             return {"status": status}
 

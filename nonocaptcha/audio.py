@@ -45,9 +45,7 @@ class SolveAudio(Base):
             await self.type_audio_response(answer)
             await self.click_verify()
             try:
-                result = await self.check_detection(
-                    self.image_frame, self.animation_timeout
-                )
+                result = await self.check_detection(self.animation_timeout)
             except TryAgain:
                 continue
             else:
