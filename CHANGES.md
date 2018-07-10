@@ -6,6 +6,7 @@ History (Work in progress)
     * Detected will return in dict {'status': 'detected'}
     * Max audio retries will return in dict {'status': 'retries_exceeded'}
 * Set audio garabage removal to /3.1
+* Add browser hang patches from Pyppeteer's repo
 
 ### Version 1.7.3 (2018-07-08)
 * Fix nonocaptcha.example.yaml keys
