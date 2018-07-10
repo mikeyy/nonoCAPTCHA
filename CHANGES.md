@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-10)
+### Current Version (2018-07-10) 
+* Fix importing of non-existent/removed Exceptions
+
+### Version 1.7.4 (2018-07-08)
 * Change the way results are handled
     * Success will return in dict {'status': 'success', 'code': CAPTCHACODE}
     * Detected will return in dict {'status': 'detected'}
