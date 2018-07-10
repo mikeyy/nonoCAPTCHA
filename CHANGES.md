@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-07-10) 
+* Fix new Chromium update with Pyppeteer 0.0.19
+
+### Version 1.7.6 (2018-07-10) 
 * Fix check_detection timeout
 
 ### Version 1.7.5 (2018-07-10) 
