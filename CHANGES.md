@@ -1,6 +1,13 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-08)
+### Current Version (2018-07-10)
+* Change the way results are handled
+    * Success will return in dict {'status': 'success', 'code': CAPTCHACODE}
+    * Detected will return in dict {'status': 'detected'}
+    * Max audio retries will return in dict {'status': 'retries_exceeded'}
+* Set audio garabage removal to /3.1
+
+### Version 1.7.3 (2018-07-08)
 * Fix nonocaptcha.example.yaml keys
 
 ### Version 1.7.2 (2018-07-08)
