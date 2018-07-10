@@ -36,7 +36,8 @@ package_dir = os.path.dirname(os.path.abspath(__file__))
 
 try:
     import yaml
-    with open("nonocaptcha.yaml", 'r') as f:
+
+    with open("nonocaptcha.yaml", "r") as f:
         settings = yaml.load(f)
 except FileNotFoundError:
     print(
