@@ -31,7 +31,7 @@ class SolveAudio(Base):
 
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
-        self.get_frames()
+        await self.get_frames()
         for i in range(5):
             try:
                 answer = await self.get_audio_response()

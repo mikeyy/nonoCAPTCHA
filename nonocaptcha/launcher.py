@@ -26,33 +26,30 @@ from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
 
 DEFAULT_ARGS = [
-    # ! = added in
-    '--cryptauth-http-host ""',  # !
-    "--disable-accelerated-2d-canvas",  #!
-    "--disable-affiliation-based-matching",  # !
-    "--disable-answers-in-suggest",  # !
-    "--disable-background-networking",
-    "--disable-background-timer-throttling",
-    "--disable-browser-side-navigation",
-    "--disable-breakpad",  # !
-    "--disable-client-side-phishing-detection",
-    "--disable-default-apps",
-    "--disable-demo-mode",  # !
-    "--disable-device-discovery-notifications",  # !
-    "--disable-extensions",
-    "--disable-hang-monitor",
-    "--disable-java",  # !
-    "--disable-popup-blocking",
-    "--disable-preconnect",  # !
-    "--disable-prompt-on-repost",
-    "--disable-reading-from-canvas",  # !
-    "--disable-sync",
-    "--disable-translate",
-    "--disable-web-security",  # !
-    "--metrics-recording-only",
-    "--no-first-run",
-    "--no-sandbox",  # !
-    "--safebrowsing-disable-auto-update",
+    '--cryptauth-http-host ""'
+    '--disable-accelerated-2d-canvas',
+    '--disable-background-networking',
+    '--disable-background-timer-throttling',
+    '--disable-browser-side-navigation',
+    '--disable-client-side-phishing-detection',
+    '--disable-default-apps',
+    '--disable-dev-shm-usage',
+    '--disable-device-discovery-notifications',
+    '--disable-extensions',
+    '--disable-features=site-per-process',
+    '--disable-hang-monitor',
+    '--disable-java',
+    '--disable-popup-blocking',
+    '--disable-prompt-on-repost',
+    '--disable-reading-from-canvas',
+    '--disable-sync',
+    '--disable-translate',
+    '--disable-web-security',
+    '--metrics-recording-only',
+    '--no-first-run',
+    '--no-sandbox',
+    '--noerrdialogs',
+    '--safebrowsing-disable-auto-update',
 ]
 
 AUTOMATION_ARGS = [
@@ -252,30 +249,11 @@ class Launcher(launcher.Launcher):
         )
 
     def _cleanup_tmp_user_data_dir(self):
-        def windows(path):
-            cmd_path = os.path.join(
-                os.environ["SYSTEMROOT"]
-                if "SYSTEMROOT" in os.environ
-                else r"C:\Windows",
-                "System32",
-                "cmd.exe",
-            )
-            args = [cmd_path, "/C", "rmdir", "/S", "/Q", path]
-            subprocess.check_call(
-                args,
-                env={},
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-
         for retry in range(100):
             if self._tmp_user_data_dir and os.path.exists(
                 self._tmp_user_data_dir
             ):
-                if sys.platform == "win32":
-                    windows(f"{self._tmp_user_data_dir}")
-                else:
-                    shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
+                shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
                 if os.path.exists(self._tmp_user_data_dir):
                     time.sleep(0.01)
             else:

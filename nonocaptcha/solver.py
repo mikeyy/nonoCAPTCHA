@@ -166,7 +166,7 @@ class Solver(Base):
         """Click checkbox, on failure it will attempt to decipher the audio
            file
         """
-        self.get_frames()
+        await self.get_frames()
         await self.wait_for_checkbox()
         await self.click_checkbox()
         try:
