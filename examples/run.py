@@ -17,7 +17,7 @@ from nonocaptcha.solver import Solver
 
 # Max browsers to open
 threads = 1
-sort_position = True
+sort_position = False
 pageurl = settings["run"]["pageurl"]
 sitekey = settings["run"]["sitekey"]
 proxy_source = settings["proxy"]["source"]
@@ -99,7 +99,8 @@ class Run(object):
                 used_positions.remove(this_position)
             
             if result:
-                self.proxies.set_active(proxy, is_active=False)
+                print(result)
+                self.proxies.set_active(proxy, False)
                 if result['status'] == "detected":
                     self.proxies.set_banned(proxy)
                 else:
