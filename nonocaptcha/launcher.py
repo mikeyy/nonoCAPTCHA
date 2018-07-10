@@ -28,7 +28,7 @@ from pyppeteer.util import download_chromium, merge_dict, get_free_port
 DEFAULT_ARGS = [
     # ! = added in
     '--cryptauth-http-host ""',  # !
-    "--disable-accelerated-2d-canvas", #!
+    "--disable-accelerated-2d-canvas",  #!
     "--disable-affiliation-based-matching",  # !
     "--disable-answers-in-suggest",  # !
     "--disable-background-networking",
@@ -91,16 +91,12 @@ class Connection(connection.Connection):
 
     def send(self, method, params=None):
         if self._lastId and not self._connected:
-            raise ConnectionError('Connection is closed')
+            raise ConnectionError("Connection is closed")
         if params is None:
             params = dict()
         self._lastId += 1
         _id = self._lastId
-        msg = json.dumps(dict(
-            id=_id,
-            method=method,
-            params=params,
-        ))
+        msg = json.dumps(dict(id=_id, method=method, params=params))
         asyncio.ensure_future(self._async_send(msg, _id))
         callback = asyncio.get_event_loop().create_future()
         self._callbacks[_id] = callback
@@ -121,22 +117,19 @@ class Connection(connection.Connection):
         self._sessions.clear()
 
         # close connection
-        if hasattr(self, 'connection'):  # may not have connection
+        if hasattr(self, "connection"):  # may not have connection
             await self.connection.close()
         if not self._recv_fut.done():
             self._recv_fut.cancel()
 
-    async def createSession(self, targetId: str) -> 'CDPSession':
+    async def createSession(self, targetId: str) -> "CDPSession":
         """Create new session."""
-        resp = await self.send(
-            'Target.attachToTarget',
-            {'targetId': targetId}
-        )
-        sessionId = resp.get('sessionId')
+        resp = await self.send("Target.attachToTarget", {"targetId": targetId})
+        sessionId = resp.get("sessionId")
         session = CDPSession(self, targetId, sessionId)
         self._sessions[sessionId] = session
         return session
-    
+
 
 class CDPSession(connection.CDPSession, EventEmitter):
     async def send(self, method, params=None):
@@ -148,36 +141,36 @@ class CDPSession(connection.CDPSession, EventEmitter):
         self._callbacks[_id] = callback
         callback.method: str = method  # type: ignore
         if not self._connection:
-            raise NetworkError('Connection closed.')
+            raise NetworkError("Connection closed.")
         try:
-            await self._connection.send('Target.sendMessageToTarget', {
-                'sessionId': self._sessionId,
-                'message': msg,
-            })
+            await self._connection.send(
+                "Target.sendMessageToTarget",
+                {"sessionId": self._sessionId, "message": msg},
+            )
         except concurrent.futures.CancelledError:
             raise NetworkError("connection unexpectedly closed")
         return await callback
 
     def _on_message(self, msg):
         obj = json.loads(msg)
-        _id = obj.get('id')
+        _id = obj.get("id")
         if _id and _id in self._callbacks:
             callback = self._callbacks.pop(_id)
-            if 'error' in obj:
-                error = obj['error']
-                msg = error.get('message')
-                data = error.get('data')
+            if "error" in obj:
+                error = obj["error"]
+                msg = error.get("message")
+                data = error.get("data")
                 callback.set_exception(
-                    NetworkError(f'Protocol Error: {msg} {data}')
+                    NetworkError(f"Protocol Error: {msg} {data}")
                 )
             else:
-                result = obj.get('result')
+                result = obj.get("result")
                 try:
                     callback.set_result(result)
                 except asyncio.base_futures.InvalidStateError:
                     raise NetworkError("connection unexpectedly closed")
         else:
-            self.emit(obj.get('method'), obj.get('params'))
+            self.emit(obj.get("method"), obj.get("params"))
 
 
 class Launcher(launcher.Launcher):
@@ -269,9 +262,10 @@ class Launcher(launcher.Launcher):
             )
             args = [cmd_path, "/C", "rmdir", "/S", "/Q", path]
             subprocess.check_call(
-                args, env={}, 
-                stdout=subprocess.DEVNULL, 
-                stderr=subprocess.DEVNULL
+                args,
+                env={},
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
 
         for retry in range(100):
@@ -287,7 +281,7 @@ class Launcher(launcher.Launcher):
             else:
                 break
         else:
-            raise IOError('Unable to remove Temporary User Data')
+            raise IOError("Unable to remove Temporary User Data")
 
     async def waitForChromeToClose(self):
         if self.proc:

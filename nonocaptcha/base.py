@@ -10,15 +10,7 @@ FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
 
 
-class Detected(Exception):
-    pass
-
-
 class SafePassage(Exception):
-    pass
-
-
-class Success(Exception):
     pass
 
 
@@ -41,14 +33,14 @@ class Base(Clicker):
     headless = settings["main"]["headless"]
     keyboard_traverse = settings["main"]["keyboard_traverse"]
     proxy_protocol = settings["proxy"]["protocol"]
-    page_load_timeout = (settings["main"]["timeout"]["page_load"] * 1000)
-    deface_timeout = (settings["main"]["timeout"]["deface"] * 1000)
-    animation_timeout = (settings["main"]["timeout"]["animation"] * 1000)
+    page_load_timeout = settings["main"]["timeout"]["page_load"] * 1000
+    deface_timeout = settings["main"]["timeout"]["deface"] * 1000
+    animation_timeout = settings["main"]["timeout"]["animation"] * 1000
     speech_service = settings["speech"]["service"]
     deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
     jquery_data = os.path.join(package_dir, settings["data"]["jquery"])
     override_data = os.path.join(package_dir, settings["data"]["override_js"])
-    
+
     def get_frames(self):
         self.checkbox_frame = next(
             frame for frame in self.page.frames if "api2/anchor" in frame.url
@@ -101,9 +93,7 @@ class Base(Clicker):
 
 })()"""
         try:
-            await frame.waitForFunction(
-                func, timeout=timeout, polling=50
-            )
+            await frame.waitForFunction(func, timeout=timeout)
         except asyncio.TimeoutError:
             raise SafePassage()
         else:
@@ -111,11 +101,11 @@ class Base(Clicker):
                 status = "detected"
             elif await frame.evaluate("parent.window.tryagain === true"):
                 await frame.evaluate("parent.window.tryagain = false;")
-                status = 'try_again'
+                raise TryAgain()
             elif await frame.evaluate("parent.window.success === true"):
-                status = 'success'
-            
-            return {'status': status}
+                status = "success"
+
+            return {"status": status}
 
     def log(self, message):
         self.logger.debug(f"{self.proc_id} {message}")

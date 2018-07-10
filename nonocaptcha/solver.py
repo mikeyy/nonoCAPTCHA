@@ -22,8 +22,8 @@ from nonocaptcha import util
 
 class ButtonError(Exception):
     pass
-  
-  
+
+
 class DefaceError(Exception):
     pass
 
@@ -50,7 +50,7 @@ class Solver(Base):
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
-        self.proxy = f'{self.proxy_protocol}://{proxy}' if proxy else proxy
+        self.proxy = f"{self.proxy_protocol}://{proxy}" if proxy else proxy
         self.proxy_auth = proxy_auth
 
         self.proc_id = self.proc_count
@@ -151,11 +151,11 @@ class Solver(Base):
             await self.page.goto(
                 self.url,
                 timeout=self.page_load_timeout,
-                waitUntil="documentloaded"
+                waitUntil="documentloaded",
             )
         except TimeoutError:
             raise PageError("Problem loading page")
-            
+
     async def deface(self):
         try:
             await self.wait_for_deface()
@@ -176,10 +176,10 @@ class Solver(Base):
         except SafePassage:
             return await self._solve()
         else:
-            if result['status'] == "success":
+            if result["status"] == "success":
                 code = await self.g_recaptcha_response()
                 if code:
-                    result['code'] = code
+                    result["code"] = code
                     return result
             else:
                 return result
@@ -194,16 +194,16 @@ class Solver(Base):
             self.audio = SolveAudio(self.page, self.proxy, self.proc_id)
             await self.wait_for_audio_button()
             result = await self.click_audio_button()
-            if result:
-                if result['status'] == "detected":
+            if isinstance(result, dict):
+                if result["status"] == "detected":
                     return result
             solve = self.audio.solve_by_audio
 
         result = await solve()
-        if result['status'] == "success":
+        if result["status"] == "success":
             code = await self.g_recaptcha_response()
             if code:
-                result['code'] = code
+                result["code"] = code
                 return result
         else:
             return result
@@ -212,8 +212,7 @@ class Solver(Base):
         """Wait for audio button to appear."""
         try:
             await self.checkbox_frame.waitForFunction(
-                "$('#recaptcha-anchor').length",
-                timeout=self.animation_timeout
+                "$('#recaptcha-anchor').length", timeout=self.animation_timeout
             )
         except ButtonError:
             raise ButtonError("Checkbox missing, aborting")
@@ -234,7 +233,7 @@ class Solver(Base):
         try:
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-audio-button').length",
-                timeout=self.animation_timeout
+                timeout=self.animation_timeout,
             )
         except ButtonError:
             raise ButtonError("Audio button missing, aborting")
@@ -250,14 +249,12 @@ class Solver(Base):
 
         try:
             result = await self.check_detection(
-                self.image_frame,
-                self.animation_timeout
+                self.image_frame, self.animation_timeout
             )
         except SafePassage:
             pass
         else:
             return result
-        
 
     async def g_recaptcha_response(self):
         code = await self.page.evaluate("$('#g-recaptcha-response').val()")

@@ -30,7 +30,7 @@ def mp3_to_wav(mp3_filename):
     wav_filename = mp3_filename.replace(".mp3", ".wav")
     segment = AudioSegment.from_mp3(mp3_filename)
     sound = segment.set_channels(1).set_frame_rate(16000)
-    garbage = len(sound) / 3.5
+    garbage = len(sound) / 3.1
     sound = sound[+garbage : len(sound) - garbage]
     sound.export(wav_filename, format="wav")
     return wav_filename
@@ -42,19 +42,19 @@ class DeepSpeech(object):
     async def get_text(self, mp3_filename):
         wav_filename = await mp3_to_wav(mp3_filename)
         proc = await asyncio.create_subprocess_exec(
-                *[
-                    'deepspeech', 
-                    os.path.join(self.MODEL_DIR, "output_graph.pb"), 
-                    wav_filename,
-                    os.path.join(self.MODEL_DIR, "alphabet.txt"),
-                    os.path.join(self.MODEL_DIR, "lm.binary"), 
-                    os.path.join(self.MODEL_DIR, "trie")
-                ],
-                stdout=asyncio.subprocess.PIPE,
-            )
+            *[
+                "deepspeech",
+                os.path.join(self.MODEL_DIR, "output_graph.pb"),
+                wav_filename,
+                os.path.join(self.MODEL_DIR, "alphabet.txt"),
+                os.path.join(self.MODEL_DIR, "lm.binary"),
+                os.path.join(self.MODEL_DIR, "trie"),
+            ],
+            stdout=asyncio.subprocess.PIPE,
+        )
         if not proc.returncode:
             data = await proc.stdout.readline()
-            result = data.decode('ascii').rstrip()
+            result = data.decode("ascii").rstrip()
             await proc.wait()
             if result:
                 return result

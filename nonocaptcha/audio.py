@@ -53,12 +53,11 @@ class SolveAudio(Base):
             else:
                 return result
         else:
-            return {'status': 'retries_exceeded'}
-            
+            return {"status": "retries_exceeded"}
 
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
-        
+
         try:
             audio_url = await self.image_frame.evaluate(
                 f'$(".rc-audiochallenge-tdownload-link").attr("href")'
@@ -74,7 +73,7 @@ class SolveAudio(Base):
                 audio_url,
                 self.proxy,
                 binary=True,
-                timeout=self.page_load_timeout
+                timeout=self.page_load_timeout,
             )
         except TimeoutError:
             self.log("Download timed-out, trying again")
@@ -127,6 +126,5 @@ class SolveAudio(Base):
             verify_button = await self.image_frame.J(
                 "#recaptcha-verify-button"
             )
-
             self.log("Clicking verify")
             await self.click_button(verify_button)
