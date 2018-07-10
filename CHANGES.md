@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
 ### Current Version (2018-07-10) 
+* Fix check_detection timeout
+
+### Version 1.7.5 (2018-07-10) 
 * Fix importing of non-existent/removed Exceptions
 
 ### Version 1.7.4 (2018-07-08)
