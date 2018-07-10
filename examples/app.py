@@ -13,17 +13,17 @@ from functools import partial
 from pathlib import Path
 
 from nonocaptcha import util, settings
+from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 proxy_source = settings["proxy"]["source"]
+proxies = ProxyDB(last_used_timeout=10*60, last_banned_timeout=30*60)
 
 dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 app = web.Application()
 loop = asyncio.get_event_loop()
-asyncio.get_child_watcher().attach_loop(loop)
-executor = ThreadPoolExecutor(100)
 
 
 def shuffle(i):
@@ -32,37 +32,33 @@ def shuffle(i):
 
 
 async def work(pageurl, sitekey):
-    async with timeout(180) as timer:
-        proxy = random.choice(proxies)
-        # Chromium options and arguments
-        options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-        try:
-            result = await client.start()
-            if result:
-                return result
-        except CancelledError:
-            return
-
-def pre_work(pageurl, sitekey):
-    result = asyncio.run_coroutine_threadsafe(
-        work(pageurl, sitekey), loop=loop
-    ).result()
-    return result
+    async with timeout(3*60) as timer:
+        while not timer.expired:
+            proxy = await proxies.get()
+            if proxy:
+                # Chromium options and arguments
+                options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+                client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+                try:
+                    result = await client.start()
+                    if result:
+                        if result['status'] == "detected":
+                            proxies.set_banned(proxy)
+                        else:
+                            proxies.set_used(proxy)
+                            if result['status'] == "success":
+                                return result['code']
+                except:
+                    return
 
 
 async def get_solution(request):
-    while not proxies:
-        await asyncio.sleep(1)
     params = request.rel_url.query
     pageurl = params["pageurl"]
     sitekey = params["sitekey"]
     response = {"error": "invalid request"}
     if pageurl and sitekey:
-        sub_loop = partial(pre_work, pageurl, sitekey)
-        result = await loop.run_in_executor(
-            executor, sub_loop
-        )
+        result = await work(pageurl, sitekey)
         if result:
             response = {"solution": result}
         else:
@@ -70,9 +66,7 @@ async def get_solution(request):
     return web.json_response(response)
 
 
-proxies = None
 async def load_proxies():
-    global proxies
     print('Loading proxies')
     while 1:
         protos = ["http://", "https://"]
@@ -86,7 +80,7 @@ async def load_proxies():
         except:
             continue
         else:
-            proxies = shuffle(result.strip().split("\n"))
+            proxies.add(result.split('\n'))
             print('Proxies loaded')
             await asyncio.sleep(10 * 60)
 
@@ -112,4 +106,4 @@ app.on_startup.append(start_background_tasks)
 app.on_cleanup.append(cleanup_background_tasks)
 
 if __name__ == "__main__":
-    web.run_app(app, host="127.0.0.1", port=8000)
+    web.run_app(app, host="0.0.0.0", port=8000)
