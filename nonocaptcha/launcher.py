@@ -18,8 +18,8 @@ import websockets
 
 from pyee import EventEmitter
 from pyppeteer import launcher
-from pyppeteer import connection
 from pyppeteer.browser import Browser
+from pyppeteer.connection import Connection
 from pyppeteer.errors import NetworkError
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
@@ -57,117 +57,6 @@ AUTOMATION_ARGS = [
     "--password-store=basic",
     "--use-mock-keychain",
 ]
-
-
-class Connection(connection.Connection):
-    async def _recv_loop(self):
-        async with self._ws as connection:
-            self._connected = True
-            self.connection = connection
-            while self._connected:
-                try:
-                    resp = await self.connection.recv()
-                    if resp:
-                        self._on_message(resp)
-                except (websockets.ConnectionClosed, ConnectionResetError):
-                    break
-
-        if self._connected:
-            asyncio.ensure_future(self.dispose())
-
-    async def _async_send(self, msg, callback_id):
-        while not self._connected:
-            await asyncio.sleep(self._delay)
-        try:
-            await self.connection.send(msg)
-        except websockets.ConnectionClosed:
-            callback = self._callbacks.get(callback_id, None)
-            if callback and not callback.done():
-                callback.set_result(None)
-                await self.dispose()
-
-    def send(self, method, params=None):
-        if self._lastId and not self._connected:
-            raise ConnectionError("Connection is closed")
-        if params is None:
-            params = dict()
-        self._lastId += 1
-        _id = self._lastId
-        msg = json.dumps(dict(id=_id, method=method, params=params))
-        asyncio.ensure_future(self._async_send(msg, _id))
-        callback = asyncio.get_event_loop().create_future()
-        self._callbacks[_id] = callback
-        callback.method = method  # type: ignore
-        return callback
-
-    async def _on_close(self):
-        if self._closeCallback:
-            self._closeCallback()
-            self._closeCallback = None
-
-        for cb in self._callbacks.values():
-            cb.cancel()
-        self._callbacks.clear()
-
-        for session in self._sessions.values():
-            session._on_closed()
-        self._sessions.clear()
-
-        # close connection
-        if hasattr(self, "connection"):  # may not have connection
-            await self.connection.close()
-        if not self._recv_fut.done():
-            self._recv_fut.cancel()
-
-    async def createSession(self, targetId: str) -> "CDPSession":
-        """Create new session."""
-        resp = await self.send("Target.attachToTarget", {"targetId": targetId})
-        sessionId = resp.get("sessionId")
-        session = CDPSession(self, targetId, sessionId)
-        self._sessions[sessionId] = session
-        return session
-
-
-class CDPSession(connection.CDPSession, EventEmitter):
-    async def send(self, method, params=None):
-        self._lastId += 1
-        _id = self._lastId
-        msg = json.dumps(dict(id=_id, method=method, params=params))
-
-        callback = asyncio.get_event_loop().create_future()
-        self._callbacks[_id] = callback
-        callback.method: str = method  # type: ignore
-        if not self._connection:
-            raise NetworkError("Connection closed.")
-        try:
-            await self._connection.send(
-                "Target.sendMessageToTarget",
-                {"sessionId": self._sessionId, "message": msg},
-            )
-        except concurrent.futures.CancelledError:
-            raise NetworkError("connection unexpectedly closed")
-        return await callback
-
-    def _on_message(self, msg):
-        obj = json.loads(msg)
-        _id = obj.get("id")
-        if _id and _id in self._callbacks:
-            callback = self._callbacks.pop(_id)
-            if "error" in obj:
-                error = obj["error"]
-                msg = error.get("message")
-                data = error.get("data")
-                callback.set_exception(
-                    NetworkError(f"Protocol Error: {msg} {data}")
-                )
-            else:
-                result = obj.get("result")
-                try:
-                    callback.set_result(result)
-                except asyncio.base_futures.InvalidStateError:
-                    raise NetworkError("connection unexpectedly closed")
-        else:
-            self.emit(obj.get("method"), obj.get("params"))
 
 
 class Launcher(launcher.Launcher):
