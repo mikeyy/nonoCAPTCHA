@@ -42,7 +42,7 @@ class Base(Clicker):
     override_data = os.path.join(package_dir, settings["data"]["override_js"])
 
     async def get_frames(self):
-        res = await self.page._client.send("Page.getResourceTree")
+        res = await self.page._client.send("Page.getFrameTree")
         childFrames = res["frameTree"]["childFrames"]
         checkbox_frame_id = next(
             frame["frame"]["id"]
