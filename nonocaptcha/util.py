@@ -35,8 +35,8 @@ def threaded(func):
     return wrap
 
 
-async def save_file(file, data, binary=False):
-    mode = "w" if not binary else "wb"
+async def save_file(file, data, byte_=False):
+    mode = "w" if not byte_ else "wb"
     async with aiofiles.open(file, mode=mode) as f:
         await f.write(data)
 
