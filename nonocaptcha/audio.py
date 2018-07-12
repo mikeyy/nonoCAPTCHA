@@ -70,7 +70,7 @@ class SolveAudio(Base):
             audio_data = await util.get_page(
                 audio_url,
                 self.proxy,
-                byte_=True,
+                binary=True,
                 timeout=self.page_load_timeout,
             )
         except TimeoutError:
