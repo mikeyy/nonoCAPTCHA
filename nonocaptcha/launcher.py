@@ -5,18 +5,12 @@
 
 import asyncio
 import atexit
-import concurrent.futures
-import json
 import os
 import psutil
-import shutil
 import signal
-import subprocess
 import sys
-import time
 import websockets
 
-from pyee import EventEmitter
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
@@ -60,50 +54,6 @@ AUTOMATION_ARGS = [
 
 
 class Launcher(launcher.Launcher):
-    def __init__(self, options, **kwargs):
-        """Make new launcher."""
-        self.options = merge_dict(options, kwargs)
-        self.port = get_free_port()
-        self.url = f"http://127.0.0.1:{self.port}"
-        self.chrome_args = []
-        self.proc = None
-
-        if not self.options.get("ignoreDefaultArgs", False):
-            self.chrome_args.extend(DEFAULT_ARGS)
-            self.chrome_args.append(f"--remote-debugging-port={self.port}")
-
-        self.chromeClosed = True
-        if self.options.get("appMode", False):
-            self.options["headless"] = False
-        elif not self.options.get("ignoreDefaultArgs", False):
-            self.chrome_args.extend(AUTOMATION_ARGS)
-
-        self._tmp_user_data_dir = None
-        self._parse_args()
-
-        if self.options.get("devtools"):
-            self.chrome_args.append("--auto-open-devtools-for-tabs")
-            self.options["headless"] = False
-
-        if "headless" not in self.options or self.options.get("headless"):
-            self.chrome_args.extend(
-                [
-                    "--headless",
-                    "--disable-gpu",
-                    "--hide-scrollbars",
-                    "--mute-audio",
-                ]
-            )
-
-        if "executablePath" in self.options:
-            self.exec = self.options["executablePath"]
-        else:
-            if not check_chromium():
-                download_chromium()
-            self.exec = str(chromium_excutable())
-
-        self.cmd = [self.exec] + self.chrome_args
-
     async def launch(self):
         env = self.options.get("env")
         self.proc = await asyncio.subprocess.create_subprocess_exec(
@@ -117,7 +67,7 @@ class Launcher(launcher.Launcher):
 
         def _close_process(*args, **kwargs):
             if not self.chromeClosed:
-                asyncio.wait(asyncio.ensure_future(self.killChrome()))
+                asyncio.get_event_loop().run_until_complete(self.killChrome())
 
         # dont forget to close browser process
         atexit.register(_close_process)
@@ -137,19 +87,6 @@ class Launcher(launcher.Launcher):
             self.connection, self.options, self.proc, self.killChrome
         )
 
-    def _cleanup_tmp_user_data_dir(self):
-        for retry in range(100):
-            if self._tmp_user_data_dir and os.path.exists(
-                self._tmp_user_data_dir
-            ):
-                shutil.rmtree(self._tmp_user_data_dir, ignore_errors=True)
-                if os.path.exists(self._tmp_user_data_dir):
-                    time.sleep(0.01)
-            else:
-                break
-        else:
-            raise IOError("Unable to remove Temporary User Data")
-
     async def waitForChromeToClose(self):
         if self.proc:
             if self.proc.returncode is None and not self.chromeClosed:
@@ -161,7 +98,7 @@ class Launcher(launcher.Launcher):
                             proc.kill()
                         except psutil._exceptions.NoSuchProcess:
                             pass
-                    self.proc.kill()
+                    self.proc.terminate()
                     await self.proc.wait()
 
     async def killChrome(self):
