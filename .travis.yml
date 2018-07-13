@@ -1,7 +1,8 @@
 language: python
 python: 3.6
+sudo: required
 before_install:
-- apt-get install swig
+- sudo apt-get install swig
 install:
 - pip install -r requirements.txt
 script:
