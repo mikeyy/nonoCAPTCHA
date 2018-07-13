@@ -1,6 +1,6 @@
 language: python
 python: 3.6
-before-install:
+before_install:
 - apt-get install swig
 install:
 - pip install -r requirements.txt
