@@ -11,3 +11,4 @@ pyyaml==3.12
 requests==2.19.1
 user-agent==0.1.9
 websockets==5.0.1
+flake8==3.5.0
