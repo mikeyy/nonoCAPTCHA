@@ -1,23 +1,26 @@
 import asyncio
-import os
 import random
+import signal
 import shutil
 import sys
-import time
 
+from aiohttp import web
 from async_timeout import timeout
-from contextlib import suppress
+from asyncio import CancelledError
 from pathlib import Path
-from quart import Quart, Response, request
 
-from nonocaptcha import util
+from nonocaptcha import util, settings
+from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
-from config import settings
 
-count = 100
+proxy_source = settings["proxy"]["source"]
+proxies = ProxyDB(last_used_timeout=10*60, last_banned_timeout=30*60)
 
-sem = asyncio.Semaphore(count)
-app = Quart(__name__)
+dir = f"{Path.home()}/.pyppeteer/.dev_profile"
+shutil.rmtree(dir, ignore_errors=True)
+
+app = web.Application()
+loop = asyncio.get_event_loop()
 
 
 def shuffle(i):
@@ -25,91 +28,80 @@ def shuffle(i):
     return i
 
 
-proxies = None
-async def get_proxies():
-    global proxies
+async def work(pageurl, sitekey):
+    async with timeout(3*60) as timer:
+        while not timer.expired:
+            proxy = await proxies.get()
+            if proxy:
+                # Chromium options and arguments
+                options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+                client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+                try:
+                    result = await client.start()
+                    if result:
+                        if result['status'] == "detected":
+                            proxies.set_banned(proxy)
+                        else:
+                            proxies.set_used(proxy)
+                            if result['status'] == "success":
+                                return result['code']
+                except CancelledError:
+                    return
 
-    asyncio.set_event_loop(asyncio.get_event_loop())
+
+async def get_solution(request):
+    params = request.rel_url.query
+    pageurl = params["pageurl"]
+    sitekey = params["sitekey"]
+    response = {"error": "invalid request"}
+    if pageurl and sitekey:
+        result = await work(pageurl, sitekey)
+        if result:
+            response = {"solution": result}
+        else:
+            response = {"error": "worker timed-out"}
+    return web.json_response(response)
+
+
+async def load_proxies():
+    print('Loading proxies')
     while 1:
         protos = ["http://", "https://"]
-        if any(p in proxy_src for p in protos):
+        if any(p in proxy_source for p in protos):
             f = util.get_page
         else:
             f = util.load_file
-        
+
         try:
-            result = await f(proxy_src)
-        except:
+            result = await f(proxy_source)
+        except Exception:
             continue
         else:
-            proxies = shuffle(result.strip().split("\n"))
-            await asyncio.sleep(10*60)
+            proxies.add(result.split('\n'))
+            print('Proxies loaded')
+            await asyncio.sleep(10 * 60)
 
 
-async def work(pageurl, sitekey):
-    
-    # Chromium options and arguments
-    options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-
-    if proxy_src:
-        proxy = random.choice(proxies)
-    else:
-        proxy = None
-
-    async with sem:
-        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
-        try:
-            task = asyncio.ensure_future(client.start())
-            await task
-        except:
-            task.cancel()
-            with suppress(asyncio.CancelledError):
-                await task
-        else:
-            return task.result()
+async def start_background_tasks(app):
+    app["dispatch"] = app.loop.create_task(load_proxies())
 
 
-@app.route("/get", methods=["GET", "POST"])
-async def get():
-    while not proxies:
-        await asyncio.sleep(1)
-
-    result = None
-    if not request.args:
-        result = "Invalid request"
-    else:
-        pageurl = request.args.get("pageurl")
-        sitekey = request.args.get("sitekey")
-        if not pageurl or not sitekey:
-            result = "Missing sitekey or pageurl"
-        else:
-            async with timeout(180) as t:
-                while 1:
-                    task = asyncio.ensure_future(work(pageurl, sitekey))
-                    await task
-                    result = task.result()
-                    if result:
-                        break
-
-                    if t.expired:
-                        task.cancel()
-                        with suppress(asyncio.CancelledError):
-                            await task
-                        break
-
-            if not result:
-                result = "Request timed-out, please try again"        
-    return Response(result, mimetype="text/plain")
+async def cleanup_background_tasks(app):
+    app["dispatch"].cancel()
+    await app["dispatch"]
 
 
-home = Path.home()
-dir = f'{home}/.pyppeteer/.dev_profile'
-shutil.rmtree(dir, ignore_errors=True)
+def signal_handler(signal, frame):
+    sys.exit(0)
 
-loop = asyncio.get_event_loop()
-proxy_src = settings["proxy_source"]
-if proxy_src:
-    asyncio.ensure_future(get_proxies())
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGHUP, signal_handler)
+
+app.router.add_get("/get", get_solution)
+app.on_startup.append(start_background_tasks)
+app.on_cleanup.append(cleanup_background_tasks)
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 5000, loop=loop)
+    web.run_app(app, host="0.0.0.0", port=8000)

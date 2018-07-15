@@ -1,0 +1,9 @@
+language: python
+python: 3.6
+sudo: required
+before_install:
+- sudo apt-get install swig libpulse-dev libasound2-dev
+install:
+- pip install -r requirements.txt
+script:
+- flake8 --exclude venv

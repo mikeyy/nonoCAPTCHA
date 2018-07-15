@@ -12,9 +12,8 @@ from PIL import Image
 
 class SolveImage(Base):
     url = 'https://www.google.com/searchbyimage?site=search&sa=X&image_url='
-
-    def __init__(self, image_frame, proxy, proc_id):
-        self.image_frame = image_frame
+    def __init__(self, page, proxy, proc_id):
+        self.page = page
         self.proxy = proxy
         self.proc_id = proc_id
 
@@ -49,11 +48,31 @@ class SolveImage(Base):
         await self.get_image_dimensions()
         asyncio.sleep(10)
 
+    async def get_image_title(self):
+        """Something, something... something"""
+
+        image_title_element = (
+            'document.getElementsByClassName("rc-imageselect-desc")[0]'
+        )
+
+        if await self.image_frame.evaluate(
+            f"typeof {image_title_element} === 'undefined'"
+        ):
+            image_title_element = (
+                'document.getElementsByClassName("rc-imageselect-desc-no-'
+                'canonical")[0]'
+            )
+
+        title = await self.image_frame.evaluate(
+            f"{image_title_element}.innerText"
+            f".replace( /.*\\n(.*)\\n.*/,'$1');"
+        )
+        return str(title).strip()
+
     async def get_image_url(self):
         image_url = \
             'document.getElementsByClassName("rc-image-tile-wrapper")[0].'\
             'getElementsByTagName("img")[0].src'
-
         return await self.image_frame.evaluate(image_url)
 
     async def get_image_dimensions(self):
@@ -64,4 +83,3 @@ class SolveImage(Base):
     async def download_image(self):
         """work in progress"""
         image_url = await self.get_image_url()
-        pass

@@ -5,11 +5,34 @@
 
 import aiohttp
 import aiofiles
+import asyncio
 import pickle
-from async_timeout import timeout as async_timeout
-# from concurrent.futures._base import TimeoutError
+import requests
+import sys
+from functools import partial, wraps
 
-__all__ = ["save_file", "load_file", "get_page"]
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+__all__ = [
+    "save_file",
+    "load_file",
+    "get_page",
+    "threaded",
+    "serialize",
+    "deserialize",
+]
+
+
+def threaded(func):
+    @wraps(func)
+    async def wrap(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+
+        return await loop.run_in_executor(None, partial(func, *args, **kwargs))
+
+    return wrap
 
 
 async def save_file(file, data, binary=False):
@@ -24,26 +47,37 @@ async def load_file(file, binary=False):
         return await f.read()
 
 
-async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
+@threaded
+def get_page_win(url, proxy=None, binary=False, verify=False, timeout=300):
+    proxies = None
     if proxy:
-        proxy = f"http://{proxy}"
+        proxies = {"http": proxy, "https": proxy}
+    with requests.Session() as session:
+        response = session.get(
+            url, proxies=proxies, verify=verify, timeout=timeout
+        )
+        if binary:
+            return response.content
+        return response.text
 
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with async_timeout(timeout) as cm:
-                async with session.get(
-                    url, proxy=proxy, verify_ssl=verify
-                ) as response:
-                    if binary:
-                        return await response.read()
-                    return await response.text()
-        except BaseException as e:
-            print(f'An error occured in get_page: {e}')
+
+async def get_page(url, proxy=None, binary=False, verify=False, timeout=300):
+    if sys.platform == "win32":
+        # SSL Doesn't work on aiohttp through ProactorLoop so we use requests
+        return await get_page_win(url, proxy, binary, verify, timeout)
+    else:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url, proxy=proxy, verify_ssl=verify, timeout=timeout
+            ) as response:
+                if binary:
+                    return await response.read()
+                return await response.text()
 
 
 def serialize(obj, p):
     """Must be synchronous to prevent corrupting data"""
-    with open(p, 'wb') as f:
+    with open(p, "wb") as f:
         pickle.dump(obj, f)
 
 

@@ -1,0 +1,35 @@
+main:
+    debug: true
+    headless: true
+    keyboard_traverse: false 
+    timeout:
+        page_load: 30
+        deface: 30
+        animation: 5
+
+proxy:
+    protocol: http
+    source: 
+        
+speech:
+    service: pocketsphinx
+    deepspeech:
+        model_dir: deepspeech/models
+    pocketsphinx:
+        model_dir: pocketsphinx/model
+    azure:
+        api_subkey: 
+    amazon:
+        secret_key_id:
+        secret_access_key:
+        region:
+        s3_bucket:
+
+data:
+    deface_html: data/deface.html
+    jquery: data/jquery.js
+    override: data/override.js
+
+run:
+    pageurl: https://google.com/recaptcha/api2/demo
+    sitekey: 6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-

@@ -1,11 +1,12 @@
 nonoCAPTCHA
 ===========
 
-An async Python library to automate solving ReCAPTCHA v2 by audio, using
-Microsoft Azure’s Speech-to-Text API. Built with Pyppeteer for it’s
-Chrome automation framework and similarities to Puppeteer, PyDub for
-easily converting MP3 files into WAV, Quart for it’s async minimalist
-web-framework, and Python’s built-in AsyncIO for convenience.
+An async Python library to automate solving ReCAPTCHA v2 by audio using
+Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s and Amazon's Transcribe 
+Speech-to-Text API. Built with Pyppeteer for it’s Chrome automation framework
+and similarities to Puppeteer, PyDub for easily converting MP3 files into WAV, 
+aiohttp for it’s async minimalistic web-server, and Python’s built-in AsyncIO
+for convenience.
 
 Disclaimer
 ----------
@@ -47,8 +48,10 @@ Requirements
 
 `Python
 3.6.5 <https://www.python.org/downloads/release/python-365/>`__,
-`FFmpeg <https://ffmpeg.org/download.html>`__ and a `Microsoft
-Azure <https://portal.azure.com/>`__ account with Bing Speech API access
+`FFmpeg <https://ffmpeg.org/download.html>`__, a `Microsoft
+Azure <https://portal.azure.com/>`__ account for Bing Speech API access, an
+Amazon Web Services account for Transcribe and S3 access, and for Pocketsphinx
+you'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Ubuntu.
 
 Installation
 ------------
@@ -69,22 +72,33 @@ If you would like to use it in your own script
 
 .. code:: python
 
+   import asyncio
+   from nonocaptcha import settings
    from nonocaptcha.solver import Solver
-   from config import settings
 
+   pageurl = settings["run"]["pageurl"]
+   sitekey = settings["run"]["sitekey"]
+
+   proxy = "127.0.0.1:1000"
+   auth_details = {
+        "username": "user",
+        "password": "pass"
+   }
+   args = ["--timeout 5"]
+   options = {"ignoreHTTPSErrors": True, "args": args}
    client = Solver(
-       settings['pageurl'],
-       settings['sitekey'],
-       options=options,
-       proxy=proxy,
-       proxy_auth=auth_details(),
+        pageurl,
+        sitekey,
+        options=options,
+        proxy=proxy,
+        proxy_auth=auth_details,
    )
 
-   answer = await client.start()
-   if answer:
-       print(answer)
+   solution = asyncio.get_event_loop().run_until_complete(client.start())
+   if solution:
+        print(solution)
 
-Use the included multithread script.
+Or use the included async script app.py/run.py
 
 *Edit variable count for amount of threads to use*
 
