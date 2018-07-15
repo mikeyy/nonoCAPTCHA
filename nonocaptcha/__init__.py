@@ -4,8 +4,6 @@
 import os.path
 import sys
 
-from nonocaptcha.solver import Solver
-
 version_info = (1, 7, 7)
 __version__ = "{}.{}.{}".format(*version_info)
 
@@ -34,7 +32,6 @@ __all__ = (
     "settings",
     "package_dir",
     "package_info",
-    "Solver",
 )
 
 sys.path.append(os.getcwd())
