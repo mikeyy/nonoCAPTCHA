@@ -11,15 +11,13 @@ import os
 import re
 import struct
 import sys
-import tempfile
 import time
 import websockets
 
 from datetime import datetime
 from uuid import uuid4
 from pydub import AudioSegment
-from pocketsphinx.pocketsphinx import *
-from sphinxbase.sphinxbase import *
+from pocketsphinx.pocketsphinx import Decoder
 
 from nonocaptcha import settings
 from nonocaptcha import util
@@ -31,7 +29,7 @@ def mp3_to_wav(mp3_filename):
     segment = AudioSegment.from_mp3(mp3_filename)
     sound = segment.set_channels(1).set_frame_rate(16000)
     garbage = len(sound) / 3.1
-    sound = sound[+garbage : len(sound) - garbage]
+    sound = sound[+garbage:len(sound) - garbage]
     sound.export(wav_filename, format="wav")
     return wav_filename
 
@@ -188,7 +186,7 @@ class Azure(object):
         pattern = "^\r\n"  # header separator is an empty line
         m = re.search(pattern, response, re.M)
         return json.loads(
-            response[m.end() :]
+            response[m.end():]
         )  # assuming that content type is json
 
     @util.threaded

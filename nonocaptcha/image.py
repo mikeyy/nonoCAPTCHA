@@ -13,7 +13,7 @@ class SolveImage(object):
         """Go through procedures to solve image"""
 
         title = await self.get_image_title()
-        image_url = await self.get_image_url()
+        # image_url = await self.get_image_url()
 
         return title
 

@@ -2,8 +2,6 @@ import asyncio
 import json
 import random
 import shutil
-import sys
-import time
 
 from pathlib import Path
 from quart import Quart, Response, request

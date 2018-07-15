@@ -3,13 +3,10 @@
 
 """Solver module."""
 
-import asyncio
 import json
-import pathlib
 import time
-import sys
 
-from asyncio import TimeoutError, CancelledError
+from asyncio import TimeoutError
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 

@@ -4,20 +4,19 @@
 """Example run functions."""
 
 import asyncio
-import random
 import time
 
 from nonocaptcha import util, settings
-from nonocaptcha.solver import Solver
 
-count = 10
+count = 50
 pageurl = settings["run"]["pageurl"]
 sitekey = settings["run"]["sitekey"]
+
 
 async def work():
     start = time.time()
     result = await util.get_page(
-        f"http://localhost:5000/get?"
+        f"http://mikeyy.com/solve?"
         f"pageurl={pageurl}&sitekey={sitekey}"
     )
     end = time.time()

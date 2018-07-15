@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import random
-import yaml
 
 from nonocaptcha import settings, package_dir
 

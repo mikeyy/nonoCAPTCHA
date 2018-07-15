@@ -1,8 +1,7 @@
 import time
-import os
 import asyncio
 
-from peewee import *
+from peewee import SqliteDatabase, Model, CharField, BooleanField, IntegerField
 
 
 database_filename = "proxy.db"
@@ -28,7 +27,7 @@ class Proxy(Model):
     last_banned = IntegerField(default=0)
 
 
-# if os.path.exists(database_filename): os.remove(database_filename)
+# import os; if os.path.exists(database_filename): os.remove(database_filename)
 init_db(database_filename)
 
 
@@ -42,7 +41,7 @@ class ProxyDB(object):
     def add(self, proxies):
         def chunks(l, n):
             n = max(1, n)
-            return (l[i : i + n] for i in range(0, len(l), n))
+            return (l[i:i + n] for i in range(0, len(l), n))
 
         q = [proxy.proxy for proxy in Proxy.select(Proxy.proxy)]
         proxies_up = list(set(q) & set(proxies))

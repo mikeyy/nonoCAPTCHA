@@ -5,22 +5,22 @@
 
 import asyncio
 import random
-import signal
 import sys
 
 from async_timeout import timeout
-from asyncio import TimeoutError, CancelledError
+from asyncio import CancelledError
 
 from nonocaptcha import util, settings
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 # Max browsers to open
-threads = 1
+threads = 10
 sort_position = False
 pageurl = settings["run"]["pageurl"]
 sitekey = settings["run"]["sitekey"]
 proxy_source = settings["proxy"]["source"]
+
 
 def shuffle(i):
     random.shuffle(i)
@@ -62,7 +62,7 @@ class Run(object):
                 f = util.get_page
             else:
                 f = util.load_file
-    
+
             result = await f(proxy_source)
             self.proxies.add(result.split('\n'))
             print("Proxies loaded.")
@@ -71,7 +71,9 @@ class Run(object):
     async def work(self):
         args = ["--timeout 5"]
         if sort_position:
-            this_position = next(x for x in positions if x not in used_positions)
+            this_position = next(
+                x for x in positions if x not in used_positions
+            )
             used_positions.append(this_position)
             args.extend(
                 [
@@ -97,7 +99,7 @@ class Run(object):
         finally:
             if sort_position:
                 used_positions.remove(this_position)
-            
+
             if result:
                 print(result)
                 self.proxies.set_active(proxy, False)
@@ -107,7 +109,6 @@ class Run(object):
                     self.proxies.set_used(proxy)
                     if result['status'] == "success":
                         return result['code']
-
 
     async def main(self):
         if proxy_source:
@@ -130,6 +131,7 @@ class Run(object):
                 pending, return_when=asyncio.FIRST_COMPLETED
             )
 
+
 if sys.platform == "win32":
     loop = asyncio.ProactorEventLoop()
     asyncio.set_event_loop(loop)
@@ -137,4 +139,3 @@ else:
     loop = asyncio.get_event_loop()
 
 loop.run_until_complete(Run(loop).main())
-

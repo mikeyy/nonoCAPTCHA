@@ -24,7 +24,7 @@ __all__ = [
     "deserialize",
 ]
 
-# Decorator wraps blocking code in an executor to run async
+
 def threaded(func):
     @wraps(func)
     async def wrap(*args, **kwargs):

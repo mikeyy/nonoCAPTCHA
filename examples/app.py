@@ -3,13 +3,10 @@ import random
 import signal
 import shutil
 import sys
-import subprocess
 
-from aiohttp import web, ClientSession, ClientError
+from aiohttp import web
 from async_timeout import timeout
-from asyncio import TimeoutError, CancelledError
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
+from asyncio import CancelledError
 from pathlib import Path
 
 from nonocaptcha import util, settings
@@ -48,7 +45,7 @@ async def work(pageurl, sitekey):
                             proxies.set_used(proxy)
                             if result['status'] == "success":
                                 return result['code']
-                except:
+                except CancelledError:
                     return
 
 
@@ -77,7 +74,7 @@ async def load_proxies():
 
         try:
             result = await f(proxy_source)
-        except:
+        except Exception:
             continue
         else:
             proxies.add(result.split('\n'))
@@ -96,6 +93,7 @@ async def cleanup_background_tasks(app):
 
 def signal_handler(signal, frame):
     sys.exit(0)
+
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
