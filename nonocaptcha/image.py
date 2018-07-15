@@ -4,14 +4,13 @@
 """ ***IN TESTING*** """
 
 from nonocaptcha.base import Base
-from nonocaptcha import util
 
 import asyncio
-from PIL import Image
 
 
 class SolveImage(Base):
     url = 'https://www.google.com/searchbyimage?site=search&sa=X&image_url='
+
     def __init__(self, page, proxy, proc_id):
         self.page = page
         self.proxy = proxy
@@ -32,11 +31,15 @@ class SolveImage(Base):
 
     async def pictures_of(self):
         el = await self.get_description_element()
-        return await self.image_frame.evaluate('el => el.firstElementChild.innerText', el)
+        return await self.image_frame.evaluate(
+            'el => el.firstElementChild.innerText', el
+        )
 
     async def get_description_element(self):
         name1 = await self.image_frame.querySelector('.rc-imageselect-desc')
-        name2 = await self.image_frame.querySelector('.rc-imageselect-desc-no-canonical')
+        name2 = await self.image_frame.querySelector(
+            '.rc-imageselect-desc-no-canonical'
+        )
         return name1 if name1 else name2
 
     async def solve_by_image(self):
@@ -70,16 +73,19 @@ class SolveImage(Base):
         return str(title).strip()
 
     async def get_image_url(self):
-        image_url = \
-            'document.getElementsByClassName("rc-image-tile-wrapper")[0].'\
+        image_url = (
+            'document.getElementsByClassName("rc-image-tile-wrapper")[0].'
             'getElementsByTagName("img")[0].src'
+        )
         return await self.image_frame.evaluate(image_url)
 
     async def get_image_dimensions(self):
         async for el in self.get_images():
-            dimensions = await self.image_frame.evaluate('el => el.firstElementChild.firstElementChild.style', el)
+            dimensions = await self.image_frame.evaluate(
+                'el => el.firstElementChild.firstElementChild.style', el
+            )
             print(dimensions)
 
     async def download_image(self):
         """work in progress"""
-        image_url = await self.get_image_url()
+        # image_url = await self.get_image_url()
