@@ -27,8 +27,9 @@ class Proxy(Model):
     last_banned = IntegerField(default=0)
 
     def __repr__(self):
-        return f'Proxy(ip={self.proxy}, active={self.active}, alive={self.alive}, ' \
-               f'last_used={self.last_used} last_banned={self.last_banned})'
+        return f'Proxy(ip={self.proxy}, active={self.active}, '\
+            f'alive={self.alive}, last_used={self.last_used}, ' \
+            f'last_banned={self.last_banned})'
 
 
 # import os; if os.path.exists(database_filename): os.remove(database_filename)
