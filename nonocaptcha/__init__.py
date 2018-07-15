@@ -29,15 +29,19 @@ __all__ = (
     "__maintainer__",
     "__version__",
     "version_info",
+    "settings",
+    "package_dir",
+    "package_info",
 )
 
-sys.path.append(os.getcwd())
+path = os.getcwd()
+sys.path.append(path)
 package_dir = os.path.dirname(os.path.abspath(__file__))
+config_dir = os.path.dirname(path)
 
 try:
     import yaml
-
-    with open("nonocaptcha.yaml", "r") as f:
+    with open(os.path.join(config_dir, "nonocaptcha.yaml"), "r") as f:
         settings = yaml.load(f)
 except FileNotFoundError:
     print(
