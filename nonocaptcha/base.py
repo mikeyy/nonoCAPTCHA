@@ -38,7 +38,7 @@ class Base(Clicker):
     speech_service = settings["speech"]["service"]
     deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
     jquery_data = os.path.join(package_dir, settings["data"]["jquery"])
-    override_data = os.path.join(package_dir, settings["data"]["override_js"])
+    override_data = os.path.join(package_dir, settings["data"]["override"])
 
     async def get_frames(self):
         self.checkbox_frame = next(

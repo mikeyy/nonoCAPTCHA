@@ -4,6 +4,8 @@
 import os.path
 import sys
 
+from nonocaptcha.solver import Solver
+
 version_info = (1, 7, 7)
 __version__ = "{}.{}.{}".format(*version_info)
 
@@ -29,6 +31,10 @@ __all__ = (
     "__maintainer__",
     "__version__",
     "version_info",
+    "settings",
+    "package_dir",
+    "package_info",
+    "Solver",
 )
 
 sys.path.append(os.getcwd())
@@ -36,8 +42,7 @@ package_dir = os.path.dirname(os.path.abspath(__file__))
 
 try:
     import yaml
-
-    with open("nonocaptcha.yaml", "r") as f:
+    with open(f"{package_dir}/nonocaptcha.yaml", "r") as f:
         settings = yaml.load(f)
 except FileNotFoundError:
     print(
