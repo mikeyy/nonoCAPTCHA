@@ -82,11 +82,22 @@ class Solver(Base):
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
-        chrome_args = []
+        args = [
+            '--cryptauth-http-host ""'
+            '--disable-accelerated-2d-canvas',
+            '--disable-dev-shm-usage',
+            '--disable-device-discovery-notifications',
+            '--disable-features=site-per-process',
+            '--disable-java',
+            '--disable-web-security',
+            '--disable-reading-from-canvas',
+            '--no-sandbox',
+            '--noerrdialogs',
+        ]
         if self.proxy:
-            chrome_args.append(f"--proxy-server={self.proxy}")
-        args = self.options.pop("args")
-        args.extend(chrome_args)
+            args.append(f"--proxy-server={self.proxy}")
+        if "args" in self.options:
+            args.extend(self.options.pop("args"))
         self.options.update({"headless": self.headless, "args": args})
         self.launcher = Launcher(self.options)
         browser = await self.launcher.launch()

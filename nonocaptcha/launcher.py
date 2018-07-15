@@ -19,40 +19,6 @@ from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
 
-DEFAULT_ARGS = [
-    '--cryptauth-http-host ""'
-    '--disable-accelerated-2d-canvas',
-    '--disable-background-networking',
-    '--disable-background-timer-throttling',
-    '--disable-browser-side-navigation',
-    '--disable-client-side-phishing-detection',
-    '--disable-default-apps',
-    '--disable-dev-shm-usage',
-    '--disable-device-discovery-notifications',
-    '--disable-extensions',
-    '--disable-features=site-per-process',
-    '--disable-hang-monitor',
-    '--disable-java',
-    '--disable-popup-blocking',
-    '--disable-prompt-on-repost',
-    '--disable-reading-from-canvas',
-    '--disable-sync',
-    '--disable-translate',
-    '--disable-web-security',
-    '--metrics-recording-only',
-    '--no-first-run',
-    '--no-sandbox',
-    '--noerrdialogs',
-    '--safebrowsing-disable-auto-update',
-]
-
-AUTOMATION_ARGS = [
-    "--enable-automation",
-    "--password-store=basic",
-    "--use-mock-keychain",
-]
-
-
 class Launcher(launcher.Launcher):
     async def launch(self):
         env = self.options.get("env")

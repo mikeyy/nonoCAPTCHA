@@ -42,20 +42,12 @@ class Base(Clicker):
     override_data = os.path.join(package_dir, settings["data"]["override_js"])
 
     async def get_frames(self):
-        res = await self.page._client.send("Page.getFrameTree")
-        childFrames = res["frameTree"]["childFrames"]
-        checkbox_frame_id = next(
-            frame["frame"]["id"]
-            for frame in childFrames
-            if "api2/anchor" in frame["frame"]["url"]
+        self.checkbox_frame = next(
+            frame for frame in self.page.frames if "api2/anchor" in frame.url
         )
-        image_frame_id = next(
-            frame["frame"]["id"]
-            for frame in childFrames
-            if "api2/bframe" in frame["frame"]["url"]
+        self.image_frame = next(
+            frame for frame in self.page.frames if "api2/bframe" in frame.url
         )
-        self.checkbox_frame = self.page._frameManager.frame(checkbox_frame_id)
-        self.image_frame = self.page._frameManager.frame(image_frame_id)
 
     async def click_reload_button(self):
         reload_button = await self.image_frame.J("#recaptcha-reload-button")
