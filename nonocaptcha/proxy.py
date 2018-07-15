@@ -63,8 +63,8 @@ class ProxyDB(object):
         try:
             async with self._lock:
                 proxy = Proxy.get(
-                    (Proxy.active == False)
-                    & (Proxy.alive == True)
+                    (Proxy.active == 0)
+                    & (Proxy.alive == 1)
                     & (Proxy.last_banned <= time.time())
                     & (Proxy.last_used <= time.time())
                 ).proxy
@@ -90,7 +90,7 @@ class ProxyDB(object):
         return query.execute()
 
     def loaded_count(self):
-        query = Proxy.select().where(Proxy.alive == True)
+        query = Proxy.select().where(Proxy.alive == 1)
         return query.count()
 
     def banned_count(self):
@@ -99,16 +99,16 @@ class ProxyDB(object):
 
     def used_count(self):
         query = Proxy.select(Proxy.proxy).where(
-            (Proxy.alive == True)
+            (Proxy.alive == 1)
             & (Proxy.last_banned <= time.time())
-            & ((Proxy.last_used >= time.time()) | (Proxy.active == True))
+            & ((Proxy.last_used >= time.time()) | (Proxy.active == 1))
         )
         return query.count()
 
     def usable_count(self):
         query = Proxy.select(Proxy.proxy).where(
-            (Proxy.active == False)
-            & (Proxy.alive == True)
+            (Proxy.active == 0)
+            & (Proxy.alive == 1)
             & (Proxy.last_banned <= time.time())
             & (Proxy.last_used <= time.time())
         )
