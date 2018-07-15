@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/mikeyy/nonoCAPTCHA.svg?branch=master
+    :target: https://travis-ci.org/mikeyy/nonoCAPTCHA
+
 nonoCAPTCHA
 ===========
 
