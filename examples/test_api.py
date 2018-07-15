@@ -16,7 +16,7 @@ sitekey = settings["run"]["sitekey"]
 async def work():
     start = time.time()
     result = await util.get_page(
-        f"http://mikeyy.com/solve?"
+        f"http://127.0.0.1:5000?"
         f"pageurl={pageurl}&sitekey={sitekey}"
     )
     end = time.time()
