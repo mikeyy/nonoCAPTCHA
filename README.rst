@@ -1,7 +1,17 @@
-.. image:: https://badge.fury.io/py/nonocaptcha.svg
-    :target: https://badge.fury.io/py/nonocaptcha
 .. image:: https://travis-ci.org/mikeyy/nonoCAPTCHA.svg?branch=master
     :target: https://travis-ci.org/mikeyy/nonoCAPTCHA
+.. image:: https://img.shields.io/pypi/v/nonocaptcha.svg
+    :alt: PyPI
+    :target: https://pypi.org/project/nonocaptcha/
+.. image:: https://img.shields.io/pypi/pyversions/nonocaptcha.svg
+    :alt: PyPI - Python Version
+    :target: https://pypi.org/project/nonocaptcha/
+.. image:: https://img.shields.io/pypi/l/nonocaptcha.svg
+    :alt: PyPI - License   
+    :target: https://pypi.org/project/nonocaptcha/
+.. image:: https://img.shields.io/pypi/status/nonocaptcha.svg
+    :alt: PyPI - Status
+    :target: https://pypi.org/project/nonocaptcha/
 
 nonoCAPTCHA
 ===========
