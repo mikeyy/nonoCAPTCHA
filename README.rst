@@ -1,6 +1,5 @@
 .. image:: https://badge.fury.io/py/nonocaptcha.svg
     :target: https://badge.fury.io/py/nonocaptcha
-
 .. image:: https://travis-ci.org/mikeyy/nonoCAPTCHA.svg?branch=master
     :target: https://travis-ci.org/mikeyy/nonoCAPTCHA
 
