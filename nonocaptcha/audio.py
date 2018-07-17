@@ -24,9 +24,10 @@ class DownloadError(Exception):
 
 
 class SolveAudio(Base):
-    def __init__(self, page, proxy, proc_id):
+    def __init__(self, page, proxy, proxy_auth, proc_id):
         self.page = page
         self.proxy = proxy
+        self.proxy_auth = proxy_auth
         self.proc_id = proc_id
 
     async def solve_by_audio(self):
@@ -69,7 +70,8 @@ class SolveAudio(Base):
         try:
             audio_data = await util.get_page(
                 audio_url,
-                self.proxy,
+                proxy=self.proxy,
+                proxy_auth=self.proxy_auth,
                 binary=True,
                 timeout=self.page_load_timeout,
             )
