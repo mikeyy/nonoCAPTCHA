@@ -7,9 +7,6 @@ main:
         deface: 30
         animation: 5
 
-proxy:
-    source: 
-
 speech:
     service: pocketsphinx
     deepspeech:
