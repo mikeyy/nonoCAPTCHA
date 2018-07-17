@@ -41,16 +41,14 @@ class Solver(Base):
         sitekey,
         proxy=None,
         proxy_auth=None,
-        proxy_protocol="http",
         options={},
         **kwargs,
     ):
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
-        self.proxy = f"{proxy_protocol}://{proxy}" if proxy else proxy
+        self.proxy = f"http://{proxy}" if proxy else proxy
         self.proxy_auth = proxy_auth
-
         self.proc_id = self.proc_count
         type(self).proc_count += 1
 
