@@ -1,6 +1,6 @@
 main:
     debug: true
-    headless: true
+    headless: false
     keyboard_traverse: false 
     timeout:
         page_load: 30
