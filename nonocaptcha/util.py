@@ -11,7 +11,7 @@ import requests
 import sys
 
 from functools import partial, wraps
-from requests.auth import HTTPProxyAuth
+
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -50,13 +50,13 @@ async def load_file(file, binary=False):
 
 @threaded
 def get_page_win(
-        url,
-        proxy=None,
-        proxy_auth=None,
-        binary=False,
-        verify=False,
-        timeout=300
-    ):
+    url,
+    proxy=None,
+    proxy_auth=None,
+    binary=False,
+    verify=False,
+    timeout=300
+):
     proxies = None
     if proxy:
         if proxy_auth:
@@ -82,13 +82,13 @@ def get_page_win(
 
 
 async def get_page(
-        url,
-        proxy=None,
-        proxy_auth=None,
-        binary=False,
-        verify=False,
-        timeout=300
-    ):
+    url,
+    proxy=None,
+    proxy_auth=None,
+    binary=False,
+    verify=False,
+    timeout=300
+):
     if sys.platform == "win32":
         # SSL Doesn't work on aiohttp through ProactorLoop so we use Requests
         return await get_page_win(
