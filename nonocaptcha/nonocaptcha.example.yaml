@@ -23,5 +23,5 @@ speech:
 
 data:
     deface_html: data/deface.html
-    jquery: data/jquery.js
-    override: data/override.js
+    jquery_js: data/jquery.js
+    override_js: data/override.js
