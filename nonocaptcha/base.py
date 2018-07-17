@@ -36,8 +36,8 @@ class Base(Clicker):
     animation_timeout = settings["main"]["timeout"]["animation"] * 1000
     speech_service = settings["speech"]["service"]
     deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
-    jquery_data = os.path.join(package_dir, settings["data"]["jquery"])
-    override_data = os.path.join(package_dir, settings["data"]["override"])
+    jquery_data = os.path.join(package_dir, settings["data"]["jquery_js"])
+    override_data = os.path.join(package_dir, settings["data"]["override_js"])
 
     async def get_frames(self):
         self.checkbox_frame = next(
