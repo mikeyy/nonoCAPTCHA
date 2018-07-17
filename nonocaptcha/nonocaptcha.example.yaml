@@ -8,9 +8,8 @@ main:
         animation: 5
 
 proxy:
-    protocol: http
     source: 
-        
+
 speech:
     service: pocketsphinx
     deepspeech:
@@ -29,7 +28,3 @@ data:
     deface_html: data/deface.html
     jquery: data/jquery.js
     override: data/override.js
-
-run:
-    pageurl: https://google.com/recaptcha/api2/demo
-    sitekey: 6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-

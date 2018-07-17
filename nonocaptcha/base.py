@@ -31,7 +31,6 @@ class Base(Clicker):
     proc_id = 0
     headless = settings["main"]["headless"]
     keyboard_traverse = settings["main"]["keyboard_traverse"]
-    proxy_protocol = settings["proxy"]["protocol"]
     page_load_timeout = settings["main"]["timeout"]["page_load"] * 1000
     deface_timeout = settings["main"]["timeout"]["deface"] * 1000
     animation_timeout = settings["main"]["timeout"]["animation"] * 1000
