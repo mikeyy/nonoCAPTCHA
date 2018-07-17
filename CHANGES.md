@@ -1,6 +1,12 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-10) 
+### Current Version (2018-07-10)
+* Remove proxy settings from configuration file
+* Remove proxy protocol attribute from Solver (Aiohttp only supports HTTP)
+* Fix proxy authentication when downloading audio file
+* Add flake8 for auto-testing in repository 
+
+### Version 1.7.7 (2018-07-10)
 * Fix new Chromium update with Pyppeteer 0.0.19
 
 ### Version 1.7.6 (2018-07-10) 
