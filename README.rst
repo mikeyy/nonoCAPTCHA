@@ -17,17 +17,17 @@ nonoCAPTCHA
 ===========
 
 An async Python library to automate solving ReCAPTCHA v2 by audio using
-Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s and Amazon's Transcribe 
-Speech-to-Text API. Built with Pyppeteer for it’s Chrome automation framework
+Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, and Amazon's Transcribe 
+Speech-to-Text API. Built with Pyppeteer for Chrome automation framework
 and similarities to Puppeteer, PyDub for easily converting MP3 files into WAV, 
-aiohttp for it’s async minimalistic web-server, and Python’s built-in AsyncIO
+aiohttp for async minimalistic web-server, and Python’s built-in AsyncIO
 for convenience.
 
 Disclaimer
 ----------
 
 This project is for educational and research purposes only. Any actions
-and or activities related to the material contained on this GitHub
+and/or activities related to the material contained on this GitHub
 Repository is solely your responsibility. The misuse of the information
 in this GitHub Repository can result in criminal charges brought against
 the persons in question. The author will not be held responsible in the
@@ -45,7 +45,7 @@ for the thread. I’ve finally decided to release the script.
 Preview
 -------
 
-Check out this 1-minute presentation of the script in action, with only
+Check out 1-minute presentation of the script in action, with only
 8 threads!
 
 .. figure:: https://github.com/mikeyy/nonoCAPTCHA/blob/presentation/presentation.gif
@@ -83,7 +83,7 @@ Please edit config.example.py and save as config.py
 Usage
 -----
 
-If you would like to use it in your own script
+If you want to use it in your own script
 
 .. code:: python
 
