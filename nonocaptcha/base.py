@@ -3,7 +3,7 @@ import logging
 import os
 import random
 
-from nonocaptcha import settings, package_dir
+from nonocaptcha import package_dir
 
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)

@@ -4,7 +4,7 @@
 import os.path
 import sys
 
-version_info = (1, 7, 8)
+version_info = (1, 7, 9)
 __version__ = "{}.{}.{}".format(*version_info)
 
 
@@ -29,7 +29,6 @@ __all__ = (
     "__maintainer__",
     "__version__",
     "version_info",
-    "settings",
     "package_dir",
     "package_info",
 )
