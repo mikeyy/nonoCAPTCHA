@@ -9,11 +9,11 @@ from async_timeout import timeout
 from asyncio import CancelledError
 from pathlib import Path
 
-from nonocaptcha import util, settings
+from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
-proxy_source = settings["proxy"]["source"]
+proxy_source = None # Can be URL or file location
 proxies = ProxyDB(last_used_timeout=10*60, last_banned_timeout=30*60)
 
 dir = f"{Path.home()}/.pyppeteer/.dev_profile"
@@ -50,16 +50,22 @@ async def work(pageurl, sitekey):
 
 
 async def get_solution(request):
-    params = request.rel_url.query
-    pageurl = params["pageurl"]
-    sitekey = params["sitekey"]
-    response = {"error": "invalid request"}
-    if pageurl and sitekey:
-        result = await work(pageurl, sitekey)
-        if result:
-            response = {"solution": result}
+    params  = request.rel_url.query
+    pageurl = params.get("pageurl")
+    sitekey = params.get("sitekey")
+    secret_key = params.get("secret_key")
+    if not pageurl or not sitekey or not secret_key:
+        response = {"error": "invalid request"}
+    else:
+        if secret_key != "CHANGEME":
+            response = {"error": "unauthorized attempt"}
         else:
-            response = {"error": "worker timed-out"}
+            if pageurl and sitekey:
+                result = await work(pageurl, sitekey)
+                if result:
+                    response = {"solution": result}
+                else:
+                    response = {"error": "worker timed-out"}
     return web.json_response(response)
 
 

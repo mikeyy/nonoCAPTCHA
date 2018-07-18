@@ -8,10 +8,10 @@ from quart import Quart, Response, request
 
 from nonocaptcha import util
 from nonocaptcha.solver import Solver
-from config import settings
 
 count = 100
 
+proxy_source = None # Can be URL or file location
 sem = asyncio.Semaphore(count)
 app = Quart(__name__)
 tasks = {}
@@ -113,8 +113,7 @@ dir = f"{home}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 loop = asyncio.get_event_loop()
-proxy_src = settings["proxy_source"]
-if proxy_src:
+if proxy_source:
     asyncio.ensure_future(get_proxies())
 
 if __name__ == "__main__":

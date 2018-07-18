@@ -10,16 +10,16 @@ import sys
 from async_timeout import timeout
 from asyncio import CancelledError
 
-from nonocaptcha import util, settings
+from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 # Max browsers to open
 threads = 10
-sort_position = False
-pageurl = settings["run"]["pageurl"]
-sitekey = settings["run"]["sitekey"]
-proxy_source = settings["proxy"]["source"]
+sort_position = True
+pageurl = "https://www.google.com/recaptcha/api2/demo"
+sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
+proxy_source = None # Can be URL or file location
 
 
 def shuffle(i):
