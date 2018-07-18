@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-10)
+### Current Version (2018-07-17)
+* Move configuration checking out of __init__.py into base.py
+
+### Version 1.7.8 (2018-07-17)
 * Remove proxy settings from configuration file
 * Remove proxy protocol attribute from Solver (Aiohttp only supports HTTP)
 * Fix proxy authentication when downloading audio file
