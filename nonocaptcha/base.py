@@ -8,6 +8,24 @@ from nonocaptcha import settings, package_dir
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
 
+try:
+    import yaml
+    with open("nonocaptcha.yaml") as f:
+        settings = yaml.load(f)
+except FileNotFoundError:
+    print(
+        "Solver can't run without a configuration file!\n"
+        "An example (nonocaptcha.example.yaml) has been copied to your folder."
+    )
+
+    import sys
+    from shutil import copyfile
+
+    copyfile(
+        f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml"
+    )
+    sys.exit(0)
+
 
 class SafePassage(Exception):
     pass

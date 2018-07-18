@@ -36,21 +36,3 @@ __all__ = (
 
 sys.path.append(os.getcwd())
 package_dir = os.path.dirname(os.path.abspath(__file__))
-
-try:
-    import yaml
-    with open("nonocaptcha.yaml") as f:
-        settings = yaml.load(f)
-except FileNotFoundError:
-    print(
-        "Solver can't run without a configuration file!\n"
-        "An example (nonocaptcha.example.yaml) has been copied to your folder."
-    )
-
-    import sys
-    from shutil import copyfile
-
-    copyfile(
-        f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml"
-    )
-    sys.exit(0)
