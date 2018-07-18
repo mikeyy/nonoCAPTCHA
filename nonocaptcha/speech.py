@@ -19,7 +19,7 @@ from uuid import uuid4
 from pydub import AudioSegment
 from pocketsphinx.pocketsphinx import Decoder
 
-from nonocaptcha import settings
+from nonocaptcha.base import settings
 from nonocaptcha import util
 
 
