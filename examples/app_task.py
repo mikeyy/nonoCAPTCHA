@@ -11,7 +11,7 @@ from nonocaptcha.solver import Solver
 
 count = 100
 
-proxy_source = None # Can be URL or file location
+proxy_source = None  # Can be URL or file location
 sem = asyncio.Semaphore(count)
 app = Quart(__name__)
 tasks = {}
@@ -35,13 +35,13 @@ async def get_proxies():
     asyncio.set_event_loop(asyncio.get_event_loop())
     while True:
         protos = ["http://", "https://"]
-        if any(p in proxy_src for p in protos):
+        if any(p in proxy_source for p in protos):
             f = util.get_page
         else:
             f = util.load_file
 
         try:
-            result = await f(proxy_src)
+            result = await f(proxy_source)
         except BaseException:
             continue
         else:
@@ -56,7 +56,7 @@ async def work(pageurl, sitekey, task_id):
 
     async with sem:
         while True:
-            if proxy_src:
+            if proxy_source:
                 proxy = random.choice(proxies)
             else:
                 proxy = None

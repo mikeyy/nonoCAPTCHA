@@ -19,7 +19,7 @@ threads = 10
 sort_position = True
 pageurl = "https://www.google.com/recaptcha/api2/demo"
 sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
-proxy_source = None # Can be URL or file location
+proxy_source = None  # Can be URL or file location
 
 
 def shuffle(i):

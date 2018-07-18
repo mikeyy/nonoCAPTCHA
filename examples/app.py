@@ -13,7 +13,7 @@ from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
-proxy_source = None # Can be URL or file location
+proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_used_timeout=10*60, last_banned_timeout=30*60)
 
 dir = f"{Path.home()}/.pyppeteer/.dev_profile"
@@ -50,7 +50,7 @@ async def work(pageurl, sitekey):
 
 
 async def get_solution(request):
-    params  = request.rel_url.query
+    params = request.rel_url.query
     pageurl = params.get("pageurl")
     sitekey = params.get("sitekey")
     secret_key = params.get("secret_key")
