@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-17)
+### Current Version (2018-07-18)
+* Fix bug
+
+### Version 1.7.9 (2018-07-17)
 * Move configuration checking out of __init__.py into base.py
 
 ### Version 1.7.8 (2018-07-17)
