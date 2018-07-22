@@ -224,7 +224,7 @@ class Solver(Base):
             return result
 
     async def wait_for_checkbox(self):
-        """Wait for audio button to appear."""
+        """Wait for checkbox to appear."""
         try:
             await self.checkbox_frame.waitForFunction(
                 "$('#recaptcha-anchor').length", timeout=self.animation_timeout
