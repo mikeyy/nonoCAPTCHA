@@ -146,6 +146,11 @@ class Solver(Base):
     });
     if(window.ready_eddy){
         return true;
+    }else{
+        // I don't think this is necessary but it won't hurt...
+        var evt = document.createEvent('Event');
+        evt.initEvent('load', false, false);
+        window.dispatchEvent(evt);
     }
 }"""
         await self.page.waitForFunction(func, timeout=self.deface_timeout)
