@@ -74,8 +74,8 @@ class ProxyDB(object):
                 proxy = (
                     Proxy.select(Proxy.proxy)
                     .where(
-                        (Proxy.active == False)
-                        & (Proxy.alive == True)
+                        (Proxy.active == 0)
+                        & (Proxy.alive == 1)
                         & (Proxy.last_banned <= time.time())
                         & (Proxy.last_used <= time.time())
                     )
