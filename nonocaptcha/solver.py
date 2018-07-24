@@ -79,7 +79,8 @@ class Solver(Base):
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
         args = [
-            '--cryptauth-http-host ""'
+            '--cryptauth-http-host ""',
+            '--disable-webgl',
             '--disable-accelerated-2d-canvas',
             '--disable-dev-shm-usage',
             '--disable-device-discovery-notifications',
@@ -108,7 +109,12 @@ class Solver(Base):
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
-        navigator_config["webdriver"] = False
+        navigator_config["mediaDevices"] = None
+        navigator_config["webkitGetUserMedia"] = None
+        navigator_config["mozGetUserMedia"] = None
+        navigator_config["getUserMedia"] = None
+        navigator_config["webkitRTCPeerConnection"] = None
+        navigator_config["webdriver"] = None
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
         await self.page.evaluateOnNewDocument(
