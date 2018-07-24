@@ -1,7 +1,9 @@
 import time
 import asyncio
 
-from peewee import SqliteDatabase, Model, CharField, BooleanField, IntegerField
+from peewee import (
+    SqliteDatabase, Model, CharField, BooleanField, IntegerField, fn
+)
 
 
 database_filename = "proxy.db"
@@ -69,12 +71,17 @@ class ProxyDB(object):
     async def get(self):
         try:
             async with self._lock:
-                proxy = Proxy.get(
-                    (Proxy.active == 0)
-                    & (Proxy.alive == 1)
-                    & (Proxy.last_banned <= time.time())
-                    & (Proxy.last_used <= time.time())
-                ).proxy
+                proxy = (
+                    Proxy.select(Proxy.proxy)
+                    .where(
+                        (Proxy.active == False)
+                        & (Proxy.alive == True)
+                        & (Proxy.last_banned <= time.time())
+                        & (Proxy.last_used <= time.time())
+                    )
+                    .order_by(fn.Random())
+                    .get().proxy
+                )
                 self.set_active(proxy, is_active=True)
         except Proxy.DoesNotExist:
             return
