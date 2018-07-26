@@ -43,8 +43,7 @@ init_db(database_filename)
 class ProxyDB(object):
     _lock = asyncio.Lock()
 
-    def __init__(self, last_used_timeout=300, last_banned_timeout=300):
-        self.last_used_timeout = last_used_timeout
+    def __init__(self, last_banned_timeout=300):
         self.last_banned_timeout = last_banned_timeout
 
     def add(self, proxies):
@@ -76,8 +75,11 @@ class ProxyDB(object):
                     .where(
                         (Proxy.active == 0)
                         & (Proxy.alive == 1)
-                        & (Proxy.last_banned <= time.time())
-                        & (Proxy.last_used <= time.time())
+                        & (
+                            Proxy.last_banned <= (
+                                time.time() + self.last_banned_timeout
+                            )
+                        )
                     )
                     .order_by(Proxy.last_used)
                     .get().proxy
@@ -93,13 +95,13 @@ class ProxyDB(object):
 
     def set_used(self, proxy):
         query = Proxy.update(
-            last_used=time.time() + self.last_used_timeout, active=False
+            last_used=time.time(), active=False
         ).where(Proxy.proxy == proxy)
         return query.execute()
 
     def set_banned(self, proxy):
         query = Proxy.update(
-            last_banned=time.time() + self.last_banned_timeout, active=False
+            last_banned=time.time(), active=False
         ).where(Proxy.proxy == proxy)
         return query.execute()
 
@@ -108,22 +110,9 @@ class ProxyDB(object):
         return query.count()
 
     def banned_count(self):
-        query = Proxy.select().where(Proxy.last_banned >= time.time())
-        return query.count()
-
-    def used_count(self):
-        query = Proxy.select(Proxy.proxy).where(
-            (Proxy.alive == 1)
-            & (Proxy.last_banned <= time.time())
-            & ((Proxy.last_used >= time.time()) | (Proxy.active == 1))
-        )
-        return query.count()
-
-    def usable_count(self):
-        query = Proxy.select(Proxy.proxy).where(
-            (Proxy.active == 0)
-            & (Proxy.alive == 1)
-            & (Proxy.last_banned <= time.time())
-            & (Proxy.last_used <= time.time())
+        query = Proxy.select().where(
+            Proxy.last_banned >= (
+                time.time() + self.last_banned_timeout
+            )
         )
         return query.count()
