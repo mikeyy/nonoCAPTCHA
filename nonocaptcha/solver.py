@@ -145,7 +145,22 @@ class Solver(Base):
            Function x is an odd hack for multiline text, but it works.
         """
         html_code = await util.load_file(self.deface_data)
-        await self.page.setContent(html_code % self.sitekey)
+        deface_js = (
+            (
+                """() => {
+    var x = (function () {/*
+        %s
+    */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
+    document.open();
+    document.write(x)
+    document.close();
+}
+"""
+                % html_code
+            )
+            % self.sitekey
+        )
+        await self.page.evaluate(deface_js)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
     $(frame).load( function() {
