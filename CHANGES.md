@@ -1,6 +1,9 @@
 History (Work in progress)
 =======
-### Current Version (2018-07-18)
+### Current Version (2018-07-25)
+* Add compatiblity for Python versions 3.6.0 - 3.7.0
+
+### Version 1.7.10 (2018-07-18)
 * Fix bug
 
 ### Version 1.7.9 (2018-07-17)
