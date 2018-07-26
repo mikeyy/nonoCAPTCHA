@@ -75,13 +75,11 @@ class ProxyDB(object):
                     .where(
                         (Proxy.active == 0)
                         & (Proxy.alive == 1)
-                        & (
-                            Proxy.last_banned <= (
-                                time.time() + self.last_banned_timeout
-                            )
-                        )
+                        & (Proxy.last_banned
+                            >= time.time() + self.last_banned_timeout) 
+                        | (Proxy.last_banned == 0)
                     )
-                    .order_by(Proxy.last_used.desc())
+                    .order_by(Proxy.last_used)
                     .get().proxy
                 )
                 self.set_active(proxy, is_active=True)
@@ -104,15 +102,3 @@ class ProxyDB(object):
             last_banned=time.time(), active=False
         ).where(Proxy.proxy == proxy)
         return query.execute()
-
-    def loaded_count(self):
-        query = Proxy.select().where(Proxy.alive == 1)
-        return query.count()
-
-    def banned_count(self):
-        query = Proxy.select().where(
-            Proxy.last_banned >= (
-                time.time() + self.last_banned_timeout
-            )
-        )
-        return query.count()
