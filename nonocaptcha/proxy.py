@@ -81,7 +81,7 @@ class ProxyDB(object):
                             )
                         )
                     )
-                    .order_by(Proxy.last_used)
+                    .order_by(Proxy.last_used.desc())
                     .get().proxy
                 )
                 self.set_active(proxy, is_active=True)
