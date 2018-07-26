@@ -76,7 +76,7 @@ class ProxyDB(object):
                         (Proxy.active == 0)
                         & (Proxy.alive == 1)
                         & (Proxy.last_banned
-                            >= time.time() + self.last_banned_timeout) 
+                            <= time.time() + self.last_banned_timeout)
                         | (Proxy.last_banned == 0)
                     )
                     .order_by(Proxy.last_used)
@@ -88,14 +88,10 @@ class ProxyDB(object):
         return proxy
 
     def set_active(self, proxy, is_active):
-        query = Proxy.update(active=is_active).where(Proxy.proxy == proxy)
-        return query.execute()
-
-    def set_used(self, proxy):
-        query = Proxy.update(
-            last_used=time.time(), active=False
-        ).where(Proxy.proxy == proxy)
-        return query.execute()
+        Proxy.update(active=is_active).where(Proxy.proxy == proxy).execute()
+        Proxy.update(
+            last_used=time.time()
+        ).where(Proxy.proxy == proxy).execute()
 
     def set_banned(self, proxy):
         query = Proxy.update(
