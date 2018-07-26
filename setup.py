@@ -35,6 +35,7 @@ setup(
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: JavaScript",
         "Topic :: Scientific/Engineering",
         "Topic :: Software Development :: Libraries",
