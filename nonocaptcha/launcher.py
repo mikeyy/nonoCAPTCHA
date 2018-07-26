@@ -51,7 +51,7 @@ class Launcher(launcher.Launcher):
                 download_chromium()
             self.exec = str(chromium_excutable())
         self.cmd = [self.exec] + self.chrome_args
-    
+
     async def launch(self):
         env = self.options.get("env")
         self.proc = await asyncio.subprocess.create_subprocess_exec(
@@ -62,9 +62,11 @@ class Launcher(launcher.Launcher):
         )
         self.chromeClosed = False
         self.connection = None
+
         def _close_process(*args, **kwargs):
             if not self.chromeClosed:
                 asyncio.ensure_future(self.killChrome())
+
         # dont forget to close browser process
         atexit.register(_close_process)
         if self.options.get("handleSIGINT", True):

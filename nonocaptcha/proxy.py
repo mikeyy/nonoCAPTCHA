@@ -2,7 +2,7 @@ import time
 import asyncio
 
 from peewee import (
-    SqliteDatabase, Model, CharField, BooleanField, IntegerField, fn
+    SqliteDatabase, Model, CharField, BooleanField, IntegerField
 )
 
 

@@ -145,7 +145,7 @@ class Solver(Base):
            Function x is an odd hack for multiline text, but it works.
         """
         html_code = await util.load_file(self.deface_data)
-        await self.page.setContent(html_code% self.sitekey)
+        await self.page.setContent(html_code % self.sitekey)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
     $(frame).load( function() {
