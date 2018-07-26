@@ -62,8 +62,8 @@ Requirements
 ------------
 
 `Python
-`3.6.0<https://www.python.org/downloads/release/python-360/>`__-
-`3.7.0<https://www.python.org/downloads/release/python-370/>`__,
+`3.6.0 <https://www.python.org/downloads/release/python-360/>`__-
+`3.7.0 <https://www.python.org/downloads/release/python-370/>`__,
 `FFmpeg <https://ffmpeg.org/download.html>`__, a `Microsoft
 Azure <https://portal.azure.com/>`__ account for Bing Speech API access, an
 Amazon Web Services account for Transcribe and S3 access, and for Pocketsphinx
