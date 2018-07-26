@@ -39,7 +39,7 @@ class Clicker:
     @staticmethod
     async def click_button(button):
         click_delay = random.uniform(30, 170)
-        await button.click(delay=click_delay / 1000)
+        await button.click(delay=click_delay)
 
 
 class Base(Clicker):

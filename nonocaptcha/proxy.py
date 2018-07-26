@@ -79,7 +79,7 @@ class ProxyDB(object):
                         & (Proxy.last_banned <= time.time())
                         & (Proxy.last_used <= time.time())
                     )
-                    .order_by(fn.Random())
+                    .order_by(Proxy.last_used)
                     .get().proxy
                 )
                 self.set_active(proxy, is_active=True)

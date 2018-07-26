@@ -16,6 +16,7 @@ var waitondom = function () {
         }
     }
 }
+
 for (const key of Object.keys(_navigator)) {
     obj = window.navigator;
     Object.defineProperty(obj, key, {

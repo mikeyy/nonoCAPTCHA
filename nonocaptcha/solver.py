@@ -80,16 +80,32 @@ class Solver(Base):
         """Get a new browser, set proxy and arguments"""
         args = [
             '--cryptauth-http-host ""',
-            '--disable-webgl',
             '--disable-accelerated-2d-canvas',
+            '--disable-background-networking',
+            '--disable-background-timer-throttling',
+            '--disable-browser-side-navigation',
+            '--disable-client-side-phishing-detection',
+            '--disable-default-apps',
             '--disable-dev-shm-usage',
             '--disable-device-discovery-notifications',
+            '--disable-extensions',
             '--disable-features=site-per-process',
+            '--disable-hang-monitor',
             '--disable-java',
+            '--disable-popup-blocking',
+            '--disable-prompt-on-repost',
+            '--disable-sync',
+            '--disable-translate',
             '--disable-web-security',
-            '--disable-reading-from-canvas',
+            '--disable-webgl',
+            '--metrics-recording-only',
+            '--no-first-run',
+            '--safebrowsing-disable-auto-update',
             '--no-sandbox',
-            '--noerrdialogs',
+            # Automation arguments
+            '--enable-automation',
+            '--password-store=basic',
+            '--use-mock-keychain',
         ]
         if self.proxy:
             args.append(f"--proxy-server={self.proxy}")
@@ -109,12 +125,12 @@ class Solver(Base):
         navigator_config = generate_navigator_js(
             os=("linux", "mac", "win"), navigator=("chrome")
         )
-        navigator_config["mediaDevices"] = None
-        navigator_config["webkitGetUserMedia"] = None
-        navigator_config["mozGetUserMedia"] = None
-        navigator_config["getUserMedia"] = None
-        navigator_config["webkitRTCPeerConnection"] = None
-        navigator_config["webdriver"] = None
+        navigator_config["mediaDevices"] = False
+        navigator_config["webkitGetUserMedia"] = False
+        navigator_config["mozGetUserMedia"] = False
+        navigator_config["getUserMedia"] = False
+        navigator_config["webkitRTCPeerConnection"] = False
+        navigator_config["webdriver"] = False
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
         await self.page.evaluateOnNewDocument(
@@ -129,22 +145,7 @@ class Solver(Base):
            Function x is an odd hack for multiline text, but it works.
         """
         html_code = await util.load_file(self.deface_data)
-        deface_js = (
-            (
-                """() => {
-    var x = (function () {/*
-        %s
-    */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
-    document.open();
-    document.write(x)
-    document.close();
-}
-"""
-                % html_code
-            )
-            % self.sitekey
-        )
-        await self.page.evaluate(deface_js)
+        await self.page.setContent(html_code% self.sitekey)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
     $(frame).load( function() {
