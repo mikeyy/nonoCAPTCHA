@@ -89,9 +89,10 @@ class ProxyDB(object):
 
     def set_active(self, proxy, is_active):
         Proxy.update(active=is_active).where(Proxy.proxy == proxy).execute()
-        Proxy.update(
-            last_used=time.time()
-        ).where(Proxy.proxy == proxy).execute()
+        if is_active:
+            Proxy.update(
+                last_used=time.time()
+            ).where(Proxy.proxy == proxy).execute()
 
     def set_banned(self, proxy):
         query = Proxy.update(
