@@ -8,17 +8,17 @@ import random
 import sys
 
 from async_timeout import timeout
-from asyncio import CancelledError
 
 from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
-# Max browsers to open
-threads = 50
+threads = 50 # Max browsers to open
 sort_position = False
+
 pageurl = "https://www.google.com/recaptcha/api2/demo"
 sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
+
 proxy_source = None  # Can be URL or file location
 
 
@@ -50,6 +50,7 @@ if sort_position:
 
 class Run(object):
     proxies_loading = True
+
     def __init__(self, loop):
         self.proxies = ProxyDB(last_banned_timeout=45*60)
         if proxy_source:
