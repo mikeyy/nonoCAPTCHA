@@ -14,7 +14,7 @@ from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 proxy_source = None  # Can be URL or file location
-proxies = ProxyDB(last_used_timeout=10*60, last_banned_timeout=30*60)
+proxies = ProxyDB(last_banned_timeout=45*60)
 
 dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
@@ -42,7 +42,6 @@ async def work(pageurl, sitekey):
                         if result['status'] == "detected":
                             proxies.set_banned(proxy)
                         else:
-                            proxies.set_used(proxy)
                             if result['status'] == "success":
                                 return result['code']
                 except CancelledError:

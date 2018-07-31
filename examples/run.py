@@ -15,8 +15,8 @@ from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 # Max browsers to open
-threads = 10
-sort_position = True
+threads = 50
+sort_position = False
 pageurl = "https://www.google.com/recaptcha/api2/demo"
 sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
 proxy_source = None  # Can be URL or file location
@@ -49,13 +49,15 @@ if sort_position:
 
 
 class Run(object):
+    proxies_loading = True
     def __init__(self, loop):
-        self.proxies = ProxyDB()
+        self.proxies = ProxyDB(last_banned_timeout=45*60)
         if proxy_source:
             asyncio.ensure_future(self.get_proxies(), loop=loop)
 
     async def get_proxies(self):
         while True:
+            self.proxies_loading = True
             print("Proxies loading...")
             protos = ["http://", "https://"]
             if any(p in proxy_source for p in protos):
@@ -65,6 +67,7 @@ class Run(object):
 
             result = await f(proxy_source)
             self.proxies.add(result.split('\n'))
+            self.proxies_loading = False
             print("Proxies loaded.")
             await asyncio.sleep(10 * 60)
 
@@ -81,7 +84,11 @@ class Run(object):
                     "--window-size=400,400",
                 ]
             )
-        options = {"ignoreHTTPSErrors": True, "args": args}
+        options = {
+
+            "ignoreHTTPSErrors": True,
+            "args": args
+        }
         proxy = await self.proxies.get() if proxy_source else None
         client = Solver(
             pageurl,
@@ -92,27 +99,21 @@ class Run(object):
         try:
             async with timeout(180):
                 result = await client.start()
-        except CancelledError:
-            if client.launcher:
-                if not client.launcher.chromeClosed:
-                    await client.launcher.waitForChromeToClose()
         finally:
             if sort_position:
                 used_positions.remove(this_position)
 
             if result:
-                print(result)
                 self.proxies.set_active(proxy, False)
                 if result['status'] == "detected":
                     self.proxies.set_banned(proxy)
                 else:
-                    self.proxies.set_used(proxy)
                     if result['status'] == "success":
                         return result['code']
 
     async def main(self):
         if proxy_source:
-            while self.proxies is None:
+            while not self.proxies_loading:
                 await asyncio.sleep(1)
 
         tasks = [asyncio.ensure_future(self.work()) for i in range(threads)]
@@ -138,4 +139,5 @@ if sys.platform == "win32":
 else:
     loop = asyncio.get_event_loop()
 
-loop.run_until_complete(Run(loop).main())
+r = Run(loop)
+loop.run_until_complete(r.main())
