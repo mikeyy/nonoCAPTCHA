@@ -63,7 +63,7 @@ class Solver(Base):
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
             self.log(f"Starting solver with proxy {self.proxy}")
-            await self.bypass_csp()
+            await self.set_bypass_csp()
             await self.goto()
             await self.deface()
             result = await self.solve()
@@ -77,10 +77,10 @@ class Solver(Base):
                 await self.browser.close()
         return result
 
-    async def bypass_csp(self):
-            await self.page._client.send(
-                "Page.setBypassCSP", {'enabled': True}
-            )
+    async def set_bypass_csp(self):
+        await self.page._client.send(
+            "Page.setBypassCSP", {'enabled': True}
+        )
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
