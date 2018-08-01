@@ -75,9 +75,11 @@ class ProxyDB(object):
                     .where(
                         (Proxy.active == 0)
                         & (Proxy.alive == 1)
-                        & (Proxy.last_banned
+                        & (
+                            (Proxy.last_banned
                             <= time.time() + self.last_banned_timeout)
-                        | (Proxy.last_banned == 0)
+                            | (Proxy.last_banned == 0)
+                        )
                     )
                     .order_by(Proxy.last_used)
                     .get().proxy
