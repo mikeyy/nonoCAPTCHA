@@ -47,7 +47,7 @@ class ProxyDB(object):
     def add(self, proxies):
         def chunks(l, n):
             n = max(1, n)
-            return (l[i : i + n] for i in range(0, len(l), n))
+            return (l[i:i + n] for i in range(0, len(l), n))
 
         q = [proxy.proxy for proxy in Proxy.select(Proxy.proxy)]
         proxies_up = list(set(q) & set(proxies))
