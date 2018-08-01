@@ -63,6 +63,7 @@ class Solver(Base):
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
             self.log(f"Starting solver with proxy {self.proxy}")
+            await self.bypass_csp()
             await self.goto()
             await self.deface()
             result = await self.solve()
@@ -75,6 +76,11 @@ class Solver(Base):
             if self.browser:
                 await self.browser.close()
         return result
+
+    async def bypass_csp(self):
+            await self.page._client.send(
+                "Page.setBypassCSP", {'enabled': True}
+            )
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
@@ -140,7 +146,7 @@ class Solver(Base):
 
     async def wait_for_deface(self):
         """Overwrite current page with reCAPTCHA widget and wait for image
-           iframe to load on document before continuing.
+           iframe to appear on dom before continuing.
 
            Function x is an odd hack for multiline text, but it works.
         """
@@ -197,9 +203,7 @@ class Solver(Base):
             raise DefaceError("Problem defacing page")
 
     async def solve(self):
-        """Click checkbox, on failure it will attempt to decipher the audio
-           file
-        """
+        """Click checkbox, otherwise attempt to decipher audio"""
         await self.get_frames()
         await self.wait_for_checkbox()
         await self.click_checkbox()
