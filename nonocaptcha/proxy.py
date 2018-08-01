@@ -75,8 +75,8 @@ class ProxyDB(object):
                         & (Proxy.alive == 1)
                         & (
                             (
-                                Proxy.last_banned
-                                <= time.time() + self.last_banned_timeout
+                                Proxy.last_banned + self.last_banned_timeout
+                                <= time.time()
                             )
                             | (Proxy.last_banned == 0)
                         )
