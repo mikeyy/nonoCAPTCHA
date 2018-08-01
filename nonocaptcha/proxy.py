@@ -1,9 +1,7 @@
 import time
 import asyncio
 
-from peewee import (
-    SqliteDatabase, Model, CharField, BooleanField, IntegerField
-)
+from peewee import SqliteDatabase, Model, CharField, BooleanField, IntegerField
 
 
 database_filename = "proxy.db"
@@ -30,9 +28,9 @@ class Proxy(Model):
 
     def __repr__(self):
         return (
-            f'Proxy(ip={self.proxy}, active={self.active},',
-            f'alive={self.alive}, last_used={self.last_used},',
-            f'last_banned={self.last_banned})'
+            f"Proxy(ip={self.proxy}, active={self.active},",
+            f"alive={self.alive}, last_used={self.last_used},",
+            f"last_banned={self.last_banned})",
         )
 
 
@@ -49,7 +47,7 @@ class ProxyDB(object):
     def add(self, proxies):
         def chunks(l, n):
             n = max(1, n)
-            return (l[i:i + n] for i in range(0, len(l), n))
+            return (l[i : i + n] for i in range(0, len(l), n))
 
         q = [proxy.proxy for proxy in Proxy.select(Proxy.proxy)]
         proxies_up = list(set(q) & set(proxies))
@@ -76,13 +74,16 @@ class ProxyDB(object):
                         (Proxy.active == 0)
                         & (Proxy.alive == 1)
                         & (
-                            (Proxy.last_banned
-                            <= time.time() + self.last_banned_timeout)
+                            (
+                                Proxy.last_banned
+                                <= time.time() + self.last_banned_timeout
+                            )
                             | (Proxy.last_banned == 0)
                         )
                     )
                     .order_by(Proxy.last_used)
-                    .get().proxy
+                    .get()
+                    .proxy
                 )
                 self.set_active(proxy, is_active=True)
         except Proxy.DoesNotExist:
@@ -92,12 +93,12 @@ class ProxyDB(object):
     def set_active(self, proxy, is_active):
         Proxy.update(active=is_active).where(Proxy.proxy == proxy).execute()
         if is_active:
-            Proxy.update(
-                last_used=time.time()
-            ).where(Proxy.proxy == proxy).execute()
+            Proxy.update(last_used=time.time()).where(
+                Proxy.proxy == proxy
+            ).execute()
 
     def set_banned(self, proxy):
-        query = Proxy.update(
-            last_banned=time.time(), active=False
-        ).where(Proxy.proxy == proxy)
+        query = Proxy.update(last_banned=time.time(), active=False).where(
+            Proxy.proxy == proxy
+        )
         return query.execute()
