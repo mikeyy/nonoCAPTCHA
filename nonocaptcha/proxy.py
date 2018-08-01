@@ -6,10 +6,13 @@ from peewee import SqliteDatabase, Model, CharField, BooleanField, IntegerField
 
 database_filename = "proxy.db"
 database = db = SqliteDatabase(
-    database_filename, pragmas=({
-    "synchronous": "off",
-    "journal_mode": "wal",
-    "cache_size": -1024 * 64})
+    database_filename, pragmas=(
+        {
+            "synchronous": "off",
+            "journal_mode": "wal",
+            "cache_size": -1024 * 64
+        }
+    )
 )
 
 
