@@ -89,11 +89,10 @@ If you want to use it in your own script
 .. code:: python
 
    import asyncio
-   from nonocaptcha import settings
    from nonocaptcha.solver import Solver
 
-   pageurl = settings["run"]["pageurl"]
-   sitekey = settings["run"]["sitekey"]
+   pageurl = "https://www.google.com/recaptcha/api2/demo"
+   sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
 
    proxy = "127.0.0.1:1000"
    auth_details = {
