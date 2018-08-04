@@ -7,7 +7,7 @@ from nonocaptcha.solver import Solver
 if len(sys.argv) == 3:
     pageurl, sitekey, proxy = sys.argv[1:]
 else:
-    print('Invalid amount of arguments (pageurl, sitekey, proxy)')
+    print('Invalid number of arguments (pageurl, sitekey, proxy)')
     sys.exit(0)
 
 
