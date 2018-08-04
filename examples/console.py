@@ -13,8 +13,8 @@ from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
-threads = 50  # Max browsers to open
-sort_position = False
+threads = 1  # Max browsers to open
+sort_position = True
 
 pageurl = "https://www.google.com/recaptcha/api2/demo"
 sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
