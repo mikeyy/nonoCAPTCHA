@@ -9,6 +9,7 @@ import shutil
 import tempfile
 
 from asyncio import TimeoutError, CancelledError
+from aiohttp.client_exceptions import ClientError
 
 from nonocaptcha import util
 from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech
@@ -33,7 +34,7 @@ class SolveAudio(Base):
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
         await self.get_frames()
-        for i in range(5):
+        for i in range(10):
             try:
                 answer = await self.get_audio_response()
             except DownloadError:
@@ -75,8 +76,8 @@ class SolveAudio(Base):
                 binary=True,
                 timeout=self.page_load_timeout,
             )
-        except TimeoutError:
-            self.log("Download timed-out, trying again")
+        except ClientError as e:
+            self.log(f"Error `{e}` occured during audio download, retrying")
         else:
             answer = None
             service = self.speech_service.lower()
@@ -98,18 +99,19 @@ class SolveAudio(Base):
             if answer:
                 self.log(f'Received answer "{answer}"')
                 return answer
-        self.log("No answer, reloading")
-        await self.click_reload_button()
-        func = (
-            f'"{audio_url}" !== '
-            f'$(".rc-audiochallenge-tdownload-link").attr("href")'
-        )
-        try:
-            await self.image_frame.waitForFunction(
-                func, timeout=self.animation_timeout
+
+            self.log("No answer, reloading")
+            await self.click_reload_button()
+            func = (
+                f'"{audio_url}" !== '
+                f'$(".rc-audiochallenge-tdownload-link").attr("href")'
             )
-        except TimeoutError:
-            raise ReloadError("Download link never updated")
+            try:
+                await self.image_frame.waitForFunction(
+                    func, timeout=self.animation_timeout
+                )
+            except TimeoutError:
+                raise ReloadError("Download link never updated")
 
     async def type_audio_response(self, answer):
         self.log("Typing audio response")
