@@ -1,18 +1,19 @@
 # !/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Launcher module. Make Pyppeteer subproccess calls async and remove
-   default arguments."""
+"""Launcher module. Mostly consists of Pyppetter patches."""
 
 import asyncio
 import atexit
 import os
 import signal
 import sys
+import websockets
 
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
+from pyppeteer.errors import NetworkError
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
@@ -82,12 +83,16 @@ class Launcher(launcher.Launcher):
             self.connection, self.options, self.proc, self.killChrome
         )
 
-    async def waitForChromeToClose(self):
-        if self.proc:
-            if self.proc.returncode is None and not self.chromeClosed:
-                self.chromeClosed = True
-                self.proc.terminate()
-                await self.proc.wait()
+    def waitForChromeToClose(self):
+        if self.proc.returncode is None and not self.chromeClosed:
+            self.chromeClosed = True
+            try:
+                #  I would have prefered terminate() but websocket gets stuck
+                #  in an infinite loop 1% of the time. This will do for now.
+                #  Stupid bug.
+                self.proc.kill()
+            except OSError:
+                pass
 
     async def killChrome(self):
         """Terminate chromium process."""
@@ -99,5 +104,5 @@ class Launcher(launcher.Launcher):
                 pass
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir
-            await self.waitForChromeToClose()
+            self.waitForChromeToClose()
             self._cleanup_tmp_user_data_dir()
