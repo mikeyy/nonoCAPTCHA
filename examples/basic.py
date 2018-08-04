@@ -31,5 +31,6 @@ client = Solver(pageurl, sitekey, options=options, proxy=proxy)
 task = asyncio.ensure_future(client.start())
 result = loop.run_until_complete(task)
 loop.run_until_complete(client.cleanup())
-if result:
-    print(result)
+if not task.cancelled():
+    if result:
+        print(result)
