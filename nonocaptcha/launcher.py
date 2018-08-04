@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Launcher module. Make Pyppeteer subproccess calls async and remove 
+"""Launcher module. Make Pyppeteer subproccess calls async and remove
    default arguments."""
 
 import asyncio

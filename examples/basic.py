@@ -1,4 +1,5 @@
 import asyncio
+import signal
 import sys
 
 from nonocaptcha.solver import Solver
