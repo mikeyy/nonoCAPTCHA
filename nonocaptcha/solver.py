@@ -73,9 +73,11 @@ class Solver(Base):
             end = time.time()
             elapsed = end - start
             self.log(f"Time elapsed: {elapsed}")
-            if self.browser:
-                await self.browser.close()
         return result
+        
+    async def cleanup(self):
+        if self.browser:
+            await self.browser.close()
 
     async def set_bypass_csp(self):
         await self.page._client.send(
