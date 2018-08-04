@@ -5,7 +5,6 @@ import shutil
 import sys
 
 from aiohttp import web
-from async_timeout import timeout
 from asyncio import CancelledError
 from pathlib import Path
 
@@ -13,7 +12,7 @@ from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
-SECRETKEY= "CHANGEME"
+SECRETKEY = "CHANGEME"
 
 proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
@@ -31,33 +30,32 @@ def shuffle(i):
 
 
 async def work(pageurl, sitekey, proxy):
-    while 1:
-        proxy = await proxies.get()
-        if proxy:
-            if "@" in proxy:
-                proxy_details = proxy.split("@")
-                proxy = proxy_details[1]
-                username, password = proxy_details[0].split(":")
-                proxy_auth = {"username": username, "password": password}
-            options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-            client = Solver(
-                pageurl,
-                sitekey,
-                options=options,
-                proxy=proxy,
-                proxy_auth=proxy_auth
-            )
-            try:
-                result = await client.start()
-                if isinstance(result, dict):
-                    if 'code' in result:
-                        return result
-            except CancelledError:
-                return
+    proxy = await proxies.get()
+    if proxy:
+        if "@" in proxy:
+            proxy_details = proxy.split("@")
+            proxy = proxy_details[1]
+            username, password = proxy_details[0].split(":")
+            proxy_auth = {"username": username, "password": password}
+        options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+        client = Solver(
+            pageurl,
+            sitekey,
+            options=options,
+            proxy=proxy,
+            proxy_auth=proxy_auth
+        )
+        try:
+            result = await client.start()
+            if isinstance(result, dict):
+                if 'code' in result:
+                    return result
+        except CancelledError:
+            return
 
 
 async def get_solution(request):
-    params  = await request.post()
+    params = await request.post()
     pageurl = params.get("pageurl")
     sitekey = params.get("sitekey")
     secret_key = params.get("secret_key")
@@ -75,8 +73,6 @@ async def get_solution(request):
                         response["solution"] = result['code']
                     else:
                         response["error"] = result['status']
-                        # Should we update last_blocked for this?
-                        # if result['status'] == 'detected':
     return web.json_response(response)
 
 

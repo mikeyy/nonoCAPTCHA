@@ -1,19 +1,18 @@
 # !/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Launcher module. Mostly consists of Pyppetter patches."""
+"""Launcher module. Make Pyppeteer subproccess calls async and remove 
+   default arguments."""
 
 import asyncio
 import atexit
 import os
 import signal
 import sys
-import websockets
 
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
-from pyppeteer.errors import NetworkError
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
