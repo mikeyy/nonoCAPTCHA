@@ -77,7 +77,7 @@ class Solver(Base):
             await self.cleanup()
             self.log(f"Time elapsed: {elapsed}")
         return result
-        
+
     async def cleanup(self):
         if self.browser:
             await self.browser.close()
