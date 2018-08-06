@@ -8,10 +8,12 @@ import atexit
 import os
 import signal
 import sys
+import websockets
 
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
+from pyppeteer.errors import NetworkError
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
@@ -59,21 +61,7 @@ class Launcher(launcher.Launcher):
         )
         self.chromeClosed = False
         self.connection = None
-
-        def _close_process(*args, **kwargs):
-            if not self.chromeClosed:
-                asyncio.wait(asyncio.ensure_future(self.killChrome()))
-
-        # dont forget to close browser process
-        atexit.register(_close_process)
-        if self.options.get("handleSIGINT", True):
-            signal.signal(signal.SIGINT, _close_process)
-        if self.options.get("handleSIGTERM", True):
-            signal.signal(signal.SIGTERM, _close_process)
-        if not sys.platform.startswith("win"):
-            # SIGHUP is not defined on windows
-            if self.options.get("handleSIGHUP", True):
-                signal.signal(signal.SIGHUP, _close_process)
+        # Signal handlers for exits used to be here
         connectionDelay = self.options.get("slowMo", 0.1)
         self.browserWSEndpoint = self._get_ws_endpoint()
         self.connection = Connection(self.browserWSEndpoint, connectionDelay)
