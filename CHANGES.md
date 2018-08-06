@@ -1,6 +1,21 @@
-History (Work in progress)
+History
 =======
-### Current Version (2018-07-25)
+### Current Version (2018-08-06)
+* solver.py
+    * Add function cleanup() to solver for closing browsers
+    * Bypass Content-Security-Policy in response headers
+* launcher.py
+  * Remove signal handlers in launcher due to redundancy
+* proxy.py
+  * Remove last_used_timeout argument
+* examples/
+    * Change naming of files
+    * api.py
+        * Add multi-threaded support
+* Fix bugs
+* I might have forgot a change...
+
+### Version 1.7.11 (2018-07-25)
 * Add compatiblity for Python versions 3.6.0 - 3.7.0
 
 ### Version 1.7.10 (2018-07-18)
