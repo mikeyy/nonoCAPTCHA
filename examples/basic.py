@@ -1,5 +1,4 @@
 import asyncio
-import signal
 import sys
 
 from nonocaptcha.solver import Solver
@@ -11,11 +10,12 @@ else:
     sys.exit(0)
 
 
+loop = asyncio.get_event_loop()
 options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 client = Solver(pageurl, sitekey, options=options, proxy=proxy)
 try:
     result = loop.run_until_complete(client.start())
-except CancelledError:
+except asyncio.CancelledError:
     raise
 else:
     if result:
