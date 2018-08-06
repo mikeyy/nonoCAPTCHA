@@ -6,7 +6,7 @@
 import json
 import time
 
-from asyncio import TimeoutError
+from asyncio import TimeoutError, CancelledError
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
@@ -67,17 +67,21 @@ class Solver(Base):
             await self.goto()
             await self.deface()
             result = await self.solve()
+        except CancelledError:
+            raise
         except BaseException as e:
             self.log(f"{e} {type(e)}")
         finally:
             end = time.time()
             elapsed = end - start
+            await self.cleanup()
             self.log(f"Time elapsed: {elapsed}")
         return result
-
+        
     async def cleanup(self):
         if self.browser:
             await self.browser.close()
+            self.log('Browser closed')
 
     async def set_bypass_csp(self):
         await self.page._client.send(
