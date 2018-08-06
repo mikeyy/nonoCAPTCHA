@@ -73,38 +73,40 @@ class ProxyDB(object):
 
     async def get(self):
         try:
-            async with self._lock:
-                proxy = (
-                    Proxy.select(Proxy.proxy)
-                    .where(
-                        (Proxy.active == 0)
-                        & (Proxy.alive == 1)
-                        & (
-                            (
-                                Proxy.last_banned + self.last_banned_timeout
-                                <= time.time()
-                            )
-                            | (Proxy.last_banned == 0)
+            proxy = (
+                Proxy.select(Proxy.proxy)
+                .where(
+                    (Proxy.active == 0)
+                    & (Proxy.alive == 1)
+                    & (
+                        (
+                            Proxy.last_banned + self.last_banned_timeout
+                            <= time.time()
                         )
+                        | (Proxy.last_banned == 0)
                     )
-                    .order_by(Proxy.last_used)
-                    .get()
-                    .proxy
                 )
-                self.set_active(proxy, is_active=True)
+                .order_by(Proxy.last_used)
+                .get()
+                .proxy
+            )
+            await self.set_active(proxy, is_active=True)
         except Proxy.DoesNotExist:
             return
         return proxy
 
-    def set_active(self, proxy, is_active):
-        Proxy.update(active=is_active).where(Proxy.proxy == proxy).execute()
-        if is_active:
-            Proxy.update(last_used=time.time()).where(
+    async def set_active(self, proxy, is_active):
+        """Returns None"""
+        async with self._lock:
+            Proxy.update(active=is_active).where(Proxy.proxy == proxy).execute()
+            if is_active:
+                Proxy.update(last_used=time.time()).where(
+                    Proxy.proxy == proxy
+                ).execute()
+
+    async def set_banned(self, proxy):
+        """Returns None"""
+        async with self._lock:
+            query = Proxy.update(last_banned=time.time(), active=False).where(
                 Proxy.proxy == proxy
             ).execute()
-
-    def set_banned(self, proxy):
-        query = Proxy.update(last_banned=time.time(), active=False).where(
-            Proxy.proxy == proxy
-        )
-        return query.execute()
