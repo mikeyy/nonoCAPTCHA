@@ -105,9 +105,9 @@ class Run(object):
                 used_positions.remove(this_position)
 
             if result:
-                self.proxies.set_active(proxy, False)
+                await self.proxies.set_active(proxy, False)
                 if result['status'] == "detected":
-                    self.proxies.set_banned(proxy)
+                    await self.proxies.set_banned(proxy)
                 else:
                     if result['status'] == "success":
                         return result['code']
