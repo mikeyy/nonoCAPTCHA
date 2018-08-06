@@ -1,14 +1,11 @@
 import asyncio
-import logging
-import random
 import signal
 import shutil
 import sys
-import subprocess
 
-from aiohttp import web, ClientSession, ClientError
+from aiohttp import web
 from async_timeout import timeout
-from asyncio import TimeoutError, CancelledError
+from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial, wraps
 from pathlib import Path
@@ -19,7 +16,7 @@ from nonocaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
 
-proxy_source = None # Can be URL or file location
+proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
 
 pool = ThreadPoolExecutor()
@@ -76,17 +73,17 @@ def sub_loop(pageurl, sitekey):
         work(pageurl, sitekey, loop)
     )
     return result
-    
+
 
 async def get_solution(request):
-    params  = request.rel_url.query
+    params = request.rel_url.query
     pageurl = params.get("pageurl")
     sitekey = params.get("sitekey")
     secret_key = params.get("secret_key")
     if not pageurl or not sitekey or not secret_key:
         response = {"error": "invalid request"}
     else:
-        if secret_key!= SECRET_KEY:
+        if secret_key != SECRET_KEY:
             response = {"error": "unauthorized attempt logged"}
         else:
             if pageurl and sitekey:
@@ -110,7 +107,7 @@ async def load_proxies():
 
         try:
             result = await f(proxy_source)
-        except:
+        except Exception:
             continue
         else:
             proxies.add(result.split('\n'))
@@ -127,12 +124,13 @@ async def cleanup_background_tasks(app):
     await app["dispatch"]
 
 
-#  Not sure if I need these here, will check later loop.add_signal_handler
+#  Not sure if I need these here, will check later. And loop.add_signal_handler
 #  might be the better option
 def signal_handler(signal, frame):
-    loop.stop()
-    loop.close()
+    main_loop.stop()
+    main_loop.close()
     sys.exit(0)
+
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
