@@ -7,6 +7,7 @@ from aiohttp import web
 from async_timeout import timeout
 from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import suppress
 from functools import partial, wraps
 from pathlib import Path
 
@@ -39,19 +40,27 @@ def timer(duration):
     return wrap
 
 
-@timer(duration=3*60)  # 180 seconds seems reasonable
+@timer(duration=10)  # 180 seconds seems reasonable
 async def work(pageurl, sitekey, loop):
+    asyncio.set_event_loop(loop)
     while 1:
         fut = asyncio.run_coroutine_threadsafe(
             proxies.get(), main_loop
         )
         proxy = fut.result()
         options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-        client = Solver(pageurl, sitekey, options=options, proxy=proxy)
+        client = Solver(
+            pageurl,
+            sitekey,
+            options=options,
+            proxy=proxy,
+            loop=loop,
+        )
         try:
             task = loop.create_task(client.start())
             await task
-            task.exception()
+            with suppress(BaseException):
+                task.exception()
         except CancelledError:
             break
         else:
@@ -64,15 +73,23 @@ async def work(pageurl, sitekey, loop):
                 else:
                     if result['status'] == "success":
                         return result['code']
-
+                        
 
 def sub_loop(pageurl, sitekey):
+    async def cancel_task(task):
+        task.cancel()
+        #  Please don't hurt me, I'll do better next time
+        with suppress(BaseException):
+            await task
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    result = loop.run_until_complete(
-        work(pageurl, sitekey, loop)
-    )
-    return result
+    result = loop.run_until_complete(work(pageurl, sitekey, loop))
+    #  Cancel all pending tasks in the loop
+    for task in asyncio.Task.all_tasks():
+        loop.run_until_complete(cancel_task(task))
+    if result:
+        return result
 
 
 async def get_solution(request):
