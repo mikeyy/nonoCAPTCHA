@@ -30,66 +30,73 @@ dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 
-def timer(duration):
+def looper(duration):
     def wrap(func):
         @wraps(func)
         async def wrap(*args, **kwargs):
-            async with timeout(duration):
-                return await func(*args, **kwargs)
+            async with timeout(duration) as timer:
+                while not timer.expired:
+                    try:
+                        result = await func(*args, **kwargs)
+                    except CancelledError:
+                        break
+                    else:
+                        if result:
+                            return result
         return wrap
     return wrap
 
-
-@timer(duration=10)  # 180 seconds seems reasonable
+            
+@looper(duration=60)  # 180 seconds seems reasonable
 async def work(pageurl, sitekey, loop):
-    asyncio.set_event_loop(loop)
-    while 1:
-        fut = asyncio.run_coroutine_threadsafe(
-            proxies.get(), main_loop
-        )
-        proxy = fut.result()
-        options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
-        client = Solver(
-            pageurl,
-            sitekey,
-            options=options,
-            proxy=proxy,
-            loop=loop,
-        )
-        try:
-            task = loop.create_task(client.start())
-            await task
-            with suppress(BaseException):
-                task.exception()
-        except CancelledError:
-            break
-        else:
-            result = task.result()
-            if result:
-                if result['status'] == "detected":
-                    asyncio.run_coroutine_threadsafe(
-                        proxies.set_banned(proxy), main_loop
-                    )
-                else:
-                    if result['status'] == "success":
-                        return result['code']
-                        
-
+    proxy = asyncio.run_coroutine_threadsafe(
+        proxies.get(), main_loop
+    ).result()
+    options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+    client = Solver(
+        pageurl,
+        sitekey,
+        options=options,
+        proxy=proxy,
+        loop=loop,
+    )
+    try:
+        result = await client.start()
+    except:
+        raise
+    else:
+        if result:
+            if result['status'] == "detected":
+                asyncio.run_coroutine_threadsafe(
+                    proxies.set_banned(proxy), main_loop
+                )
+            else:
+                if result['status'] == "success":
+                    return result['code']
+     
+                   
 def sub_loop(pageurl, sitekey):
     async def cancel_task(task):
-        task.cancel()
-        #  Please don't hurt me, I'll do better next time
-        with suppress(BaseException):
-            await task
+        if not task.cancelled():
+            task.cancel()
+            # Please don't hurt me, I'll do better next time
+            with suppress(BaseException):
+                await task
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    result = loop.run_until_complete(work(pageurl, sitekey, loop))
+    task = asyncio.ensure_future(work(pageurl, sitekey, loop))
+    result = loop.run_until_complete(task)
     #  Cancel all pending tasks in the loop
-    for task in asyncio.Task.all_tasks():
-        loop.run_until_complete(cancel_task(task))
-    if result:
-        return result
+    pending = [
+        asyncio.ensure_future(cancel_task(task))
+        for task in asyncio.Task.all_tasks()
+    ]
+    if pending:
+        loop.run_until_complete(asyncio.wait(pending))
+    loop.stop()
+    return result
+
 
 
 async def get_solution(request):
@@ -105,7 +112,10 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 f = partial(sub_loop, pageurl, sitekey)
-                result = await main_loop.run_in_executor(pool, f)
+                result = await asyncio.ensure_future(
+                    main_loop.run_in_executor(pool, f)
+                )
+                print(result)
                 if result:
                     response = {"solution": result}
                 else:
