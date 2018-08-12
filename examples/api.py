@@ -5,11 +5,12 @@ import sys
 
 from aiohttp import web
 from async_timeout import timeout
-from asyncio import CancelledError
+from asyncio import CancelledError, IncompleteReadError
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
 from functools import partial, wraps
 from pathlib import Path
+from threading import Thread
 
 from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
@@ -30,25 +31,65 @@ dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 
-def looper(duration):
-    def wrap(func):
-        @wraps(func)
-        async def wrap(*args, **kwargs):
-            async with timeout(duration) as timer:
-                while not timer.expired:
-                    try:
-                        result = await func(*args, **kwargs)
-                    except CancelledError:
-                        break
-                    else:
-                        if result:
-                            return result
-        return wrap
-    return wrap
+class TimedLoop(object):
+    cancelled = False
 
-            
-@looper(duration=60)  # 180 seconds seems reasonable
-async def work(pageurl, sitekey, loop):
+    def __init__(self, coro, duration):
+        self.coro = coro
+        self.duration = duration
+
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, *args):
+        self.shutdown()
+
+    def start(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        task = asyncio.ensure_future(self._seek_result())
+        task.add_done_callback(self._on_done)
+        trigger = partial(self.loop.create_task, self._cancel_task(task))
+        self.loop.call_later(self.duration, trigger)
+        self.loop.run_forever()
+        if not task.cancelled():
+            result = task.result()
+            return result
+
+    def shutdown(self, *args, **kwargs):
+        # Cancel all pending tasks in the loop
+        pending = [
+            self.loop.call_soon_threadsafe(partial(self._cancel_task, task))
+            for task in asyncio.Task.all_tasks()
+        ]
+        asyncio.wait(pending,loop=self.loop)
+
+    async def _seek_result(self):
+        try:
+            while 1:
+                task = asyncio.ensure_future(
+                    self.coro(),
+                    loop=self.loop
+                )
+                await task
+                if not task.cancelled():
+                    result = task.result()
+                    if result:
+                        return result
+        except CancelledError:
+            await self._cancel_task(task)
+            raise CancelledError
+    
+    def _on_done(self, task):
+        self.loop.call_soon_threadsafe(self.loop.stop)
+        
+    async def _cancel_task(self, task):
+        if not task.done():
+            task.set_result(None)
+            await task
+    
+
+async def work(pageurl, sitekey):
     proxy = asyncio.run_coroutine_threadsafe(
         proxies.get(), main_loop
     ).result()
@@ -57,46 +98,17 @@ async def work(pageurl, sitekey, loop):
         pageurl,
         sitekey,
         options=options,
-        proxy=proxy,
-        loop=loop,
+        proxy=proxy
     )
-    try:
-        result = await client.start()
-    except:
-        raise
-    else:
-        if result:
-            if result['status'] == "detected":
-                asyncio.run_coroutine_threadsafe(
-                    proxies.set_banned(proxy), main_loop
-                )
-            else:
-                if result['status'] == "success":
-                    return result['code']
-     
-                   
-def sub_loop(pageurl, sitekey):
-    async def cancel_task(task):
-        if not task.cancelled():
-            task.cancel()
-            # Please don't hurt me, I'll do better next time
-            with suppress(BaseException):
-                await task
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    task = asyncio.ensure_future(work(pageurl, sitekey, loop))
-    result = loop.run_until_complete(task)
-    #  Cancel all pending tasks in the loop
-    pending = [
-        asyncio.ensure_future(cancel_task(task))
-        for task in asyncio.Task.all_tasks()
-    ]
-    if pending:
-        loop.run_until_complete(asyncio.wait(pending))
-    loop.stop()
-    return result
-
+    result = await client.start()
+    if result:
+        if result['status'] == "detected":
+            asyncio.run_coroutine_threadsafe(
+                proxies.set_banned(proxy), main_loop
+            )
+        else:
+            if result['status'] == "success":
+                return result['code']
 
 
 async def get_solution(request):
@@ -111,10 +123,9 @@ async def get_solution(request):
             response = {"error": "unauthorized attempt logged"}
         else:
             if pageurl and sitekey:
-                f = partial(sub_loop, pageurl, sitekey)
-                result = await asyncio.ensure_future(
-                    main_loop.run_in_executor(pool, f)
-                )
+                coro = partial(work, pageurl, sitekey)
+                with TimedLoop(coro, duration=10) as t:
+                    result = await main_loop.run_in_executor(pool, t.start)
                 print(result)
                 if result:
                     response = {"solution": result}
