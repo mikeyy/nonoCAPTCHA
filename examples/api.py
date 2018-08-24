@@ -4,13 +4,10 @@ import shutil
 import sys
 
 from aiohttp import web
-from async_timeout import timeout
-from asyncio import CancelledError, IncompleteReadError
+from asyncio import CancelledError
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import suppress
-from functools import partial, wraps
+from functools import partial
 from pathlib import Path
-from threading import Thread
 
 from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
@@ -34,47 +31,43 @@ shutil.rmtree(dir, ignore_errors=True)
 
 class TimedLoop(object):
     def __init__(self, coro, duration, executor=None):
-        self.coro = coro
-        self.duration = duration
-        self.pool = executor if executor else ThreadPoolExecutor()
+        self._coro = coro
+        self._duration = duration
+        self._parent_task = None
+        self._executor = executor if executor else ThreadPoolExecutor()
 
     async def __aenter__(self):
-        self.parent_task = asyncio.Task.current_task()
-        self.parent_loop = asyncio.get_event_loop()
+        self._parent_task = asyncio.Task.current_task()
         return self
 
     async def __aexit__(self, *args):
-        self.parent_loop.call_soon(
-            self.parent_loop.create_task, self.shutdown()
-        )
+        asyncio.get_event_loop().call_soon(self._parent_task.cancel)
 
     def __await__(self):
         return (yield from self.start)
 
     async def start(self):
-        on_complete = self.parent_loop.create_future()
-        self.pool.submit(self.setup_loop, on_complete)
-        result = await on_complete
+        result = await asyncio.get_event_loop().run_in_executor(
+            self._executor, self.setup_loop
+        )
         return result
 
-    def setup_loop(self, waiter):
+    def setup_loop(self):
         thread_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(thread_loop)
         task = thread_loop.create_task(self.continuous(thread_loop))
-        thread_loop.call_later(self.duration, task.cancel)
+        thread_loop.call_later(self._duration, task.cancel)
         try:
-            result = thread_loop.run_until_complete(task)
-        finally:
-            self.parent_loop.call_soon_threadsafe(
-                waiter.set_result, result
-            )
-            thread_loop.create_task(self.cancel(thread_loop))
             try:
-                thread_loop.run_forever()
+                thread_loop.run_until_complete(task)
             finally:
-                thread_loop.call_soon(thread_loop.close)
+                thread_loop.create_task(self.cancel(thread_loop))
+                thread_loop.run_forever()
+        finally:
+            thread_loop.call_soon(thread_loop.close)
+            return task.result() if not task.cancelled() else None
 
-    async def cancel(self, loop):       
+    async def cancel(self, loop):
         def silence_gathered(future):
             try:
                 future.result()
@@ -96,16 +89,15 @@ class TimedLoop(object):
     async def continuous(self, loop):
         try:
             while True:
-                task = loop.create_task(self.coro())
+                task = loop.create_task(self._coro())
                 await task
                 result = task.result()
                 if result:
                     return result
         except CancelledError:
-            loop.call_soon(task.cancel)
-
-    async def shutdown(self):
-        self.parent_task.cancel()
+            task.cancel()
+            await task
+            raise
 
 
 async def work(pageurl, sitekey):
@@ -143,9 +135,8 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TimedLoop(coro, duration=180) as t:
+                async with TimedLoop(coro, duration=60) as t:
                     result = await t.start()
-                print(result)
                 if result:
                     response = {"solution": result}
                 else:
