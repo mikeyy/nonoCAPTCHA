@@ -33,8 +33,6 @@ shutil.rmtree(dir, ignore_errors=True)
 
 
 class TimedLoop(object):
-    result = None
-
     def __init__(self, coro, duration, executor=None):
         self.coro = coro
         self.duration = duration
@@ -44,7 +42,7 @@ class TimedLoop(object):
         self.parent_task = asyncio.Task.current_task()
         self.parent_loop = asyncio.get_event_loop()
         return self
-        
+
     async def __aexit__(self, *args):
         self.parent_loop.call_soon(
             self.parent_loop.create_task, self.shutdown()
@@ -74,7 +72,7 @@ class TimedLoop(object):
             try:
                 thread_loop.run_forever()
             finally:
-                thead_loop.call_soon(thread_loop.close)
+                thread_loop.call_soon(thread_loop.close)
 
     async def cancel(self, loop):       
         def silence_gathered(future):
@@ -130,7 +128,7 @@ async def work(pageurl, sitekey):
         else:
             if result['status'] == "success":
                 return result['code']
-    
+
 
 async def get_solution(request):
     params = request.rel_url.query
@@ -186,8 +184,8 @@ async def cleanup_background_tasks(app):
 #  Not sure if I need these here, will check later. And loop.add_signal_handler
 #  might be the better option
 def signal_handler(signal, frame):
-    main_loop.stop()
-    main_loop.close()
+    loop.stop()
+    loop.close()
     sys.exit(0)
 
 
