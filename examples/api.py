@@ -103,9 +103,8 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TimedLoop(coro, duration=6) as t:
+                async with TimedLoop(coro, duration=180) as t:
                     result = await t.start()
-                print(result)
                 if result:
                     response = {"solution": result}
                 else:
