@@ -4,7 +4,6 @@ import shutil
 import sys
 
 from aiohttp import web
-from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
@@ -18,9 +17,9 @@ SECRET_KEY = "CHANGEME"
 proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
 
-loop = asyncio.get_event_loop()
+parent_loop = asyncio.get_event_loop()
 asyncio.set_child_watcher(asyncio.FastChildWatcher())
-asyncio.get_child_watcher().attach_loop(loop)
+asyncio.get_child_watcher().attach_loop(parent_loop)
 
 app = web.Application()
 
@@ -30,48 +29,68 @@ shutil.rmtree(dir, ignore_errors=True)
 
 
 class TimedLoop(object):
-    def __init__(self, coro, duration, executor=None, loop=None):
+    def __init__(self, coro, duration, loop=None):
         self._coro = coro
         self._duration = duration
-        self._executor = executor or ThreadPoolExecutor()
         self._loop = loop or asyncio.get_event_loop()
+        self._executor = ThreadPoolExecutor()
+        self._main_task = None
 
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, exc, exc_type, tb):
-        self._loop.call_soon_threadsafe(self._thread_loop.stop)
+        asyncio.run_coroutine_threadsafe(self.cleanup(), self._thread_loop)
         return self
 
     def __await__(self):
         return self.start().__await__()
 
     async def start(self):
+        self._thread_loop = asyncio.new_event_loop()
+        self._loop.run_in_executor(
+            self._executor, self.thread_loop, self._thread_loop)
+        future = asyncio.Future()
         try:
-            async with timeout(self._duration):
-                result = await self._loop.run_in_executor(
-                    self._executor, self._run_task)
-        except asyncio.TimeoutError:
+            self._thread_loop.call_soon_threadsafe(
+                self._thread_loop.create_task, self.timed_continuity(future))
+            await future
+            result = future.result()
+        except(asyncio.CancelledError, asyncio.TimeoutError):
             result = None
         finally:
             return result
 
-    def _run_task(self):
-        self._thread_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._thread_loop)
-        return self._thread_loop.run_until_complete(self._continuous())
+    def thread_loop(self, loop):
+        asyncio.set_event_loop(loop)
+        loop.run_forever()
 
-    async def _continuous(self):
-        while True:
-            result = await self._coro()
-            if result is not None:
-                return result
+    async def timed_continuity(self, future):
+        this = asyncio.Task.current_task(loop=self._thread_loop)
+        self._thread_loop.call_later(self._duration, this.cancel)
+        try:
+            while True:
+                result = await self._coro()
+                if result is not None:
+                    break
+        except(asyncio.CancelledError, asyncio.TimeoutError):
+            result = None
+        finally:
+            self._loop.call_soon_threadsafe(future.set_result, result)
+
+    async def cleanup(self):
+        pending = tuple(
+            task for task in asyncio.Task.all_tasks(loop=self._thread_loop)
+            if task is not asyncio.Task.current_task())
+        asyncio.gather(
+            *pending, return_exceptions=True,
+            loop=self._thread_loop).cancel()
+        self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
+        self._executor.shutdown()
 
 
 async def work(pageurl, sitekey):
-    proxy = asyncio.run_coroutine_threadsafe(
-        proxies.get(), loop
-    ).result()
+    proxy = None
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
@@ -83,8 +102,7 @@ async def work(pageurl, sitekey):
     if result:
         if result['status'] == "detected":
             asyncio.run_coroutine_threadsafe(
-                proxies.set_banned(proxy), loop
-            )
+                proxies.set_banned(proxy), asyncio.get_event_loop())
         else:
             if result['status'] == "success":
                 return result['code']
@@ -143,8 +161,8 @@ async def cleanup_background_tasks(app):
 #  Not sure if I need these here, will check later. And loop.add_signal_handler
 #  might be the better option
 def signal_handler(signal, frame):
-    loop.stop()
-    loop.close()
+    parent_loop.stop()
+    parent_loop.close()
     sys.exit(0)
 
 
