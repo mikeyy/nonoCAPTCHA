@@ -4,7 +4,7 @@ import shutil
 import sys
 
 from aiohttp import web
-from asyncio import CancelledError
+from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
@@ -30,74 +30,42 @@ shutil.rmtree(dir, ignore_errors=True)
 
 
 class TimedLoop(object):
-    def __init__(self, coro, duration, executor=None):
+    def __init__(self, coro, duration, executor=None, loop=None):
         self._coro = coro
         self._duration = duration
-        self._parent_task = None
-        self._executor = executor if executor else ThreadPoolExecutor()
+        self._executor = executor or ThreadPoolExecutor()
+        self._loop = loop or asyncio.get_event_loop()
 
     async def __aenter__(self):
-        self._parent_task = asyncio.Task.current_task()
         return self
 
-    async def __aexit__(self, *args):
-        asyncio.get_event_loop().call_soon(self._parent_task.cancel)
+    async def __aexit__(self, exc, exc_type, tb):
+        self._loop.call_soon_threadsafe(self._thread_loop.stop)
+        return self
 
     def __await__(self):
-        return (yield from self.start)
+        return self.start().__await__()
 
     async def start(self):
-        result = await asyncio.get_event_loop().run_in_executor(
-            self._executor, self.setup_loop
-        )
-        return result
-
-    def setup_loop(self):
-        thread_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(thread_loop)
-        task = thread_loop.create_task(self.continuous(thread_loop))
-        thread_loop.call_later(self._duration, task.cancel)
         try:
-            try:
-                thread_loop.run_until_complete(task)
-            finally:
-                thread_loop.create_task(self.cancel(thread_loop))
-                thread_loop.run_forever()
+            async with timeout(self._duration):
+                result = await self._loop.run_in_executor(
+                    self._executor, self._run_task)
+        except asyncio.TimeoutError:
+            result = None
         finally:
-            thread_loop.call_soon(thread_loop.close)
-            return task.result() if not task.cancelled() else None
+            return result
 
-    async def cancel(self, loop):
-        def silence_gathered(future):
-            try:
-                future.result()
-            except Exception:
-                pass
+    def _run_task(self):
+        self._thread_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._thread_loop)
+        return self._thread_loop.run_until_complete(self._continuous())
 
-        tasks = [
-            task for task in asyncio.Task.all_tasks(loop=loop)
-            if asyncio.Task.current_task() is not task
-        ]
-        gathered = asyncio.gather(*tasks, loop=loop)
-        gathered.add_done_callback(silence_gathered)
-        gathered.cancel()
-        try:
-            await gathered
-        finally:
-            loop.call_soon(loop.stop)
-
-    async def continuous(self, loop):
-        try:
-            while True:
-                task = loop.create_task(self._coro())
-                await task
-                result = task.result()
-                if result:
-                    return result
-        except CancelledError:
-            task.cancel()
-            await task
-            raise
+    async def _continuous(self):
+        while True:
+            result = await self._coro()
+            if result is not None:
+                return result
 
 
 async def work(pageurl, sitekey):
@@ -135,8 +103,9 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TimedLoop(coro, duration=60) as t:
+                async with TimedLoop(coro, duration=6) as t:
                     result = await t.start()
+                print(result)
                 if result:
                     response = {"solution": result}
                 else:
