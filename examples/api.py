@@ -96,7 +96,8 @@ class TimedLoop(object):
 
 
 async def work(pageurl, sitekey):
-    proxy = None
+    proxy = asyncio.run_coroutine_threadsafe(
+        proxies.get(), parent_loop).result()
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
@@ -108,7 +109,7 @@ async def work(pageurl, sitekey):
     if result:
         if result['status'] == "detected":
             asyncio.run_coroutine_threadsafe(
-                proxies.set_banned(proxy), asyncio.get_event_loop())
+                proxies.set_banned(proxy), parent_loop)
         else:
             if result['status'] == "success":
                 return result['code']
