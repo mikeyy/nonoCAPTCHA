@@ -33,6 +33,8 @@ class TimedLoop(object):
         self._coro = coro
         self._duration = duration
         self._loop = loop or asyncio.get_event_loop()
+        #  Haven't tried ProcessPoolExecutor. Perfomance gains are doubtful,
+        #  presumingly detrimental.
         self._executor = ThreadPoolExecutor()
         self._main_task = None
 
@@ -47,13 +49,17 @@ class TimedLoop(object):
         return self.start().__await__()
 
     async def start(self):
+        #  Due to uncertaintity of thread, evoke a new event loop prior to
+        #  thread initiation.
         self._thread_loop = asyncio.new_event_loop()
+        #  TODO Benchmark each thread spawning mechanisms
+        #  For example, threading.Thread() and self.executor.submit()
         self._loop.run_in_executor(
             self._executor, self.thread_loop, self._thread_loop)
         future = asyncio.Future()
-        try:
-            self._thread_loop.call_soon_threadsafe(
+        self._thread_loop.call_soon_threadsafe(
                 self._thread_loop.create_task, self.timed_continuity(future))
+        try:
             await future
             result = future.result()
         except(asyncio.CancelledError, asyncio.TimeoutError):
