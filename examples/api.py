@@ -1,12 +1,10 @@
 import asyncio
-import signal
 import shutil
-import sys
 
 from aiohttp import web
-from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
+from threading import Lock, Thread
 
 from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
@@ -28,88 +26,89 @@ dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 
-class TimedLoop(object):
-    def __init__(self, coro, duration, loop=None):
+class TaskRerun(object):
+    def __init__(self, coro, duration):
         self._coro = coro
         self._duration = duration
-        self._loop = loop or asyncio.get_event_loop()
-        #  Haven't tried ProcessPoolExecutor. Perfomance gains are doubtful,
-        #  presumingly detrimental.
-        self._executor = ThreadPoolExecutor()
-        self._main_task = None
+        self._lock = Lock()
 
     async def __aenter__(self):
+        with self._lock:
+            self.prepare_loop()
         return self
 
     async def __aexit__(self, exc, exc_type, tb):
-        asyncio.run_coroutine_threadsafe(self.cleanup(), self._thread_loop)
+        asyncio.run_coroutine_threadsafe(self.cleanup(self._loop), self._loop)
         return self
 
-    def __await__(self):
-        return self.start().__await__()
+    def prepare_loop(self):
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)
+        self._loop_thread = Thread(target=self._loop.run_forever)
+        self._loop_thread.start()
 
     async def start(self):
-        #  Due to uncertaintity of thread, evoke a new event loop prior to
-        #  thread initiation.
-        self._thread_loop = asyncio.new_event_loop()
-        #  TODO Benchmark each thread spawning mechanisms
-        #  For example, threading.Thread() and self.executor.submit()
-        self._loop.run_in_executor(
-            self._executor, self.thread_loop, self._thread_loop)
-        future = asyncio.Future()
-        self._thread_loop.call_soon_threadsafe(
-                self._thread_loop.create_task, self.timed_continuity(future))
+        with self._lock:
+            return await self._start(self._loop)
+
+    async def _start(self, loop):
+        def callback(task):
+            #  Consume task exception for silencing warnings
+            try:
+                task.result()
+            except Exception:
+                pass
+
+        #  Wrap in an asyncio Future otherwise the outcome is deadlock
+        task = asyncio.wrap_future(
+            asyncio.run_coroutine_threadsafe(self.seek(loop), loop))
+        task.add_done_callback(callback)
         try:
-            await future
-            result = future.result()
-        except(asyncio.CancelledError, asyncio.TimeoutError):
+            result = await task
+        except Exception:
             result = None
         finally:
             return result
 
-    def thread_loop(self, loop):
-        asyncio.set_event_loop(loop)
-        loop.run_forever()
+    async def seek(self, loop):
+        this = asyncio.Task.current_task()
+        #  Not sure if threadsafe is required
+        loop.call_soon_threadsafe(
+            loop.call_later, self._duration, this.cancel)
+        while True:
+            result = await self._coro(loop)
+            if result is not None:
+                return result
 
-    async def timed_continuity(self, future):
-        this = asyncio.Task.current_task(loop=self._thread_loop)
-        self._thread_loop.call_later(self._duration, this.cancel)
-        try:
-            while True:
-                result = await self._coro()
-                if result is not None:
-                    break
-        except(asyncio.CancelledError, asyncio.TimeoutError):
-            result = None
-        finally:
-            self._loop.call_soon_threadsafe(future.set_result, result)
-
-    async def cleanup(self):
+    async def cleanup(self, loop):
         pending = tuple(
-            task for task in asyncio.Task.all_tasks(loop=self._thread_loop)
+            task for task in asyncio.Task.all_tasks(loop=loop)
             if task is not asyncio.Task.current_task())
         asyncio.gather(
-            *pending, return_exceptions=True,
-            loop=self._thread_loop).cancel()
-        self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
-        self._executor.shutdown()
+            *pending, return_exceptions=True, loop=loop).cancel()
+
+        # Still doesn't allow us to exit using Ctrl+C despite thread stoppage
+        loop.call_soon_threadsafe(loop.stop)
+        with self._lock:
+            self._loop_thread.join()
 
 
-async def work(pageurl, sitekey):
-    proxy = asyncio.run_coroutine_threadsafe(
-        proxies.get(), parent_loop).result()
+async def work(pageurl, sitekey, loop):
+    proxy = await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(
+        proxies.get(), parent_loop))
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
         sitekey,
+        loop=loop,
         options=options,
         proxy=proxy
     )
     result = await client.start()
     if result:
         if result['status'] == "detected":
-            asyncio.run_coroutine_threadsafe(
-                proxies.set_banned(proxy), parent_loop)
+            await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(
+                proxies.set_banned(proxy), parent_loop))
         else:
             if result['status'] == "success":
                 return result['code']
@@ -128,7 +127,7 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TimedLoop(coro, duration=180) as t:
+                async with TaskRerun(coro, duration=6) as t:
                     result = await t.start()
                 if result:
                     response = {"solution": result}
@@ -158,24 +157,13 @@ async def load_proxies():
 
 async def start_background_tasks(app):
     app["dispatch"] = app.loop.create_task(load_proxies())
+    pass
 
 
 async def cleanup_background_tasks(app):
     app["dispatch"].cancel()
     await app["dispatch"]
-
-
-#  Not sure if I need these here, will check later. And loop.add_signal_handler
-#  might be the better option
-def signal_handler(signal, frame):
-    parent_loop.stop()
-    parent_loop.close()
-    sys.exit(0)
-
-
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
-signal.signal(signal.SIGHUP, signal_handler)
+    pass
 
 app.router.add_get("/", get_solution)
 app.on_startup.append(start_background_tasks)
