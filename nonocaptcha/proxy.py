@@ -1,6 +1,6 @@
 import time
-import asyncio
 
+from threading import RLock
 from peewee import SqliteDatabase, Model, CharField, BooleanField, IntegerField
 
 
