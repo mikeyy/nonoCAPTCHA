@@ -45,7 +45,7 @@ init_db(database_filename)
 
 
 class ProxyDB(object):
-    _lock = asyncio.Lock()
+    _lock = RLock()
 
     def __init__(self, last_banned_timeout=300):
         self.last_banned_timeout = last_banned_timeout
@@ -71,7 +71,7 @@ class ProxyDB(object):
             for row in chunks(rows, 100):
                 Proxy.insert_many(row).execute()
 
-    async def get(self):
+    def get(self):
         try:
             proxy = (
                 Proxy.select(Proxy.proxy)
@@ -90,14 +90,14 @@ class ProxyDB(object):
                 .get()
                 .proxy
             )
-            await self.set_active(proxy, is_active=True)
+            self.set_active(proxy, is_active=True)
         except Proxy.DoesNotExist:
             return
         return proxy
 
-    async def set_active(self, proxy, is_active):
+    def set_active(self, proxy, is_active):
         """Returns None"""
-        async with self._lock:
+        with self._lock:
             Proxy.update(active=is_active).where(
                 Proxy.proxy == proxy
             ).execute()
@@ -106,9 +106,9 @@ class ProxyDB(object):
                     Proxy.proxy == proxy
                 ).execute()
 
-    async def set_banned(self, proxy):
+    def set_banned(self, proxy):
         """Returns None"""
-        async with self._lock:
+        with self._lock:
             Proxy.update(last_banned=time.time(), active=False).where(
                 Proxy.proxy == proxy
             ).execute()
