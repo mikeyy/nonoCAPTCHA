@@ -35,17 +35,14 @@ class Launcher(launcher.Launcher):
         logLevel = self.options.get('logLevel')
         if logLevel:
             logging.getLogger('pyppeteer').setLevel(logLevel)
-
         self.chromeClosed = True
         if self.options.get('appMode', False):
             self.options['headless'] = False
         self._tmp_user_data_dir = None
         self._parse_args()
-
         if self.options.get('devtools'):
             self.chrome_args.append('--auto-open-devtools-for-tabs')
             self.options['headless'] = False
-
         if 'headless' not in self.options or self.options.get('headless'):
             self.chrome_args.extend([
                 '--headless',
@@ -64,7 +61,6 @@ class Launcher(launcher.Launcher):
     async def launch(self):
         self.chromeClosed = False
         self.connection = None
-    
         env = self.options.get("env")
         self.proc = await asyncio.subprocess.create_subprocess_exec(
             *self.cmd,
@@ -72,7 +68,6 @@ class Launcher(launcher.Launcher):
             stderr=asyncio.subprocess.DEVNULL,
             env=env,
         )
-
         # Signal handlers for exits used to be here
         connectionDelay = self.options.get("slowMo", 0)
         self.browserWSEndpoint = self._get_ws_endpoint()
@@ -99,14 +94,12 @@ class Launcher(launcher.Launcher):
             )
         return data['webSocketDebuggerUrl']
 
-    def waitForChromeToClose(self):
+    async def waitForChromeToClose(self):
         if self.proc.returncode is None and not self.chromeClosed:
             self.chromeClosed = True
             try:
-                #  I would have prefered terminate() but websocket gets stuck
-                #  in an infinite loop 1% of the time. This will do for now.
-                #  Stupid bug.
-                self.proc.kill()
+                self.proc.terminate()
+                await self.proc.wait()
             except OSError:
                 pass
 
@@ -120,5 +113,5 @@ class Launcher(launcher.Launcher):
                 pass
         if self._tmp_user_data_dir and os.path.exists(self._tmp_user_data_dir):
             # Force kill chrome only when using temporary userDataDir
-            self.waitForChromeToClose()
+            await self.waitForChromeToClose()
             self._cleanup_tmp_user_data_dir()
