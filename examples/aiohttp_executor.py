@@ -60,9 +60,10 @@ class TaskRerun(object):
                 future.set_result(None)
             except Exception:
                 future.set_result(task.exception())
-
+        
         future = asyncio.Future()
-        task = loop.create_task(self.seek(loop))
+        task = asyncio.wrap_future(
+                asyncio.run_coroutine_threadsafe(self.seek(loop), loop))
         task.add_done_callback(partial(callback, future))
         loop.call_soon_threadsafe(loop.call_later, self._duration, task.cancel)
         try:
@@ -72,6 +73,7 @@ class TaskRerun(object):
             result = None
         finally:
             return result
+
 
     async def seek(self, loop):
         while True:
@@ -124,7 +126,7 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TaskRerun(coro, duration=6) as t:
+                async with TaskRerun(coro, duration=30) as t:
                     result = await t.start()
                 if result:
                     response = {"solution": result}
