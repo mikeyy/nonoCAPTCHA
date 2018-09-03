@@ -11,7 +11,7 @@ from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
-SECRET_KEY = "otXw8mEejHaF"
+SECRET_KEY = "CHANGEME"
 
 proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
@@ -29,10 +29,6 @@ dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 
-#  Bugs are to be expected, despite my efforts. Apparently, event loops paired
-#  with threads is nothing short of a hassle. A transition to an alternative
-#  asynchronized library is a probable recourse. Unless, I'm doing something
-#  wrong, help is appreciated.
 class TaskRerun(object):
     def __init__(self, coro, duration):
         self._coro = coro
@@ -58,12 +54,7 @@ class TaskRerun(object):
 
     async def start(self):
         with self._lock:
-            #  Without wrapping the Future we experience a deadlock.
-            #  Calling without threadsafe, threads are drastically delayed
-            #  almost appearing unresponsive.
-            return await asyncio.wrap_future(
-                asyncio.run_coroutine_threadsafe(
-                    self._start(self._loop), asyncio.get_event_loop()))
+            return await self._start(self._loop)
 
     async def _start(self, loop):
         def callback(future, task):
@@ -82,10 +73,9 @@ class TaskRerun(object):
         #  contrary, run_coroutine_threadsafe terminates immediately which
         #  leaves browers running and temporariy created folders wasting space.
         task = asyncio.wrap_future(
-                asyncio.run_coroutine_threadsafe(self.seek(loop), loop),
-                loop=loop)
+                asyncio.run_coroutine_threadsafe(self.seek(loop), loop))
         task.add_done_callback(partial(callback, future))
-        loop.call_later(self._duration, task.cancel)
+        loop.call_soon_threadsafe(loop.call_later, self._duration, task.cancel)
         try:
             await future
             result = future.result()
@@ -147,7 +137,7 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TaskRerun(coro, duration=180) as t:
+                async with TaskRerun(coro, duration=30) as t:
                     result = await t.start()
                 if result:
                     response = {"solution": result}
