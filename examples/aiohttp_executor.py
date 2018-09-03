@@ -17,6 +17,8 @@ proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
 
 parent_loop = asyncio.get_event_loop()
+#  I'm not sure exactly if FastChildWatcher() is really any faster, requires
+#  future research.
 asyncio.set_child_watcher(asyncio.FastChildWatcher())
 asyncio.get_child_watcher().attach_loop(parent_loop)
 
@@ -31,6 +33,7 @@ class TaskRerun(object):
     def __init__(self, coro, duration):
         self._coro = coro
         self._duration = duration
+        #  ProcessPoolExecutor was not explored. Might be worth a try.
         self._executor = ThreadPoolExecutor()
         self._lock = Lock()
 
@@ -43,6 +46,7 @@ class TaskRerun(object):
         return self
 
     def prepare_loop(self):
+        #  Surrounding the context around run_forever never releases the lock!
         with self._lock:
             self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
@@ -60,8 +64,14 @@ class TaskRerun(object):
                 future.set_result(None)
             except Exception:
                 future.set_result(task.exception())
-        
+
+        #  We use a Future for setting a result since the task runs in a
+        #  separate thread. Otherwise, an "Task attached to a different loop"
+        #  exception is raised
         future = asyncio.Future()
+        #  Here wrap_future is used to assure task cancels gracefully; on the.
+        #  contrary, run_coroutine_threadsafe terminates immediately which
+        #  leaves browers running and temporariy created folders wasting space.
         task = asyncio.wrap_future(
                 asyncio.run_coroutine_threadsafe(self.seek(loop), loop))
         task.add_done_callback(partial(callback, future))
@@ -74,8 +84,9 @@ class TaskRerun(object):
         finally:
             return result
 
-
     async def seek(self, loop):
+        #  Maybe this loop can replaced with recursion, considering it's
+        #  doubtful we'll exceed 1000
         while True:
             result = await self._coro(loop)
             if result is not None:
@@ -87,8 +98,8 @@ class TaskRerun(object):
             if task is not asyncio.Task.current_task())
         asyncio.gather(
             *pending, return_exceptions=True, loop=loop).cancel()
-
-        # Still doesn't allow us to exit using Ctrl+C despite thread stoppage
+        #  However we are able to exit with Ctrl+C using executor greacefully,
+        #  contrary to the aiohttp_thread.py example.
         loop.call_soon_threadsafe(loop.stop)
 
 
@@ -139,6 +150,8 @@ async def load_proxies():
     print('Loading proxies')
     while 1:
         protos = ["http://", "https://"]
+        if proxy_source is None:
+            return
         if any(p in proxy_source for p in protos):
             f = util.get_page
         else:
