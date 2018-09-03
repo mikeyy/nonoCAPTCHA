@@ -68,14 +68,6 @@ class TaskRerun(object):
                     self._start(self._loop), self._loop))
 
     async def _start(self, loop):
-        def callback(future, task):
-            try:
-                loop.call_soon_threadsafe(future.set_result, task.result())
-            except asyncio.CancelledError:
-                loop.call_soon_threadsafe(future.set_result, None)
-            except Exception:
-                loop.call_soon_threadsafe(future.set_result, task.exception())
-
         #  Deadlock occurs unless we wrap the future.
         task = asyncio.wrap_future(
                 asyncio.run_coroutine_threadsafe(self.seek(loop), loop))
@@ -148,7 +140,7 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TaskRerun(coro, duration=6) as t:
+                async with TaskRerun(coro, duration=180) as t:
                     result = await t.start()
                 if result:
                     response = {"solution": result}
