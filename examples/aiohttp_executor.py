@@ -41,12 +41,16 @@ class TaskRerun(object):
         self._executor = ThreadPoolExecutor()
         self._lock = Lock()
 
+    def __del__(self):
+        asyncio.get_event_loop().call_soon_threadsafe(self._executor.shutdown)
+
     async def __aenter__(self):
         self._executor.submit(self.prepare_loop)
         return self
 
     async def __aexit__(self, exc, exc_type, tb):
-        asyncio.run_coroutine_threadsafe(self.cleanup(self._loop), self._loop)
+        asyncio.run_coroutine_threadsafe(
+            self.cleanup(self._loop), self._loop)
         return self
 
     def prepare_loop(self):
@@ -58,64 +62,62 @@ class TaskRerun(object):
 
     async def start(self):
         with self._lock:
-            #  Without wrapping the Future we experience a deadlock.
-            #  Calling without threadsafe, threads are drastically delayed
-            #  almost appearing unresponsive.
+            #  Blocking occurs unless we wrap the future.
             return await asyncio.wrap_future(
                 asyncio.run_coroutine_threadsafe(
-                    self._start(self._loop), asyncio.get_event_loop()))
+                    self._start(self._loop), self._loop))
 
     async def _start(self, loop):
         def callback(future, task):
             try:
-                future.set_result(task.result())
+                loop.call_soon_threadsafe(future.set_result, task.result())
             except asyncio.CancelledError:
-                future.set_result(None)
+                loop.call_soon_threadsafe(future.set_result, None)
             except Exception:
-                future.set_result(task.exception())
+                loop.call_soon_threadsafe(future.set_result, task.exception())
 
-        #  We use a Future for setting a result since the task runs in a
-        #  separate thread. Otherwise, an "Task attached to a different loop"
-        #  exception is raised
-        future = asyncio.Future()
-        #  Here wrap_future is used to assure task cancels gracefully; on the.
-        #  contrary, run_coroutine_threadsafe terminates immediately which
-        #  leaves browers running and temporariy created folders wasting space.
+        #  Deadlock occurs unless we wrap the future.
         task = asyncio.wrap_future(
-                asyncio.run_coroutine_threadsafe(self.seek(loop), loop),
-                loop=loop)
-        task.add_done_callback(partial(callback, future))
+                asyncio.run_coroutine_threadsafe(self.seek(loop), loop))
         loop.call_later(self._duration, task.cancel)
         try:
-            await future
-            result = future.result()
-        except Exception as exc:
+            await task
+            result = task.result()
+        except asyncio.CancelledError:
             result = None
         finally:
             return result
 
     async def seek(self, loop):
         #  Maybe this loop can replaced with recursion, considering it's
-        #  doubtful we'll exceed 1000
+        #  unlikely we'll exceed 1000
         while True:
-            result = await self._coro(loop)
-            if result is not None:
-                return result
+            task = loop.create_task(self._coro(loop))
+            try:
+                await task
+                result = task.result()
+                if result is not None:
+                    return result
+            finally:
+                if not task.cancelled():
+                    task.cancel()
+                    await task
+                break
 
     async def cleanup(self, loop):
         pending = tuple(
             task for task in asyncio.Task.all_tasks(loop=loop)
             if task is not asyncio.Task.current_task())
-        asyncio.gather(
-            *pending, return_exceptions=True, loop=loop).cancel()
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True, loop=loop)
         #  However we are able to exit with Ctrl+C using executor greacefully,
         #  contrary to the aiohttp_thread.py example.
-        loop.call_soon_threadsafe(loop.stop)
+        asyncio.get_event_loop().call_soon_threadsafe(loop.stop)
 
 
 async def work(pageurl, sitekey, loop):
-    proxy = await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(
-        proxies.get(), parent_loop))
+    proxy = proxies.get()
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
@@ -127,8 +129,7 @@ async def work(pageurl, sitekey, loop):
     result = await client.start()
     if result:
         if result['status'] == "detected":
-            await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(
-                proxies.set_banned(proxy), parent_loop))
+            loop.call_soon_threadsafe(proxies.set_banned, proxy)
         else:
             if result['status'] == "success":
                 return result['code']
@@ -147,7 +148,7 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TaskRerun(coro, duration=60) as t:
+                async with TaskRerun(coro, duration=6) as t:
                     result = await t.start()
                 if result:
                     response = {"solution": result}
