@@ -41,11 +41,10 @@ class TaskRerun(object):
         self._executor = ThreadPoolExecutor()
         self._lock = RLock()
         self._cancel = Event()
+        self._main_loop = asyncio.get_event_loop()
 
     def __del__(self):
-        #  However we are able to exit with Ctrl+C using executor greacefully,
-        #  contrary to the aiohttp_thread.py example.
-        self._loop.call_soon_threadsafe(self._loop.stop)
+        self._loop.stop()
         self._loop.close()
 
     async def __aenter__(self):
@@ -53,8 +52,9 @@ class TaskRerun(object):
         return self
 
     async def __aexit__(self, exc, exc_type, tb):
-        asyncio.run_coroutine_threadsafe(
-            self.cleanup(self._loop), self._loop)
+        await asyncio.wrap_future(
+            asyncio.run_coroutine_threadsafe(
+                self.cleanup(), self._loop))
         return self
 
     def prepare_loop(self):
@@ -66,61 +66,54 @@ class TaskRerun(object):
 
     async def start(self):
         with self._lock:
-            return await self._start(self._loop)
+            return await self._start()
 
-    async def _start(self, loop):
-        def callback(future, task):
-            #  Set appropiate results for the Future.
-            try:
-                future.set_result(task.result())
-            except asyncio.CancelledError:
-                future.set_result(None)
-            except Exception as e:
-                future.set_result(task.exception())
-            #  Set the event to inform the Task to break from loop. Not sure if
-            #  we need to wrap this in an call_soon_threadsafe.
-            self._cancel.set()
-        future = asyncio.get_event_loop().create_future()
-        #  Deadlock occurs unless we wrap the future.
+    async def _start(self):
+        #  Blocking occurs unless wrapped in an asyncio.Future object
         task = asyncio.wrap_future(
-            asyncio.run_coroutine_threadsafe(self.seek(loop), loop), loop=loop)
-        task.add_done_callback(partial(callback, future))
+                    asyncio.run_coroutine_threadsafe(
+                        self.seek(), self._loop))
         #  Imitate a Timeout by using call_later to invoke task cancellation.
-        loop.call_soon_threadsafe(loop.call_later, self.duration, task.cancel)
+        self._loop.call_later(self.duration, task.cancel)
         try:
-            #  Wait for Future to set the result
-            await future
-            result = future.result()
-        except BaseException as e:
-            # Consume Exception to make event loop happy
-            raise e
+            #  Wait for the Task to complete or cancel
+            await task
+            result = task.result()
+        except Exception as e:
+            result = None
         finally:
             return result
 
-    async def seek(self, loop):
-        #  Maybe this loop can replaced with recursion, considering it's
-        #  unlikely we'll exceed 1000
+    async def seek(self):
+        def callback(task):
+            #  Consume Exception to satisfy event loop
+            try:
+                task.result()
+            except Exception as e:
+                pass
         while True:
             try:
-                result = await self.coro(loop)
+                task = self._loop.create_task(self.coro(self._loop))
+                task.add_done_callback(callback)
+                await task
+                result = task.result()
                 if result is not None:
                     return result
-            except BaseException as e:
-                # Consume Exception to send to Future
-                raise e
-            finally:
-                #  Break if event was set
-                if self._cancel.is_set():
-                    break
+            except asyncio.CancelledError:
+                break
 
-    async def cleanup(self, loop):
+    async def cleanup(self):
         pending = tuple(
-            task for task in asyncio.Task.all_tasks(loop=loop)
+            task for task in asyncio.Task.all_tasks(loop=self._loop)
             if task is not asyncio.Task.current_task())
-        gathered = asyncio.gather(*pending, loop=loop)
+        gathered = asyncio.gather(*pending, loop=self._loop)
         gathered.cancel()
         #  Wait for pending tasks to finish cancelling.
-        await gathered
+        try:
+            await gathered
+        except BaseException as e:
+            #  Occassionally exceptions are thrown during cancellation
+            pass
 
 
 async def work(pageurl, sitekey, loop):
