@@ -1,6 +1,20 @@
 History
 =======
-### Current Version (2018-08-06)
+### Current Version (2018-09-05)
+* Move exceptions to a separate module - exceptions.py
+* solver.py
+    * Place some long running coroutines into AbastractEventLoop.create_task
+    * No longer handling BaseExceptions on initial solve method
+* launcher.py
+  * Add modifications for Pyppeteer v0.0.21
+* proxy.py
+  * Replace asyncio.Lock with threading.Lock
+* examples/
+    * aiohttp_executor.py
+        * Polished multithreading, ensuring browser exits (hopefully)
+* Once again might have forgot something...
+
+### Version 1.8.0 (2018-08-06)
 * solver.py
     * Add function cleanup() to solver for closing browsers
     * Bypass Content-Security-Policy in response headers
