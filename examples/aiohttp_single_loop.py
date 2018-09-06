@@ -19,7 +19,7 @@ from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
-SECRET_KEY = "otXw8mEejHaF"
+SECRET_KEY = "CHANGEME"
 
 proxy_source = "proxies.txt"  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
