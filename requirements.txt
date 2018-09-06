@@ -6,7 +6,7 @@ peewee==3.6.4
 pocketsphinx==0.1.15
 psutil==5.4.6
 pydub==0.22.1
-pyppeteer==0.0.19
+pyppeteer==0.0.21
 pyyaml==3.13
 requests==2.19.1
 user-agent==0.1.9
