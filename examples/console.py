@@ -90,7 +90,7 @@ class Run(object):
             "ignoreHTTPSErrors": True,
             "args": args
         }
-        proxy = await self.proxies.get() if proxy_source else None
+        proxy = self.proxies.get() if proxy_source else None
         client = Solver(
             pageurl,
             sitekey,
@@ -107,7 +107,7 @@ class Run(object):
             if result:
                 await self.proxies.set_active(proxy, False)
                 if result['status'] == "detected":
-                    await self.proxies.set_banned(proxy)
+                    self.proxies.set_banned(proxy)
                 else:
                     if result['status'] == "success":
                         return result['code']
