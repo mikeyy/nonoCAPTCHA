@@ -3,10 +3,10 @@
 
 """Solver module."""
 
+import asyncio
 import json
 import time
 
-from asyncio import TimeoutError, CancelledError
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
@@ -39,6 +39,7 @@ class Solver(Base):
         self,
         pageurl,
         sitekey,
+        loop=None,
         proxy=None,
         proxy_auth=None,
         options={},
@@ -47,6 +48,7 @@ class Solver(Base):
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
+        self.loop = loop or asyncio.get_event_loop()
         self.proxy = f"http://{proxy}" if proxy else proxy
         self.proxy_auth = proxy_auth
         self.proc_id = self.proc_count
@@ -67,7 +69,7 @@ class Solver(Base):
             await self.goto()
             await self.deface()
             result = await self.solve()
-        except CancelledError:
+        except asyncio.CancelledError:
             raise
         except BaseException as e:
             self.log(f"{e} {type(e)}")
@@ -197,24 +199,24 @@ class Solver(Base):
             await self.page.goto(
                 self.url,
                 timeout=self.page_load_timeout,
-                waitUntil="documentloaded",
-            )
-        except TimeoutError:
+                waitUntil="domcontentloaded",)
+        except asyncio.TimeoutError:
             raise PageError("Problem loading page")
 
     async def deface(self):
         try:
-            await self.wait_for_deface()
-        except TimeoutError:
+            await self.loop.create_task(self.wait_for_deface())
+        except asyncio.TimeoutError:
             raise DefaceError("Problem defacing page")
 
     async def solve(self):
         """Click checkbox, otherwise attempt to decipher audio"""
         await self.get_frames()
-        await self.wait_for_checkbox()
+        await self.loop.create_task(self.wait_for_checkbox())
         await self.click_checkbox()
         try:
-            result = await self.check_detection(self.animation_timeout)
+            result = await self.loop.create_task(
+                self.check_detection(self.animation_timeout))
         except SafePassage:
             return await self._solve()
         else:
@@ -234,24 +236,22 @@ class Solver(Base):
                 self.page,
                 self.proxy,
                 self.proxy_auth,
-                self.proc_id
-            )
+                self.proc_id)
             solve = self.image.solve_by_image
         else:
             self.audio = SolveAudio(
                 self.page,
                 self.proxy,
                 self.proxy_auth,
-                self.proc_id
-            )
-            await self.wait_for_audio_button()
+                self.proc_id)
+            await self.loop.create_task(self.wait_for_audio_button())
             result = await self.click_audio_button()
             if isinstance(result, dict):
                 if result["status"] == "detected":
                     return result
             solve = self.audio.solve_by_audio
 
-        result = await solve()
+        result = await self.loop.create_task(solve())
         if result["status"] == "success":
             code = await self.g_recaptcha_response()
             if code:
@@ -264,8 +264,8 @@ class Solver(Base):
         """Wait for checkbox to appear."""
         try:
             await self.checkbox_frame.waitForFunction(
-                "$('#recaptcha-anchor').length", timeout=self.animation_timeout
-            )
+                "$('#recaptcha-anchor').length",
+                timeout=self.animation_timeout)
         except ButtonError:
             raise ButtonError("Checkbox missing, aborting")
 
