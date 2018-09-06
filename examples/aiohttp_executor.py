@@ -6,7 +6,7 @@ from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
-from threading import RLock, Event
+from threading import RLock
 
 from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
