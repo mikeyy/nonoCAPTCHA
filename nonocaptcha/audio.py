@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Audio solving module."""
+""" Audio solving module. """
 
 import os
 import random

@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+""" Base module. """
+
 import asyncio
 import logging
 import os

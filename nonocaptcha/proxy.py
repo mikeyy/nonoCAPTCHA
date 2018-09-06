@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+""" Proxy manager module. """
+
 import time
 
 from threading import RLock

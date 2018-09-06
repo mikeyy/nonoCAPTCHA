@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Speech module. Text-to-speech classes - Sphinx, Amazon, and Azure."""
+""" Speech module. Text-to-speech classes - Sphinx, Amazon, and Azure. """
 
 import aiobotocore
 import aiofiles
