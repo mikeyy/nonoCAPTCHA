@@ -14,7 +14,7 @@ from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 threads = 1  # Max browsers to open
-sort_position = True
+sort_position = False
 
 pageurl = "https://www.google.com/recaptcha/api2/demo"
 sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
@@ -105,7 +105,7 @@ class Run(object):
                 used_positions.remove(this_position)
 
             if result:
-                await self.proxies.set_active(proxy, False)
+                self.proxies.set_active(proxy, False)
                 if result['status'] == "detected":
                     self.proxies.set_banned(proxy)
                 else:
