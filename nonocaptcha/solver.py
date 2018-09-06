@@ -10,23 +10,13 @@ import time
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
-from nonocaptcha.base import Base, SafePassage
+from nonocaptcha.base import Base
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
 from nonocaptcha import util
-
-
-class ButtonError(Exception):
-    pass
-
-
-class DefaceError(Exception):
-    pass
-
-
-class PageError(Exception):
-    pass
+from nonocaptcha.exceptions import (SafePassage, ButtonError, DefaceError,
+                                    PageError)
 
 
 class Solver(Base):
@@ -69,10 +59,6 @@ class Solver(Base):
             await self.goto()
             await self.deface()
             result = await self.solve()
-        except asyncio.CancelledError:
-            raise
-        except BaseException as e:
-            self.log(f"{e} {type(e)}")
         finally:
             end = time.time()
             elapsed = end - start
