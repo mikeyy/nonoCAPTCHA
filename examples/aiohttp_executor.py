@@ -41,8 +41,6 @@ class TaskRerun(object):
         self.duration = duration
         self._executor = ThreadPoolExecutor()
         self._lock = RLock()
-        self._cancel = Event()
-        self._main_loop = asyncio.get_event_loop()
 
     async def __aenter__(self):
         self._executor.submit(self.prepare_loop)
