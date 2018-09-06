@@ -1,7 +1,7 @@
 # !/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Launcher module. Workarounds to launch browsers asynchronously."""
+""" Launcher module. Workarounds to launch browsers asynchronously. """
 
 import asyncio
 import json
