@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+""" Threaded example using executor to create a new event loop for running a
+task. Each task will continue to retry solving until it succeeds or times-out
+per the specified duration. Default is 180 seconds (3 minutes). On shutdown
+cleanup will propagate, hopefully closing left-over browsers and removing
+temporary profile folders.
+"""
+
 import asyncio
 import shutil
 
@@ -31,9 +41,7 @@ shutil.rmtree(dir, ignore_errors=True)
 
 
 #  Bugs are to be expected, despite my efforts. Apparently, event loops paired
-#  with threads is nothing short of a hassle. A transition to an alternative
-#  asynchronized library is a probable recourse. Unless, I'm doing something
-#  wrong, help is appreciated.
+#  with threads is nothing short of a hassle.
 class TaskRerun(object):
 
     def __init__(self, coro, duration):
@@ -43,11 +51,15 @@ class TaskRerun(object):
         self._lock = RLock()
 
     async def __aenter__(self):
-        self._executor.submit(self.prepare_loop)
+        asyncio.ensure_future(
+            asyncio.wrap_future(
+                self._executor.submit(self.prepare_loop)))
         return self
 
     async def __aexit__(self, exc, exc_type, tb):
-        asyncio.run_coroutine_threadsafe(self.cleanup(), self._loop)
+        asyncio.ensure_future(
+            asyncio.wrap_future(
+                asyncio.run_coroutine_threadsafe(self.cleanup(), self._loop)))
         return self
 
     def prepare_loop(self):
@@ -59,29 +71,26 @@ class TaskRerun(object):
 
     async def start(self):
         with self._lock:
-            return await self._start()
-
-    async def _start(self):
-        #  Blocking occurs unless wrapped in an asyncio.Future object
-        task = asyncio.wrap_future(
-                    asyncio.run_coroutine_threadsafe(
-                        self.seek(), self._loop))
-        try:
-            #  Wait for the Task to complete or Timeout
-            async with timeout(self.duration):
-                await task
-            result = task.result()
-        except Exception as e:
-            result = None
-        finally:
-            return result
+            #  Blocking occurs unless wrapped in an asyncio.Future object
+            task = asyncio.wrap_future(
+                        asyncio.run_coroutine_threadsafe(
+                            self.seek(), self._loop))
+            try:
+                #  Wait for the Task to complete or Timeout
+                async with timeout(self.duration):
+                    await task
+                result = task.result()
+            except Exception:
+                result = None
+            finally:
+                return result
 
     async def seek(self):
         def callback(task):
             #  Consume Exception to satisfy event loop
             try:
                 task.result()
-            except Exception as e:
+            except Exception:
                 pass
         while True:
             try:
@@ -97,8 +106,13 @@ class TaskRerun(object):
                     return result
             except asyncio.CancelledError:
                 break
+            #  We don't want to leave the loop unless result or cancelled
+            except Exception:
+                pass
 
     async def cleanup(self):
+        #  A maximum recursion depth occurs when current task gets called for
+        #  cancellation from gather.
         pending = tuple(
             task for task in asyncio.Task.all_tasks(loop=self._loop)
             if task is not asyncio.Task.current_task())
@@ -173,13 +187,12 @@ async def load_proxies():
 
 async def start_background_tasks(app):
     app["dispatch"] = app.loop.create_task(load_proxies())
-    pass
 
 
 async def cleanup_background_tasks(app):
     app["dispatch"].cancel()
     await app["dispatch"]
-    pass
+
 
 app.router.add_get("/", get_solution)
 app.on_startup.append(start_background_tasks)
