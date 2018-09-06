@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""Solver module."""
+""" Solver module. """
 
 import asyncio
 import json
@@ -16,7 +16,7 @@ from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
 from nonocaptcha import util
 from nonocaptcha.exceptions import (SafePassage, ButtonError, DefaceError,
-                                    PageError)
+                                    PageError, nonocaptchaError)
 
 
 class Solver(Base):
@@ -59,6 +59,8 @@ class Solver(Base):
             await self.goto()
             await self.deface()
             result = await self.solve()
+        except nonocaptchaError as e:
+            self.log(f"{e} {type(e)}")
         finally:
             end = time.time()
             elapsed = end - start
