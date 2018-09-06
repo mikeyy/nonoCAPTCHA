@@ -21,7 +21,7 @@ from nonocaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
 
-proxy_source = "proxies.txt"  # Can be URL or file location
+proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
 
 parent_loop = asyncio.get_event_loop()
@@ -86,7 +86,6 @@ class TaskRerun(object):
                 if result is not None:
                     return result
             except asyncio.CancelledError:
-                print('CancelledError')
                 break
             except Exception:
                 pass
@@ -101,7 +100,7 @@ class TaskRerun(object):
             *pending, loop=self._loop, return_exceptions=True)
         gathered.cancel()
         await gathered
-        self._loop.call_soon_threadsafe(self._loop.stop())
+        self._loop.call_soon_threadsafe(self._loop.stop)
 
 
 async def work(pageurl, sitekey, loop):
