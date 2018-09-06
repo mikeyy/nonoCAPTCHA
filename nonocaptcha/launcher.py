@@ -70,16 +70,16 @@ class Launcher(launcher.Launcher):
         )
         # Signal handlers for exits used to be here
         connectionDelay = self.options.get("slowMo", 0)
-        self.browserWSEndpoint = self._get_ws_endpoint()
+        self.browserWSEndpoint = await self._get_ws_endpoint()
         self.connection = Connection(
             self.browserWSEndpoint, self._loop, connectionDelay)
         return await Browser.create(
             self.connection, self.options, self.proc, self.killChrome)
 
-    def _get_ws_endpoint(self) -> str:
+    async def _get_ws_endpoint(self) -> str:
         url = self.url + '/json/version'
         while self.proc.returncode is None:
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             try:
                 with urlopen(url) as f:
                     data = json.loads(f.read().decode())
