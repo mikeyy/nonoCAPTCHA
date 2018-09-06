@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""" Single loop example using executor to spawn tasks. A task will continue 
+""" Single loop example using executor to spawn tasks. A task will continue
 to retry solving until it succeeds or times-out per the specified duration.
 Default is 180 seconds (3 minutes). On shutdown cleanup will propagate,
 hopefully closing left-over browsers and removing temporary profile folders.
