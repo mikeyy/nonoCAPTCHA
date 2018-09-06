@@ -62,6 +62,9 @@ class Solver(Base):
         except nonocaptchaError as e:
             self.log(f"{e} {type(e)}")
         finally:
+            if isinstance(result, dict):
+                status = result['status'].capitalize()
+                self.log(f"Result: {status}")
             end = time.time()
             elapsed = end - start
             await self.cleanup()
