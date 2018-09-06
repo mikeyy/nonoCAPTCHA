@@ -1,6 +1,10 @@
 History
 =======
 ### Current Version (2018-09-05)
+* requirements.txt
+    * Update to include Pyppeteer v0.0.21 (Whoops)
+
+### Version 1.8.1 (2018-09-05)
 * Move exceptions to a separate module - exceptions.py
 * solver.py
     * Place some long running coroutines into AbastractEventLoop.create_task
