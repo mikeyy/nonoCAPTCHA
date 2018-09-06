@@ -56,17 +56,19 @@ class TaskRerun(object):
 
     async def start(self):
         def start():
-            try:
-                task = asyncio.run_coroutine_threadsafe(
-                        self.seek(), self._loop)
-                #  Emulate a timeout with call_later by calling task.cancel
-                self._loop.call_later(self.duration, task.cancel)
-                result = task.result()
-            except Exception:
-                result = None
-            finally:
-                return result
-        return await self._loop.run_in_executor(self._executor, start)
+            task = asyncio.run_coroutine_threadsafe(
+                    self.seek(), self._loop)
+            #  Emulate a timeout with call_later by calling task.cancel
+            self._loop.call_soon_threadsafe(
+                self._loop.call_later, self.duration, task.cancel)
+            result = task.result()
+            return result
+        try:
+            result = await self._loop.run_in_executor(self._executor, start)
+        except Exception:
+            result = None
+        finally:
+            return result
 
     async def seek(self):
         def callback(task):
@@ -100,7 +102,6 @@ class TaskRerun(object):
             *pending, loop=self._loop, return_exceptions=True)
         gathered.cancel()
         await gathered
-        self._loop.call_soon_threadsafe(self._loop.stop)
 
 
 async def work(pageurl, sitekey, loop):
@@ -116,7 +117,6 @@ async def work(pageurl, sitekey, loop):
     result = await client.start()
     if result:
         if result['status'] == "detected":
-            print("detected")
             loop.call_soon_threadsafe(proxies.set_banned, proxy)
         else:
             if result['status'] == "success":
