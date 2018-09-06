@@ -13,15 +13,8 @@ from aiohttp.client_exceptions import ClientError
 
 from nonocaptcha import util
 from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech
-from nonocaptcha.base import Base, TryAgain
-
-
-class ReloadError(Exception):
-    pass
-
-
-class DownloadError(Exception):
-    pass
+from nonocaptcha.base import Base
+from nonocaptcha.exceptions import DownloadError, ReloadError, TryAgain
 
 
 class SolveAudio(Base):

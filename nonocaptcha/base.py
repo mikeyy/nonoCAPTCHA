@@ -4,6 +4,7 @@ import os
 import random
 
 from nonocaptcha import package_dir
+from nonocaptcha.exceptions import SafePassage, TryAgain
 
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
@@ -25,14 +26,6 @@ except FileNotFoundError:
         f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml"
     )
     sys.exit(0)
-
-
-class SafePassage(Exception):
-    pass
-
-
-class TryAgain(Exception):
-    pass
 
 
 class Clicker:
