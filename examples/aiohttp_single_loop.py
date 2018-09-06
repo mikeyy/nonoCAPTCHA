@@ -38,7 +38,7 @@ shutil.rmtree(dir, ignore_errors=True)
 
 
 #  Should be less crash prone since we use the main loop, only spawning the
-#  task in a future. Maybe.
+#  task in a future within an executor. Maybe.
 class TaskRerun(object):
 
     def __init__(self, coro, duration):
@@ -66,7 +66,7 @@ class TaskRerun(object):
                 result = None
             finally:
                 return result
-        await self._loop.run_in_executor(self._executor, start)
+        return await self._loop.run_in_executor(self._executor, start)
 
     async def seek(self):
         def callback(task):
