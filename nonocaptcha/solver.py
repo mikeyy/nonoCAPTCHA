@@ -111,7 +111,11 @@ class Solver(Base):
             args.append(f"--proxy-server={self.proxy}")
         if "args" in self.options:
             args.extend(self.options.pop("args"))
-        self.options.update({"headless": self.headless, "args": args})
+        self.options.update({
+            "headless": self.headless,
+            "args": args,
+            #  Silence Pyppeteer logs
+            "logLevel": "CRITICAL"})
         self.launcher = Launcher(self.options)
         browser = await self.launcher.launch()
         return browser
