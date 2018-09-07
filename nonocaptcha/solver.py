@@ -47,7 +47,6 @@ class Solver(Base):
     async def start(self):
         """Begin solving"""
         start = time.time()
-
         try:
             self.browser = await self.get_new_browser()
             target = [t for t in self.browser.targets() if await t.page()][0]
