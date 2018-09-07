@@ -237,7 +237,7 @@ class Solver(Base):
             solve = self.image.solve_by_image
         else:
             self.audio = SolveAudio(
-                self.page,
+                self.image_frame,
                 self.proxy,
                 self.proxy_auth,
                 self.proc_id)
