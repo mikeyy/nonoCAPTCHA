@@ -93,7 +93,8 @@ class Run(object):
         proxy = self.proxies.get() if proxy_source else None
         proxy_auth = None
         if proxy_username and proxy_password:
-            proxy_auth = {"username": username, "password": password}
+            proxy_auth = {"username": proxy_username,
+                          "password": proxy_password}
         client = Solver(
             pageurl,
             sitekey,
