@@ -52,7 +52,7 @@ class SolveAudio(Base):
 
         try:
             audio_url = await self.image_frame.evaluate(
-                f'$(".rc-audiochallenge-tdownload-link").attr("href")'
+                '$("#audio-source").attr("src")'
             )
             if not isinstance(audio_url, str):
                 raise DownloadError("Audio url is not valid, aborting")
