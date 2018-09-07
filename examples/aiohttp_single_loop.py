@@ -21,13 +21,13 @@ from nonocaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
 
-proxies = ProxyDB(last_banned_timeout=45*60) # This is 45 minutes
+proxies = ProxyDB(last_banned_timeout=45*60)  # This is 45 minutes
 proxy_source = None  # Can be URL or file location
 proxy_username, proxy_password = (None, None)
 
 parent_loop = asyncio.get_event_loop()
-#  I'm not sure exactly if FastChildWatcher() is really any faster, requires
-#  future research.
+# I'm not sure exactly if FastChildWatcher() is really any faster, requires
+# further research.
 asyncio.set_child_watcher(asyncio.FastChildWatcher())
 asyncio.get_child_watcher().attach_loop(parent_loop)
 
@@ -38,8 +38,8 @@ dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 
-#  Should be less crash prone since we use the main loop, only spawning the
-#  task in a future within an executor. Maybe.
+# Should be less crash prone since we use the main loop, only spawning the
+# task in a future within an executor. Maybe.
 class TaskRerun(object):
 
     def __init__(self, coro, duration):
@@ -59,7 +59,7 @@ class TaskRerun(object):
         def start():
             task = asyncio.run_coroutine_threadsafe(
                     self.seek(), self._loop)
-            #  Emulate a timeout with call_later by calling task.cancel
+            # Emulate a timeout with call_later by calling task.cancel
             self._loop.call_soon_threadsafe(
                 self._loop.call_later, self.duration, task.cancel)
             result = task.result()
@@ -73,7 +73,7 @@ class TaskRerun(object):
 
     async def seek(self):
         def callback(task):
-            #  Consume Exception to satisfy event loop
+            # Consume Exception to satisfy event loop
             try:
                 task.result()
             except Exception:

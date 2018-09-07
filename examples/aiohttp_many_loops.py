@@ -28,8 +28,8 @@ proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
 
 parent_loop = asyncio.get_event_loop()
-#  I'm not sure exactly if FastChildWatcher() is really any faster, requires
-#  future research.
+# I'm not sure exactly if FastChildWatcher() is really any faster, requires
+# further research.
 asyncio.set_child_watcher(asyncio.FastChildWatcher())
 asyncio.get_child_watcher().attach_loop(parent_loop)
 
@@ -40,8 +40,8 @@ dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 
-#  Bugs are to be expected, despite my efforts. Apparently, event loops paired
-#  with threads is nothing short of a hassle.
+# Bugs are to be expected, despite my efforts. Apparently, event loops paired
+# with threads is nothing short of a hassle.
 class TaskRerun(object):
 
     def __init__(self, coro, duration):
@@ -71,12 +71,12 @@ class TaskRerun(object):
 
     async def start(self):
         with self._lock:
-            #  Blocking occurs unless wrapped in an asyncio.Future object
+            # Blocking occurs unless wrapped in an asyncio.Future object
             task = asyncio.wrap_future(
                         asyncio.run_coroutine_threadsafe(
                             self.seek(), self._loop))
             try:
-                #  Wait for the Task to complete or Timeout
+                # Wait for the Task to complete or Timeout
                 async with timeout(self.duration):
                     await task
                 result = task.result()
@@ -87,15 +87,15 @@ class TaskRerun(object):
 
     async def seek(self):
         def callback(task):
-            #  Consume Exception to satisfy event loop
+            # Consume Exception to satisfy event loop
             try:
                 task.result()
             except Exception:
                 pass
         while True:
             try:
-                #  Deadlock occurs unless wrapped in an asyncio.Future object.
-                #  We could also use AbstractEventLoop.create_task here.
+                # Deadlock occurs unless wrapped in an asyncio.Future object.
+                # We could also use AbstractEventLoop.create_task here.
                 task = asyncio.wrap_future(
                     asyncio.run_coroutine_threadsafe(
                         self.coro(self._loop), self._loop))
@@ -106,13 +106,13 @@ class TaskRerun(object):
                     return result
             except asyncio.CancelledError:
                 break
-            #  We don't want to leave the loop unless result or cancelled
+            # We don't want to leave the loop unless result or cancelled
             except Exception:
                 pass
 
     async def cleanup(self):
-        #  A maximum recursion depth occurs when current task gets called for
-        #  cancellation from gather.
+        # A maximum recursion depth occurs when current task gets called for
+        # cancellation from gather.
         pending = tuple(
             task for task in asyncio.Task.all_tasks(loop=self._loop)
             if task is not asyncio.Task.current_task())
