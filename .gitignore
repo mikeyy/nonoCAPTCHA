@@ -74,5 +74,10 @@ build.sh
 
 # proxy database
 proxy.db
+proxy.db-shm
+proxy.db-wal
+proxies.txt
+
+# speech-to-text module folders
 deepspeech
 pocketsphinx
