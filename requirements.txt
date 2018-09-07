@@ -3,6 +3,7 @@ aiofiles==0.3.2
 aiohttp==3.3.2
 async-timeout==3.0.0
 peewee==3.6.4
+pillow==5.2.0
 pocketsphinx==0.1.15
 psutil==5.4.6
 pydub==0.22.1
