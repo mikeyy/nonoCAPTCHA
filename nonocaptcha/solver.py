@@ -82,10 +82,9 @@ class Solver(Base):
                 await request.abort()
             else:
                 await request.continue_()
-        
+
         self.page.on('request', handle_request)
-            
-    
+
     async def cleanup(self):
         if self.browser:
             await self.browser.close()
