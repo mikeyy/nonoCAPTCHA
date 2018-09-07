@@ -24,8 +24,9 @@ from nonocaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
 
-proxy_source = None  # Can be URL or file location
 proxies = ProxyDB(last_banned_timeout=45*60)
+proxy_source = None  # Can be URL or file location
+proxy_username, proxy_password = (None, None)
 
 parent_loop = asyncio.get_event_loop()
 # I'm not sure exactly if FastChildWatcher() is really any faster, requires
@@ -125,13 +126,18 @@ class TaskRerun(object):
 
 async def work(pageurl, sitekey, loop):
     proxy = proxies.get()
+    proxy_auth = None
+    if proxy_username and proxy_password:
+        proxy_auth = {"username": proxy_username,
+                      "password": proxy_password}
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
         sitekey,
         loop=loop,
         options=options,
-        proxy=proxy
+        proxy=proxy,
+        proxy_auth=proxy_auth
     )
     result = await client.start()
     if result:
