@@ -56,7 +56,9 @@ class SolveImage(Base):
         pieces = await self.image_no()
         print(title, pieces)
         image = await self.download_image()
-        self.cur_image_path = os.path.join(package_dir, settings['data']['pictures'], f'{hash(image)}.jpg')
+        self.cur_image_path = os.path.join(
+            package_dir, settings['data']['pictures'], f'{hash(image)}.jpg'
+        )
         await util.save_file(self.cur_image_path, image, binary=True)
         image_obj = Image.open(self.cur_image_path)
         util.split_image(image_obj, pieces)
@@ -74,4 +76,6 @@ class SolveImage(Base):
 
     async def download_image(self):
         image_url = await self.get_image_url()
-        return await util.get_page(image_url, self.proxy, self.proxy_auth, binary=True)
+        return await util.get_page(
+            image_url, self.proxy, self.proxy_auth, binary=True
+        )

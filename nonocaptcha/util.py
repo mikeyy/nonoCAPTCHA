@@ -133,6 +133,10 @@ def split_image(image_obj, pieces):
     if pieces == 9:
         # Only case solved so far
         interval = width // 3
-        for i, (x, y) in enumerate(itertools.product(range(3), repeat=2), 1):
-            cropped = image_obj.crop((interval*x, interval*y, interval*(x+1), interval*(y+1)))
-            cropped.save(os.path.join(package_dir, settings['data']['pictures'], f'{i}.jpg'))
+        iterator = enumerate(itertools.product(range(3), repeat=2), 1)
+        for i, (x, y) in iterator:
+            cropped = image_obj.crop((interval*x, interval*y,
+                                      interval*(x+1), interval*(y+1)))
+            cropped.save(os.path.join(
+                package_dir, settings['data']['pictures'], f'{i}.jpg')
+            )
