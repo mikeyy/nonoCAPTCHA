@@ -1,11 +1,11 @@
-main:
-    debug: true
-    headless: false
-    keyboard_traverse: false 
-    timeout:
-        page_load: 30
-        deface: 30
-        animation: 5
+debug: true
+headless: false
+keyboard_traverse: false 
+block_images: true
+timeout:
+    page_load: 30
+    deface: 30
+    animation: 5
 
 speech:
     service: pocketsphinx

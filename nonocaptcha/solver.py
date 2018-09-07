@@ -51,6 +51,9 @@ class Solver(Base):
             self.browser = await self.get_new_browser()
             target = [t for t in self.browser.targets() if await t.page()][0]
             self.page = await target.page()
+            await self.page.setRequestInterception(True)
+            if self.should_block_images:
+                self.block_images()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
             self.log(f"Starting solver with proxy {self.proxy}")
@@ -73,6 +76,16 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             return result
 
+    def block_images(self):
+        async def handle_request(request):
+            if (request.resourceType == 'image'):
+                await request.abort()
+            else:
+                await request.continue_()
+        
+        self.page.on('request', handle_request)
+            
+    
     async def cleanup(self):
         if self.browser:
             await self.browser.close()
