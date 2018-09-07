@@ -97,6 +97,7 @@ class Run(object):
             options=options,
             proxy=proxy
         )
+        result = None
         try:
             async with timeout(180):
                 result = await client.start()

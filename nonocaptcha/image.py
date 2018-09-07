@@ -3,18 +3,24 @@
 
 """ ***IN TESTING*** """
 
-from nonocaptcha.base import Base
+import os
 
-import asyncio
+from PIL import Image
+
+from nonocaptcha import util
+from nonocaptcha.base import Base, settings
+from nonocaptcha import package_dir
 
 
 class SolveImage(Base):
     url = 'https://www.google.com/searchbyimage?site=search&sa=X&image_url='
 
-    def __init__(self, page, proxy, proc_id):
-        self.page = page
+    def __init__(self, image_frame, proxy, proxy_auth, proc_id):
+        self.image_frame = image_frame
         self.proxy = proxy
+        self.proxy_auth = proxy_auth
         self.proc_id = proc_id
+        self.cur_image_path = None
 
     async def get_images(self):
         table = await self.image_frame.querySelector('table')
@@ -31,9 +37,10 @@ class SolveImage(Base):
 
     async def pictures_of(self):
         el = await self.get_description_element()
-        return await self.image_frame.evaluate(
+        of = await self.image_frame.evaluate(
             'el => el.firstElementChild.innerText', el
         )
+        return of.lstrip('a ')
 
     async def get_description_element(self):
         name1 = await self.image_frame.querySelector('.rc-imageselect-desc')
@@ -45,32 +52,15 @@ class SolveImage(Base):
     async def solve_by_image(self):
         while not await self.is_solvable():
             await self.click_reload_button()
-        print(await self.pictures_of())
-        print(await self.get_image_url())
-        await asyncio.sleep(1)
-        await self.get_image_dimensions()
-        asyncio.sleep(10)
-
-    async def get_image_title(self):
-        """Something, something... something"""
-
-        image_title_element = (
-            'document.getElementsByClassName("rc-imageselect-desc")[0]'
-        )
-
-        if await self.image_frame.evaluate(
-            f"typeof {image_title_element} === 'undefined'"
-        ):
-            image_title_element = (
-                'document.getElementsByClassName("rc-imageselect-desc-no-'
-                'canonical")[0]'
-            )
-
-        title = await self.image_frame.evaluate(
-            f"{image_title_element}.innerText"
-            f".replace( /.*\\n(.*)\\n.*/,'$1');"
-        )
-        return str(title).strip()
+        title = await self.pictures_of()
+        pieces = await self.image_no()
+        print(title, pieces)
+        image = await self.download_image()
+        self.cur_image_path = os.path.join(package_dir, settings['data']['pictures'], f'{hash(image)}.jpg')
+        await util.save_file(self.cur_image_path, image, binary=True)
+        image_obj = Image.open(self.cur_image_path)
+        util.split_image(image_obj, pieces)
+        return {'status': '?'}
 
     async def get_image_url(self):
         image_url = (
@@ -79,13 +69,9 @@ class SolveImage(Base):
         )
         return await self.image_frame.evaluate(image_url)
 
-    async def get_image_dimensions(self):
-        async for el in self.get_images():
-            dimensions = await self.image_frame.evaluate(
-                'el => el.firstElementChild.firstElementChild.style', el
-            )
-            print(dimensions)
+    async def image_no(self):
+        return len([i async for i in self.get_images()])
 
     async def download_image(self):
-        """work in progress"""
-        # image_url = await self.get_image_url()
+        image_url = await self.get_image_url()
+        return await util.get_page(image_url, self.proxy, self.proxy_auth, binary=True)
