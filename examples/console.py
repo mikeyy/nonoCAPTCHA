@@ -20,6 +20,7 @@ pageurl = "https://www.google.com/recaptcha/api2/demo"
 sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
 
 proxy_source = None  # Can be URL or file location
+proxy_username, proxy_password = (None, None)
 
 
 def shuffle(i):
@@ -86,20 +87,25 @@ class Run(object):
                 ]
             )
         options = {
-
             "ignoreHTTPSErrors": True,
             "args": args
         }
         proxy = self.proxies.get() if proxy_source else None
+        proxy_auth = None
+        if proxy_username and proxy_password:
+            proxy_auth = {"username": username, "password": password}
         client = Solver(
             pageurl,
             sitekey,
             options=options,
-            proxy=proxy
+            proxy=proxy,
+            proxy_auth=proxy_auth
         )
         try:
             async with timeout(180):
                 result = await client.start()
+        except Exception:
+            result = None
         finally:
             if sort_position:
                 used_positions.remove(this_position)
