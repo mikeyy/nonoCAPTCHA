@@ -42,14 +42,15 @@ class Clicker:
 
 class Base(Clicker):
     logger = logging.getLogger(__name__)
-    if settings["main"]["debug"]:
+    if settings["debug"]:
         logger.setLevel("DEBUG")
     proc_id = 0
-    headless = settings["main"]["headless"]
-    keyboard_traverse = settings["main"]["keyboard_traverse"]
-    page_load_timeout = settings["main"]["timeout"]["page_load"] * 1000
-    deface_timeout = settings["main"]["timeout"]["deface"] * 1000
-    animation_timeout = settings["main"]["timeout"]["animation"] * 1000
+    headless = settings["headless"]
+    keyboard_traverse = settings["keyboard_traverse"]
+    should_block_images = settings["block_images"]
+    page_load_timeout = settings["timeout"]["page_load"] * 1000
+    deface_timeout = settings["timeout"]["deface"] * 1000
+    animation_timeout = settings["timeout"]["animation"] * 1000
     speech_service = settings["speech"]["service"]
     deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
     jquery_data = os.path.join(package_dir, settings["data"]["jquery_js"])
