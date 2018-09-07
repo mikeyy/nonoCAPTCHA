@@ -21,8 +21,9 @@ from nonocaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
 
+proxies = ProxyDB(last_banned_timeout=45*60) # This is 45 minutes
 proxy_source = None  # Can be URL or file location
-proxies = ProxyDB(last_banned_timeout=45*60)
+proxy_username, proxy_password = (None, None)
 
 parent_loop = asyncio.get_event_loop()
 #  I'm not sure exactly if FastChildWatcher() is really any faster, requires
@@ -51,7 +52,7 @@ class TaskRerun(object):
         return self
 
     async def __aexit__(self, exc, exc_type, tb):
-        asyncio.run_coroutine_threadsafe(self.cleanup(), self._loop)
+        self._executor.shutdown()
         return self
 
     async def start(self):
@@ -75,7 +76,7 @@ class TaskRerun(object):
             #  Consume Exception to satisfy event loop
             try:
                 task.result()
-            except Exception as e:
+            except Exception:
                 pass
         while True:
             try:
@@ -92,27 +93,21 @@ class TaskRerun(object):
             except Exception:
                 pass
 
-    async def cleanup(self):
-        #  A maximum recursion depth occurs when current task gets called for
-        #  cancellation from gather.
-        pending = tuple(
-            task for task in asyncio.Task.all_tasks(loop=self._loop)
-            if task is not asyncio.Task.current_task())
-        gathered = asyncio.gather(
-            *pending, loop=self._loop, return_exceptions=True)
-        gathered.cancel()
-        await gathered
-
 
 async def work(pageurl, sitekey, loop):
     proxy = proxies.get()
+    proxy_auth = None
+    if proxy_username and proxy_password:
+        proxy_auth = {"username": proxy_username,
+                      "password": proxy_password}
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
         sitekey,
         loop=loop,
         options=options,
-        proxy=proxy
+        proxy=proxy,
+        proxy_auth=proxy_auth
     )
     result = await client.start()
     if result:
