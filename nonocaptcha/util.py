@@ -3,17 +3,21 @@
 
 """ Utility functions. """
 
+import os
+import sys
 import aiohttp
 import aiofiles
 import asyncio
 import pickle
 import requests
-import sys
+import itertools
 
 from functools import partial, wraps
 
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from nonocaptcha import package_dir
+from nonocaptcha.base import settings
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 __all__ = [
@@ -121,3 +125,18 @@ def serialize(obj, p):
 async def deserialize(p):
     data = await load_file(p, binary=True)
     return pickle.loads(data)
+
+
+def split_image(image_obj, pieces):
+    """Splits an image into constituent pictures of x"""
+    width, height = image_obj.size
+    if pieces == 9:
+        # Only case solved so far
+        interval = width // 3
+        iterator = enumerate(itertools.product(range(3), repeat=2), 1)
+        for i, (x, y) in iterator:
+            cropped = image_obj.crop((interval*x, interval*y,
+                                      interval*(x+1), interval*(y+1)))
+            cropped.save(os.path.join(
+                package_dir, settings['data']['pictures'], f'{i}.jpg')
+            )

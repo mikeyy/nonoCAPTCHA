@@ -228,7 +228,7 @@ class Solver(Base):
         solve_image = False
         if solve_image:
             self.image = SolveImage(
-                self.page,
+                self.image_frame,
                 self.proxy,
                 self.proxy_auth,
                 self.proc_id)

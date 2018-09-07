@@ -102,6 +102,7 @@ class Run(object):
             proxy=proxy,
             proxy_auth=proxy_auth
         )
+        result = None
         try:
             async with timeout(180):
                 result = await client.start()
