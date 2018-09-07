@@ -46,8 +46,8 @@ class Solver(Base):
 
     async def start(self):
         """Begin solving"""
-        result = None
         start = time.time()
+
         try:
             self.browser = await self.get_new_browser()
             target = [t for t in self.browser.targets() if await t.page()][0]
@@ -62,14 +62,17 @@ class Solver(Base):
         except nonocaptchaError as e:
             self.log(f"{e} {type(e)}")
         finally:
-            if isinstance(result, dict):
-                status = result['status'].capitalize()
-                self.log(f"Result: {status}")
+            try:
+                if isinstance(result, dict):
+                    status = result['status'].capitalize()
+                    self.log(f"Result: {status}")
+            except NameError:
+                result = None
             end = time.time()
             elapsed = end - start
             await self.cleanup()
             self.log(f"Time elapsed: {elapsed}")
-        return result
+            return result
 
     async def cleanup(self):
         if self.browser:
