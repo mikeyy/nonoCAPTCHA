@@ -6,6 +6,7 @@
 import asyncio
 import json
 import time
+import traceback
 
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
@@ -16,7 +17,7 @@ from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
 from nonocaptcha import util
 from nonocaptcha.exceptions import (SafePassage, ButtonError, DefaceError,
-                                    PageError, nonocaptchaError)
+                                    PageError)
 
 
 class Solver(Base):
@@ -47,6 +48,7 @@ class Solver(Base):
     async def start(self):
         """Begin solving"""
         start = time.time()
+        result = None
         try:
             self.browser = await self.get_new_browser()
             target = [t for t in self.browser.targets() if await t.page()][0]
@@ -61,15 +63,13 @@ class Solver(Base):
             await self.goto()
             await self.deface()
             result = await self.solve()
-        except nonocaptchaError as e:
+        except BaseException as e:
+            print(traceback.format_exc())
             self.log(f"{e} {type(e)}")
         finally:
-            try:
-                if isinstance(result, dict):
-                    status = result['status'].capitalize()
-                    self.log(f"Result: {status}")
-            except NameError:
-                result = None
+            if isinstance(result, dict):
+                status = result['status'].capitalize()
+                self.log(f"Result: {status}")
             end = time.time()
             elapsed = end - start
             await self.cleanup()
@@ -239,9 +239,10 @@ class Solver(Base):
 
     async def _solve(self):
         # Coming soon...
-        solve_image = False
+        solve_image = True
         if solve_image:
             self.image = SolveImage(
+                self.browser,
                 self.image_frame,
                 self.proxy,
                 self.proxy_auth,

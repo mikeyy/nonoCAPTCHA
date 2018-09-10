@@ -106,9 +106,8 @@ class Run(object):
         try:
             async with timeout(180):
                 result = await client.start()
-        except Exception:
-            result = None
         finally:
+            raise SystemExit
             if sort_position:
                 used_positions.remove(this_position)
 
