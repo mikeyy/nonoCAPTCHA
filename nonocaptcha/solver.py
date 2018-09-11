@@ -51,7 +51,6 @@ class Solver(Base):
             self.browser = await self.get_new_browser()
             target = [t for t in self.browser.targets() if await t.page()][0]
             self.page = await target.page()
-            await self.page.setRequestInterception(True)
             if self.should_block_images:
                 self.block_images()
             if self.proxy_auth:
@@ -82,7 +81,7 @@ class Solver(Base):
                 await request.abort()
             else:
                 await request.continue_()
-
+        await self.page.setRequestInterception(True)
         self.page.on('request', handle_request)
 
     async def cleanup(self):
