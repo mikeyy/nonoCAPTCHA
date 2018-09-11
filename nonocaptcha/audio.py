@@ -18,14 +18,15 @@ from nonocaptcha.exceptions import DownloadError, ReloadError, TryAgain
 
 
 class SolveAudio(Base):
-    def __init__(self, image_frame, proxy, proxy_auth, proc_id):
-        self.image_frame = image_frame
+    def __init__(self, page, proxy, proxy_auth, proc_id):
+        self.page = page
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.proc_id = proc_id
 
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
+        await self.get_frames()
         for i in range(10):
             try:
                 answer = await self.get_audio_response()

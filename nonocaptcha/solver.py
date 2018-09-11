@@ -134,7 +134,8 @@ class Solver(Base):
             "headless": self.headless,
             "args": args,
             #  Silence Pyppeteer logs
-            "logLevel": "CRITICAL"})
+            # "logLevel": "CRITICAL"
+            })
         self.launcher = Launcher(self.options)
         browser = await self.launcher.launch()
         return browser
@@ -249,7 +250,7 @@ class Solver(Base):
             solve = self.image.solve_by_image
         else:
             self.audio = SolveAudio(
-                self.image_frame,
+                self.page,
                 self.proxy,
                 self.proxy_auth,
                 self.proc_id)
@@ -260,7 +261,7 @@ class Solver(Base):
                     return result
             solve = self.audio.solve_by_audio
 
-        result = await self.loop.create_task(solve())
+        result = await solve()
         if result["status"] == "success":
             code = await self.g_recaptcha_response()
             if code:
