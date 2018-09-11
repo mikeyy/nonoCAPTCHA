@@ -15,8 +15,8 @@ from nonocaptcha import package_dir
 class SolveImage(Base):
     url = 'https://www.google.com/searchbyimage?site=search&sa=X&image_url='
 
-    def __init__(self, image_frame, proxy, proxy_auth, proc_id):
-        self.image_frame = image_frame
+    def __init__(self, page, proxy, proxy_auth, proc_id):
+        self.page = page
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.proc_id = proc_id
@@ -50,11 +50,12 @@ class SolveImage(Base):
         return name1 if name1 else name2
 
     async def solve_by_image(self):
+        await self.get_frames()
+        # Why use a while loop here? Might be better to use waitForFunction
         while not await self.is_solvable():
             await self.click_reload_button()
         title = await self.pictures_of()
         pieces = await self.image_no()
-        print(title, pieces)
         image = await self.download_image()
         self.cur_image_path = os.path.join(
             package_dir, settings['data']['pictures'], f'{hash(image)}.jpg'
