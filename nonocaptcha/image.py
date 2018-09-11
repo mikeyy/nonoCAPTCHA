@@ -54,7 +54,8 @@ class SolveImage(Base):
         # Why use a while loop here? Might be better to use waitForFunction
         while not await self.is_solvable():
             await self.click_reload_button()
-        title = await self.pictures_of()
+        # Variable is unused for now
+        # title = await self.pictures_of()
         pieces = await self.image_no()
         image = await self.download_image()
         self.cur_image_path = os.path.join(
