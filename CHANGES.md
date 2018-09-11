@@ -1,6 +1,11 @@
 History
 =======
-### Current Version (2018-09-05)
+### Current Version (2018-09-10)
+* Add option to block images by setting block_images in configuration file.
+* Return result to logging, for example "Result: Success", "Result: Blocked"
+* Some behind the scene changes.
+
+### Version 1.8.2 (2018-09-05)
 * requirements.txt
     * Update to include Pyppeteer v0.0.21 (Whoops)
 
