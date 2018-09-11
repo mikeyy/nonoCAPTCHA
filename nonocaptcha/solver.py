@@ -49,8 +49,7 @@ class Solver(Base):
         start = time.time()
         try:
             self.browser = await self.get_new_browser()
-            target = [t for t in self.browser.targets() if await t.page()][0]
-            self.page = await target.page()
+            self.page = await self.browser.newPage()
             if self.should_block_images:
                 await self.page.setRequestInterception(True)
                 self.block_images()
