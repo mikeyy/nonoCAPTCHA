@@ -92,8 +92,7 @@ class Solver(Base):
 
     async def set_bypass_csp(self):
         await self.page._client.send(
-            "Page.setBypassCSP", {'enabled': True}
-        )
+            "Page.setBypassCSP", {'enabled': True})
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
@@ -124,8 +123,7 @@ class Solver(Base):
             # Automation arguments
             '--enable-automation',
             '--password-store=basic',
-            '--use-mock-keychain',
-        ]
+            '--use-mock-keychain']
         if self.proxy:
             args.append(f"--proxy-server={self.proxy}")
         if "args" in self.options:
@@ -134,8 +132,7 @@ class Solver(Base):
             "headless": self.headless,
             "args": args,
             #  Silence Pyppeteer logs
-            # "logLevel": "CRITICAL"
-            })
+            "logLevel": "CRITICAL"})
         self.launcher = Launcher(self.options)
         browser = await self.launcher.launch()
         return browser
@@ -147,8 +144,7 @@ class Solver(Base):
         jquery_js = await util.load_file(self.jquery_data)
         override_js = await util.load_file(self.override_data)
         navigator_config = generate_navigator_js(
-            os=("linux", "mac", "win"), navigator=("chrome")
-        )
+            os=("linux", "mac", "win"), navigator=("chrome"))
         navigator_config["mediaDevices"] = False
         navigator_config["webkitGetUserMedia"] = False
         navigator_config["mozGetUserMedia"] = False
@@ -158,8 +154,7 @@ class Solver(Base):
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
         await self.page.evaluateOnNewDocument(
-            "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js)
-        )
+            "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js))
         return navigator_config["userAgent"]
 
     async def wait_for_deface(self):
@@ -180,10 +175,8 @@ class Solver(Base):
     document.close();
 }
 """
-                % html_code
-            )
-            % self.sitekey
-        )
+                % html_code)
+            % self.sitekey)
         await self.page.evaluate(deface_js)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
@@ -251,6 +244,7 @@ class Solver(Base):
         else:
             self.audio = SolveAudio(
                 self.page,
+                self.loop,
                 self.proxy,
                 self.proxy_auth,
                 self.proc_id)
@@ -295,8 +289,7 @@ class Solver(Base):
         try:
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-audio-button').length",
-                timeout=self.animation_timeout,
-            )
+                timeout=self.animation_timeout)
         except ButtonError:
             raise ButtonError("Audio button missing, aborting")
 
@@ -308,7 +301,6 @@ class Solver(Base):
             self.log("Clicking audio button")
             audio_button = await self.image_frame.J("#recaptcha-audio-button")
             await self.click_button(audio_button)
-
         try:
             result = await self.check_detection(self.animation_timeout)
         except SafePassage:
