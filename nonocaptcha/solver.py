@@ -261,7 +261,7 @@ class Solver(Base):
                     return result
             solve = self.audio.solve_by_audio
 
-        result = await solve()
+        result = await self.loop.create_task(solve())
         if result["status"] == "success":
             code = await self.g_recaptcha_response()
             if code:
