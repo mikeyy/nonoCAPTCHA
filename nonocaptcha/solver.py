@@ -198,12 +198,15 @@ class Solver(Base):
         user_agent = await self.cloak_navigator()
         await self.page.setUserAgent(user_agent)
         try:
-            await self.page.goto(
-                self.url,
-                timeout=self.page_load_timeout,
-                waitUntil="domcontentloaded",)
+            await self.loop.create_task(
+                self.page.goto(
+                    self.url,
+                    timeout=self.page_load_timeout,
+                    waitUntil="domcontentloaded",))
         except asyncio.TimeoutError:
-            raise PageError("Problem loading page")
+            raise PageError("Page loading timed-out")
+        except Exception as exc:
+            raise PageError(f"Page raised an error: `{exc}`")
 
     async def deface(self):
         try:
@@ -235,7 +238,7 @@ class Solver(Base):
         solve_image = False
         if solve_image:
             self.image = SolveImage(
-                self.image_frame,
+                self.page,
                 self.proxy,
                 self.proxy_auth,
                 self.proc_id)
