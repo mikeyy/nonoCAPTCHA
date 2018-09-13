@@ -77,7 +77,7 @@ Installation
 Configuration
 -------------
 
-Please edit config.example.py and save as config.py
+Please edit nonocaptcha.example.yaml and save as nonocaptcha.yaml
 
 Usage
 -----
