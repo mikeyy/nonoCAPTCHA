@@ -15,6 +15,7 @@ RUN apt-get update \
     libxrandr2 \
     libgconf-2-4 \
     libasound2 \
+    libasound2-dev \
     libatk1.0-0 \
     libgtk-3-0 \
     gconf-service \
@@ -30,6 +31,7 @@ RUN apt-get update \
     libglib2.0-0 \
     libnspr4 \
     libpango-1.0-0 \
+    lipulse-dev \
     libstdc++6 \
     libx11-6 \
     libxcb1 \
