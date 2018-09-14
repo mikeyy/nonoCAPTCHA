@@ -13,10 +13,12 @@ else:
 async def kill_chrome():
     if client.launcher:
         if not client.launcher.chromeClosed:
-            await client.launcher.waitForChromeToClose()   
+            await client.launcher.waitForChromeToClose()
+
 
 def signal_handler(signal, frame):
     asyncio.ensure_future(kill_chrome())
+
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
