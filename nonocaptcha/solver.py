@@ -111,6 +111,7 @@ class Solver(Base):
             '--disable-java',
             '--disable-popup-blocking',
             '--disable-prompt-on-repost',
+            '--disable-setuid-sandbox',
             '--disable-sync',
             '--disable-translate',
             '--disable-web-security',
