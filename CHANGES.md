@@ -1,6 +1,11 @@
 History
 =======
-### Current Version (2018-09-10)
+### Current Version (2018-09-14)
+* Output errors during solver initialization
+* Catch additional errors during page load
+* Revert back to opening new tab
+
+### Version 1.8.3 (2018-09-10)
 * Add option to block images by setting block_images in configuration file.
 * Return result to logging, for example "Result: Success", "Result: Blocked"
 * Some behind the scene changes.
