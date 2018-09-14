@@ -62,6 +62,9 @@ class Solver(Base):
             result = await self.solve()
         except nonocaptchaError as e:
             self.log(f"{e} {type(e)}")
+        except Exception as e:
+            print(f"An error occurred during startup: {e}")
+            raise e
         finally:
             try:
                 if isinstance(result, dict):
