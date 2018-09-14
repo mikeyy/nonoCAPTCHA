@@ -1,6 +1,9 @@
 History
 =======
 ### Current Version (2018-09-14)
+* Output errors using traceback during solver initialization
+
+### Version 1.8.4 (2018-09-14)
 * Output errors during solver initialization
 * Catch additional errors during page load
 * Revert back to opening new tab

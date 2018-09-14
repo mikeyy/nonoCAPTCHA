@@ -5,7 +5,9 @@
 
 import asyncio
 import json
+import sys
 import time
+import traceback
 
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
@@ -63,7 +65,7 @@ class Solver(Base):
         except nonocaptchaError as e:
             self.log(f"{e} {type(e)}")
         except Exception as e:
-            print(f"An error occurred during startup: {e}")
+            traceback.print_exc(file=sys.stdout)
             raise e
         finally:
             try:
