@@ -31,7 +31,7 @@ RUN apt-get update \
     libglib2.0-0 \
     libnspr4 \
     libpango-1.0-0 \
-    lipulse-dev \
+    libpulse-dev \
     libstdc++6 \
     libx11-6 \
     libxcb1 \
@@ -45,6 +45,7 @@ RUN apt-get update \
     xdg-utils \
     build-essential \
     ffmpeg \
+    swig \
     software-properties-common curl \
     && add-apt-repository ppa:jonathonf/python-3.6 \
     && apt-get remove -y software-properties-common \
@@ -58,9 +59,10 @@ RUN apt-get update \
     && apt autoremove -y \
     && pip install nonocaptcha
 
-COPY examples/app.py /nonocaptcha
-COPY config.py /nonocaptcha
+ADD examples/aiohttp_examples/aiohttp_many_loops.py ~/
+ADD nonocaptcha.yaml ~/
 
-RUN python3.6 /nonocaptcha/app.py
+RUN ls ~/
+RUN python3 ~/aiohttp_many_loops.py
 
 EXPOSE 5000
