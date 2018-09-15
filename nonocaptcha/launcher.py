@@ -4,17 +4,12 @@
 """ Launcher module. Workarounds to launch browsers asynchronously. """
 
 import asyncio
-import json
 import logging
 import os
-
-from urllib.request import urlopen
-from urllib.error import URLError
 
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
-from pyppeteer.errors import BrowserError
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
