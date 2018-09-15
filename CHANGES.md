@@ -1,6 +1,9 @@
 History
 =======
 ### Current Version (2018-09-14)
+* Add Pyppeteer 0.0.24 to requirements
+
+### Version 1.8.7 (2018-09-14)
 * Bug fix
 
 ### Version 1.8.6 (2018-09-14)
