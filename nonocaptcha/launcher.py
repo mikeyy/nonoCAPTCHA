@@ -68,30 +68,11 @@ class Launcher(launcher.Launcher):
             env=env,
         )
         # Signal handlers for exits used to be here
-        connectionDelay = self.options.get("slowMo", 0)
-        self.browserWSEndpoint = await self._get_ws_endpoint()
+        connectionDelay = self.options.get("slowMo", 0)∂
         self.connection = Connection(
             self.browserWSEndpoint, self._loop, connectionDelay)
         return await Browser.create(
             self.connection, self.options, self.proc, self.killChrome)
-
-    async def _get_ws_endpoint(self) -> str:
-        url = self.url + '/json/version'
-        while self.proc.returncode is None:
-            await asyncio.sleep(0.1)
-            try:
-                with urlopen(url) as f:
-                    data = json.loads(f.read().decode())
-                break
-            except URLError as e:
-                continue
-        else:
-            raise BrowserError(
-                'Browser closed unexpectedly:\n{}'.format(
-                    self.proc.stdout.read().decode()
-                )
-            )
-        return data['webSocketDebuggerUrl']
 
     async def waitForChromeToClose(self):
         if self.proc.returncode is None and not self.chromeClosed:
