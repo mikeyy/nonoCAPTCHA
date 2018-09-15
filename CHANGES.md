@@ -1,6 +1,9 @@
 History
 =======
 ### Current Version (2018-09-14)
+* Remove Websocket debugger
+
+### Version 1.8.5 (2018-09-14)
 * Output errors using traceback during solver initialization
 
 ### Version 1.8.4 (2018-09-14)
