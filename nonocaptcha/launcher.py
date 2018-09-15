@@ -4,12 +4,17 @@
 """ Launcher module. Workarounds to launch browsers asynchronously. """
 
 import asyncio
+import json
 import logging
 import os
+
+from urllib.request import urlopen
+from urllib.error import URLError
 
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
+from pyppeteer.errors import BrowserError
 from pyppeteer.util import check_chromium, chromium_excutable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
@@ -64,10 +69,29 @@ class Launcher(launcher.Launcher):
         )
         # Signal handlers for exits used to be here
         connectionDelay = self.options.get("slowMo", 0)
+        self.browserWSEndpoint = await self._get_ws_endpoint()
         self.connection = Connection(
             self.browserWSEndpoint, self._loop, connectionDelay)
         return await Browser.create(
             self.connection, self.options, self.proc, self.killChrome)
+
+    async def _get_ws_endpoint(self) -> str:
+        url = self.url + '/json/version'
+        while self.proc.returncode is None:
+            await asyncio.sleep(0.1)
+            try:
+                with urlopen(url) as f:
+                    data = json.loads(f.read().decode())
+                break
+            except URLError as e:
+                continue
+        else:
+            raise BrowserError(
+                'Browser closed unexpectedly:\n{}'.format(
+                    await self.proc.stdout.read().decode()
+                )
+            )
+        return data['webSocketDebuggerUrl']
 
     async def waitForChromeToClose(self):
         if self.proc.returncode is None and not self.chromeClosed:
