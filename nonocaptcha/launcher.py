@@ -68,7 +68,7 @@ class Launcher(launcher.Launcher):
             env=env,
         )
         # Signal handlers for exits used to be here
-        connectionDelay = self.options.get("slowMo", 0)∂
+        connectionDelay = self.options.get("slowMo", 0)
         self.connection = Connection(
             self.browserWSEndpoint, self._loop, connectionDelay)
         return await Browser.create(
