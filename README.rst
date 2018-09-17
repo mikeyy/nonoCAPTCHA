@@ -116,7 +116,7 @@ Donations
 
 The use of proxies are required for my continuous updates and fixes on
 nonoCAPTCHA. Any donations would be a great help in allowing me to purchase 
-these proxies, that are clearly expensive. If anyone would is willing to share
+these proxies, that are clearly expensive. If anyone is willing to share
 their proxies, I wouldn't hesitate to accept the offer.
 
 Bitcoin: 1BfWQWAZBsSKCNQZgsq2vwaKxYvkrhb14u
