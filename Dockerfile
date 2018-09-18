@@ -1,21 +1,5 @@
-# Build the Docker container by running "docker build ." in the same folder as
-# Dockerfile. After the build is complete, run "docker images" and copy the
-# most recent create image. Then run the command "docker run -i -t COPIEDIMAGE"
-# which will place you in the shell of the newly created container.
-# All files are located in /nonocaptcha.
-
-# This Dockerfile assumes all required files/folders are in the absolute
-# folder:
-# - nonocaptcha.yaml
-# - examples/app.py
-# - pocketsphinx (folder)
-# You may want to add proxies.txt at the bottom of this file.
-
-# We are using Ubuntu 16.04 for the base Docker image
 FROM ubuntu:16.04
 
-# This installs all the required packages for Python3.6, Chrome, and
-# Pocketsphinx
 RUN apt-get update \
     && apt-get install -y \
     libpangocairo-1.0-0 \
@@ -75,18 +59,10 @@ RUN apt-get update \
     && apt autoremove -y \
     && pip install nonocaptcha
 
-# Copies required files for running nonoCAPTCHA to the Docker container.
-# You can comment out pocketsphinx if you aren't using Pocketsphinx.
-RUN mkdir /nonocaptcha
-ADD pocketsphinx /nonocaptcha/pocketsphinx
-ADD nonocaptcha.yaml /nonocaptcha
-# ADD proxies.txt /nonocaptcha/proxies.txt
+ADD examples/aiohttp_examples/aiohttp_many_loops.py ~/
+ADD nonocaptcha.yaml ~/
 
-# This determines which file you want to copy over to the Docker container,
-# by default the aiohttp server is copied to the container.
-ADD examples/app.py /nonocaptcha
+RUN ls ~/
+RUN python3 ~/aiohttp_many_loops.py
 
-# Uncomment the lines below if you want to autostart the app and expose the
-# port on your machine, which can be accessed by going to http://localhost:5000
-# RUN python3.6 /nonocaptcha/app.py
-# EXPOSE 5000
+EXPOSE 5000
