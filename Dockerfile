@@ -5,7 +5,7 @@
 # All files are located in /nonocaptcha.
 
 
-# This Dockerfile assumes all required files/folders are in the absolute
+# This Dockerfile assumes all required files/folders are in the relative
 # folder:
 # - nonocaptcha.yaml
 # - examples/app.py
