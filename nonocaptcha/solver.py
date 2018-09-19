@@ -133,6 +133,8 @@ class Solver(Base):
             args.append(f"--proxy-server={self.proxy}")
         if "args" in self.options:
             args.extend(self.options.pop("args"))
+        if "headless" in self.options:
+            self.headless = self.options["headless"]
         self.options.update({
             "headless": self.headless,
             "args": args,
