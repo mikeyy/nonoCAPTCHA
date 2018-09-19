@@ -26,7 +26,7 @@ SECRET_KEY = "CHANGEME"
 BANNED_TIMEOUT = 45*60  # 45 minutes
 SOLVE_DURATION = 3*60  # 3 minutes
 
-proxies = ProxyDB(last_banned_timeout=45*60)
+proxies = ProxyDB(last_banned_timeout=BANNED_TIMEOUT)
 proxy_source = None  # Can be URL or file location
 proxy_username, proxy_password = (None, None)
 
