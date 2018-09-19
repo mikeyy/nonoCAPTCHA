@@ -23,6 +23,8 @@ from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
+BANNED_TIMEOUT = 45*60  # 45 minutes
+SOLVE_DURATION = 3*60  # 3 minutes
 
 proxies = ProxyDB(last_banned_timeout=45*60)
 proxy_source = None  # Can be URL or file location
@@ -122,6 +124,7 @@ class TaskRerun(object):
         gathered.cancel()
         await gathered
         self._loop.call_soon_threadsafe(self._loop.stop)
+        self.executor.shutdown()
 
 
 async def work(pageurl, sitekey, loop):
@@ -161,7 +164,7 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TaskRerun(coro, duration=180) as t:
+                async with TaskRerun(coro, duration=SOLVE_DURATION) as t:
                     result = await t.start()
                 if result:
                     response = {"solution": result}
