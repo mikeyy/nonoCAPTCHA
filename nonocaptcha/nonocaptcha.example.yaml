@@ -26,3 +26,4 @@ data:
     jquery_js: data/jquery.js
     override_js: data/override.js
     pictures: data/pictures
+    word_vectors: data/word_vectors.bin

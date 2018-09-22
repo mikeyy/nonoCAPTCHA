@@ -5,17 +5,27 @@
 
 import os
 import sys
+import gzip
+import shutil
 import aiohttp
 import aiofiles
 import asyncio
 import pickle
+import logging
+import pathlib
 import requests
 import itertools
-
 from functools import partial, wraps
+
+from nonocaptcha.base import package_dir, settings, Base
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import gensim
+
+
+logger = Base.logger
+
 
 __all__ = [
     "save_file",
@@ -26,6 +36,8 @@ __all__ = [
     "deserialize",
 ]
 
+WD_VECTOR_FILE = os.path.join(package_dir, settings['data']['word_vectors'])
+COMPRESSED_FILE = WD_VECTOR_FILE + '.gz'
 
 def threaded(func):
     @wraps(func)
@@ -33,7 +45,6 @@ def threaded(func):
         loop = asyncio.get_event_loop()
 
         return await loop.run_in_executor(None, partial(func, *args, **kwargs))
-
     return wrap
 
 
@@ -135,3 +146,35 @@ def split_image(image_obj, pieces, save_to):
             cropped = image_obj.crop((interval*x, interval*y,
                                       interval*(x+1), interval*(y+1)))
             cropped.save(os.path.join(save_to, f'{y*row_length+x}.jpg'))
+
+
+def download_word_similarity_vectors():
+    """I am currently hosting the 1.5GB file but would like a better solution"""
+    vector_link = 'http://karlor.servebeer.com/google-word-vectors.bin.gz'
+    if not pathlib.Path(WD_VECTOR_FILE).exists():
+        logger.info('Downloading google word similarity')
+        r = requests.get(vector_link, stream=True)
+        with open(COMPRESSED_FILE, 'wb') as f:
+            r.raw.decode_content = True
+            shutil.copyfileobj(r.raw, f)
+        # uncompress
+        logging.info(f'Extracting {COMPRESSED_FILE} -> {WD_VECTOR_FILE}')
+        with gzip.open(COMPRESSED_FILE, 'rb') as compressed:
+            with open(WD_VECTOR_FILE, 'wb') as expanded:
+                shutil.copyfileobj(compressed, expanded)
+        os.remove(COMPRESSED_FILE)
+
+
+def word_similarity():
+    logger.info('Initializing word vector object...')
+    # unset limit if your machine is not bound by ram
+    word2vec_model = gensim.models.KeyedVectors.load_word2vec_format(
+        WD_VECTOR_FILE, binary=True, limit=200000,
+    )
+    word2vec_model.init_sims(replace=True)  # normalizes vectors
+    return word2vec_model
+
+
+def init_word_similarity():
+    download_word_similarity_vectors()
+    return word_similarity()

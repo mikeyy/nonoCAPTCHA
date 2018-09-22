@@ -41,7 +41,8 @@ class Solver(Base):
         self.url = pageurl
         self.sitekey = sitekey
         self.loop = loop or asyncio.get_event_loop()
-        self.proxy = f"http://{proxy}" if proxy else proxy
+        self.proxy = f"http://{proxy}" if proxy and 'http://' != proxy[:7] \
+            else proxy
         self.proxy_auth = proxy_auth
         self.proc_id = self.proc_count
         type(self).proc_count += 1
@@ -66,8 +67,6 @@ class Solver(Base):
         except BaseException as e:
             print(traceback.format_exc())
             self.log(f"{e} {type(e)}")
-        except Exception as e:
-            traceback.print_exc(file=sys.stdout)
             raise e
         finally:
             if isinstance(result, dict):

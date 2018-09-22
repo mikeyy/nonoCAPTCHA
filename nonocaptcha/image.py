@@ -7,13 +7,18 @@ import os
 import asyncio
 import threading
 from PIL import Image
+from operator import itemgetter
+from concurrent.futures import ProcessPoolExecutor
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from nonocaptcha import util
 from nonocaptcha.base import Base, settings
 from nonocaptcha import package_dir
 
+import ipgetter
+
 PICTURES = os.path.join(package_dir, settings['data']['pictures'])
+EXECUTOR = ProcessPoolExecutor(1)  # not to be confused with Exeggutor
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -28,7 +33,11 @@ class Handler(BaseHTTPRequestHandler):
 
 class SolveImage(Base):
     url = 'https://www.google.com/searchbyimage?site=search&sa=X&image_url='
-    ip_address = 'http://91.121.226.109'
+    ip_address = f'http://{ipgetter.myip()}'
+    banned_titles = [
+        'fire hydrant',
+        'bus',
+    ]
 
     def __init__(self, browser, image_frame, proxy, proxy_auth, proc_id):
         self.browser = browser
@@ -39,6 +48,8 @@ class SolveImage(Base):
         self.cur_image_path = None
         self.title = None
         self.pieces = None
+        self.word_vectors_future = EXECUTOR.submit(util.init_word_similarity)
+        self.word_vectors_obj = None
 
     async def get_images(self):
         table = await self.image_frame.querySelector('table')
@@ -58,7 +69,10 @@ class SolveImage(Base):
         of = await self.image_frame.evaluate(
             'el => el.firstElementChild.innerText', el
         )
-        return of.lstrip('a ')
+        of = of.lstrip('a ')
+        of = 'bus' if of == 'buses' else of
+        of = of.split(' or ')[0] if ' or ' in of else of
+        return of.rstrip('s') if of[-2] not in 'saiou' else of
 
     async def get_description_element(self):
         name1 = await self.image_frame.querySelector('.rc-imageselect-desc')
@@ -68,31 +82,32 @@ class SolveImage(Base):
         return name1 if name1 else name2
 
     async def cycle_to_solvable(self):
-        while not await self.is_solvable() or await self.image_no() != 9:
+        while True:
+            self.title = await self.pictures_of()
+            self.pieces = await self.image_no()
+            if self.title.lower() not in self.banned_titles and \
+                    self.pieces == 9 and await self.is_solvable():
+                break
             await self.click_reload_button()
 
     async def solve_by_image(self):
         await self.cycle_to_solvable()
-        title = await self.pictures_of()
-        pieces = 9  # TODO: crop other sizes
+        print(f'Image of {self.title}')
         image = await self.download_image()
-        self.title = title
-        print(f'Image of {title}')
-        self.pieces = pieces
         self.cur_image_path = os.path.join(PICTURES, f'{hash(image)}')
         os.mkdir(self.cur_image_path)
-        file_path = os.path.join(self.cur_image_path, f'{title}.jpg')
+        file_path = os.path.join(self.cur_image_path, f'{self.title}.jpg')
         await util.save_file(file_path, image, binary=True)
         image_obj = Image.open(file_path)
-        util.split_image(image_obj, pieces, self.cur_image_path)
+        util.split_image(image_obj, self.pieces, self.cur_image_path)
         self.start_app()
-        queries = [self.reverse_image_search(i) for i in range(pieces)]
+        queries = [self.reverse_image_search(i) for i in range(self.pieces)]
         results = await asyncio.gather(*queries, return_exceptions=True)
-        for r in results:
-            if isinstance(r, tuple) and r[1] is True:
-                pass
-                # TODO: return a list of numbers corresponding to image index
-
+        print(results)
+        pics_to_click = sorted((r for r in results if isinstance(r, tuple)),
+                               key=itemgetter(1), reverse=True)[:3]  # select 3
+        print(pics_to_click)
+        await self.click_images([i[0] for i in pics_to_click])
         return {'status': '?'}
 
     async def get_image_url(self):
@@ -120,12 +135,31 @@ class SolveImage(Base):
         if card:
             best_guess = await page.evaluate('el => el.children[1].innerText',
                                              card)
-            print(image_no, best_guess)
+            best_guess_of = best_guess.split(':')[1].lstrip()
         else:
-            best_guess = ''
-        await asyncio.sleep(100)
+            best_guess_of = ''
+        print(image_no, best_guess_of)
+        await asyncio.sleep(10)
         await page.close()
-        return self.title in best_guess
+        if not self.word_vectors_future.done():
+            self.log('Waiting for word vectors to load...')
+        self.word_vectors_obj = self.word_vectors_future.result()  # blocks
+        return image_no, self.compare(best_guess_of)
+
+    async def click_images(self, indexes):
+        image_elements = [im async for im in self.get_images()]
+        for i in indexes:
+            image = image_elements[i]
+            await self.click_button(image)
+
+    def compare(self, guess):
+        """Returns True if our guess was more similar to the title than it is
+           similar to the other keys that google offers. Similarity takes two
+           words, does some magic, and returns a float"""
+        if guess == '':
+            return -1
+        return max(self.word_vectors_obj.similarity(self.title, w)
+                   for w in guess.split() if w in self.word_vectors_obj)
 
     def start_app(self):
         Handler.base_path = self.cur_image_path

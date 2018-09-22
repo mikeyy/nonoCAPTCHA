@@ -12,11 +12,12 @@ from nonocaptcha import package_dir
 from nonocaptcha.exceptions import SafePassage, TryAgain
 
 FORMAT = "%(asctime)s %(message)s"
+root = os.path.dirname(package_dir)
 logging.basicConfig(format=FORMAT)
 
 try:
     import yaml
-    with open("nonocaptcha.yaml") as f:
+    with open(os.path.join(root, "nonocaptcha.yaml"), 'r') as f:
         settings = yaml.load(f)
 except FileNotFoundError:
     print(
@@ -28,7 +29,8 @@ except FileNotFoundError:
     from shutil import copyfile
 
     copyfile(
-        f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml"
+        f"{package_dir}/nonocaptcha.example.yaml",
+        os.path.join(root, "nonocaptcha.example.yaml")
     )
     sys.exit(0)
 
