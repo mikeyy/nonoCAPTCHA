@@ -14,9 +14,6 @@ import itertools
 
 from functools import partial, wraps
 
-from nonocaptcha import package_dir
-from nonocaptcha.base import settings
-
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -127,16 +124,14 @@ async def deserialize(p):
     return pickle.loads(data)
 
 
-def split_image(image_obj, pieces):
+def split_image(image_obj, pieces, save_to):
     """Splits an image into constituent pictures of x"""
     width, height = image_obj.size
     if pieces == 9:
         # Only case solved so far
-        interval = width // 3
-        iterator = enumerate(itertools.product(range(3), repeat=2), 1)
-        for i, (x, y) in iterator:
+        row_length = 3
+        interval = width // row_length
+        for x, y in itertools.product(range(row_length), repeat=2):
             cropped = image_obj.crop((interval*x, interval*y,
                                       interval*(x+1), interval*(y+1)))
-            cropped.save(os.path.join(
-                package_dir, settings['data']['pictures'], f'{i}.jpg')
-            )
+            cropped.save(os.path.join(save_to, f'{y*row_length+x}.jpg'))
