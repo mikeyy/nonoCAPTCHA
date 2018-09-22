@@ -90,7 +90,8 @@ class SolveImage(Base):
         results = await asyncio.gather(*queries, return_exceptions=True)
         for r in results:
             if isinstance(r, tuple) and r[1] is True:
-                correct_image_no = r[0]
+                pass
+                # TODO: return a list of numbers corresponding to image index
 
         return {'status': '?'}
 
