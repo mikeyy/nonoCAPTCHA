@@ -18,17 +18,20 @@ from nonocaptcha.exceptions import DownloadError, ReloadError, TryAgain
 
 
 class SolveAudio(Base):
-    def __init__(self, image_frame, proxy, proxy_auth, proc_id):
-        self.image_frame = image_frame
+    def __init__(self, page, loop, proxy, proxy_auth, proc_id):
+        self.page = page
+        self.loop = loop
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.proc_id = proc_id
 
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
+        await self.get_frames()
         for i in range(10):
             try:
-                answer = await self.get_audio_response()
+                answer = await self.loop.create_task(
+                    self.get_audio_response())
             except DownloadError:
                 raise
             except ReloadError:
@@ -52,8 +55,7 @@ class SolveAudio(Base):
 
         try:
             audio_url = await self.image_frame.evaluate(
-                '$("#audio-source").attr("src")'
-            )
+                '$("#audio-source").attr("src")')
             if not isinstance(audio_url, str):
                 raise DownloadError("Audio url is not valid, aborting")
         except CancelledError:
@@ -61,13 +63,13 @@ class SolveAudio(Base):
 
         self.log("Downloading audio file")
         try:
-            audio_data = await util.get_page(
-                audio_url,
-                proxy=self.proxy,
-                proxy_auth=self.proxy_auth,
-                binary=True,
-                timeout=self.page_load_timeout,
-            )
+            audio_data = await self.loop.create_task(
+                util.get_page(
+                    audio_url,
+                    proxy=self.proxy,
+                    proxy_auth=self.proxy_auth,
+                    binary=True,
+                    timeout=self.page_load_timeout))
         except ClientError as e:
             self.log(f"Error `{e}` occured during audio download, retrying")
         else:
@@ -83,11 +85,12 @@ class SolveAudio(Base):
                 tmpd = tempfile.mkdtemp()
                 tmpf = os.path.join(tmpd, "audio.mp3")
                 await util.save_file(tmpf, data=audio_data, binary=True)
-                answer = await speech.get_text(tmpf)
+                answer = await self.loop.create_task(speech.get_text(tmpf))
                 shutil.rmtree(tmpd)
             else:
                 speech = Amazon()
-                answer = await speech.get_text(audio_data)
+                answer = await self.loop.create_task(
+                    speech.get_text(audio_data))
             if answer:
                 self.log(f'Received answer "{answer}"')
                 return answer
@@ -96,12 +99,10 @@ class SolveAudio(Base):
             await self.click_reload_button()
             func = (
                 f'"{audio_url}" !== '
-                f'$(".rc-audiochallenge-tdownload-link").attr("href")'
-            )
+                f'$(".rc-audiochallenge-tdownload-link").attr("href")')
             try:
                 await self.image_frame.waitForFunction(
-                    func, timeout=self.animation_timeout
-                )
+                    func, timeout=self.animation_timeout)
             except TimeoutError:
                 raise ReloadError("Download link never updated")
 
@@ -118,7 +119,6 @@ class SolveAudio(Base):
             await response_input.press("Enter")
         else:
             verify_button = await self.image_frame.J(
-                "#recaptcha-verify-button"
-            )
+                "#recaptcha-verify-button")
             self.log("Clicking verify")
             await self.click_button(verify_button)

@@ -1,6 +1,28 @@
 History
 =======
-### Current Version (2018-09-05)
+### Current Version (2018-09-14)
+* Add Pyppeteer 0.0.24 to requirements
+
+### Version 1.8.7 (2018-09-14)
+* Bug fix
+
+### Version 1.8.6 (2018-09-14)
+* Remove Websocket debugger
+
+### Version 1.8.5 (2018-09-14)
+* Output errors using traceback during solver initialization
+
+### Version 1.8.4 (2018-09-14)
+* Output errors during solver initialization
+* Catch additional errors during page load
+* Revert back to opening new tab
+
+### Version 1.8.3 (2018-09-10)
+* Add option to block images by setting block_images in configuration file.
+* Return result to logging, for example "Result: Success", "Result: Blocked"
+* Some behind the scene changes.
+
+### Version 1.8.2 (2018-09-05)
 * requirements.txt
     * Update to include Pyppeteer v0.0.21 (Whoops)
 

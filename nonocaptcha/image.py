@@ -30,9 +30,14 @@ class SolveImage(Base):
     url = 'https://www.google.com/searchbyimage?site=search&sa=X&image_url='
     ip_address = 'http://91.121.226.109'
 
+<<<<<<< HEAD
     def __init__(self, browser, image_frame, proxy, proxy_auth, proc_id):
         self.browser = browser
         self.image_frame = image_frame
+=======
+    def __init__(self, page, proxy, proxy_auth, proc_id):
+        self.page = page
+>>>>>>> master
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.proc_id = proc_id

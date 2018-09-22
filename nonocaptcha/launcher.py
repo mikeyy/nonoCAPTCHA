@@ -88,7 +88,7 @@ class Launcher(launcher.Launcher):
         else:
             raise BrowserError(
                 'Browser closed unexpectedly:\n{}'.format(
-                    self.proc.stdout.read().decode()
+                    await self.proc.stdout.read().decode()
                 )
             )
         return data['webSocketDebuggerUrl']

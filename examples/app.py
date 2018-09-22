@@ -1,30 +1,32 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""" Single loop example using executor to spawn tasks. A task will continue
-to retry solving until it succeeds or times-out per the specified duration.
-Default is 180 seconds (3 minutes). On shutdown cleanup will propagate,
-hopefully closing left-over browsers and removing temporary profile folders.
-
-***NOTE*** After high-load testing, the script goes berserk with around 50
-active instances. Shame... Will figure out the issue later.
+""" Threaded example using executor to create a new event loop for running a
+task. Each task will continue to retry solving until it succeeds or times-out
+per the specified duration. Default is 180 seconds (3 minutes). On shutdown
+cleanup will propagate, hopefully closing left-over browsers and removing
+temporary profile folders.
 """
 
 import asyncio
 import shutil
 
 from aiohttp import web
+from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
+from threading import RLock
 
 from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
+BANNED_TIMEOUT = 45*60  # 45 minutes
+SOLVE_DURATION = 3*60  # 3 minutes
 
-proxies = ProxyDB(last_banned_timeout=45*60)  # This is 45 minutes
+proxies = ProxyDB(last_banned_timeout=BANNED_TIMEOUT)
 proxy_source = None  # Can be URL or file location
 proxy_username, proxy_password = (None, None)
 
@@ -41,38 +43,50 @@ dir = f"{Path.home()}/.pyppeteer/.dev_profile"
 shutil.rmtree(dir, ignore_errors=True)
 
 
-# Should be less crash prone since we use the main loop, only spawning the
-# task in a future within an executor. Maybe.
+# Bugs are to be expected, despite my efforts. Apparently, event loops paired
+# with threads is nothing short of a hassle.
 class TaskRerun(object):
 
     def __init__(self, coro, duration):
         self.coro = coro
         self.duration = duration
         self._executor = ThreadPoolExecutor()
-        self._loop = asyncio.get_event_loop()
+        self._lock = RLock()
 
     async def __aenter__(self):
+        asyncio.ensure_future(
+            asyncio.wrap_future(
+                self._executor.submit(self.prepare_loop)))
         return self
 
     async def __aexit__(self, exc, exc_type, tb):
-        self._executor.shutdown()
+        asyncio.ensure_future(
+            asyncio.wrap_future(
+                asyncio.run_coroutine_threadsafe(self.cleanup(), self._loop)))
         return self
 
+    def prepare_loop(self):
+        #  Surrounding the context around run_forever never releases the lock!
+        with self._lock:
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+        self._loop.run_forever()
+
     async def start(self):
-        def start():
-            task = asyncio.run_coroutine_threadsafe(
-                    self.seek(), self._loop)
-            # Emulate a timeout with call_later by calling task.cancel
-            self._loop.call_soon_threadsafe(
-                self._loop.call_later, self.duration, task.cancel)
-            result = task.result()
-            return result
-        try:
-            result = await self._loop.run_in_executor(self._executor, start)
-        except Exception:
-            result = None
-        finally:
-            return result
+        with self._lock:
+            # Blocking occurs unless wrapped in an asyncio.Future object
+            task = asyncio.wrap_future(
+                        asyncio.run_coroutine_threadsafe(
+                            self.seek(), self._loop))
+            try:
+                # Wait for the Task to complete or Timeout
+                async with timeout(self.duration):
+                    await task
+                result = task.result()
+            except Exception:
+                result = None
+            finally:
+                return result
 
     async def seek(self):
         def callback(task):
@@ -83,6 +97,8 @@ class TaskRerun(object):
                 pass
         while True:
             try:
+                # Deadlock occurs unless wrapped in an asyncio.Future object.
+                # We could also use AbstractEventLoop.create_task here.
                 task = asyncio.wrap_future(
                     asyncio.run_coroutine_threadsafe(
                         self.coro(self._loop), self._loop))
@@ -93,8 +109,22 @@ class TaskRerun(object):
                     return result
             except asyncio.CancelledError:
                 break
+            # We don't want to leave the loop unless result or cancelled
             except Exception:
                 pass
+
+    async def cleanup(self):
+        # A maximum recursion depth occurs when current task gets called for
+        # cancellation from gather.
+        pending = tuple(
+            task for task in asyncio.Task.all_tasks(loop=self._loop)
+            if task is not asyncio.Task.current_task())
+        gathered = asyncio.gather(
+            *pending, loop=self._loop, return_exceptions=True)
+        gathered.cancel()
+        await gathered
+        self._loop.call_soon_threadsafe(self._loop.stop)
+        self.executor.shutdown()
 
 
 async def work(pageurl, sitekey, loop):
@@ -134,7 +164,7 @@ async def get_solution(request):
         else:
             if pageurl and sitekey:
                 coro = partial(work, pageurl, sitekey)
-                async with TaskRerun(coro, duration=180) as t:
+                async with TaskRerun(coro, duration=SOLVE_DURATION) as t:
                     result = await t.start()
                 if result:
                     response = {"solution": result}

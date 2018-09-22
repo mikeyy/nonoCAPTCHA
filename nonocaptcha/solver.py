@@ -5,6 +5,7 @@
 
 import asyncio
 import json
+import sys
 import time
 import traceback
 
@@ -51,10 +52,9 @@ class Solver(Base):
         result = None
         try:
             self.browser = await self.get_new_browser()
-            target = [t for t in self.browser.targets() if await t.page()][0]
-            self.page = await target.page()
-            await self.page.setRequestInterception(True)
+            self.page = await self.browser.newPage()
             if self.should_block_images:
+                await self.page.setRequestInterception(True)
                 self.block_images()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
@@ -66,6 +66,9 @@ class Solver(Base):
         except BaseException as e:
             print(traceback.format_exc())
             self.log(f"{e} {type(e)}")
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+            raise e
         finally:
             if isinstance(result, dict):
                 status = result['status'].capitalize()
@@ -92,8 +95,7 @@ class Solver(Base):
 
     async def set_bypass_csp(self):
         await self.page._client.send(
-            "Page.setBypassCSP", {'enabled': True}
-        )
+            "Page.setBypassCSP", {'enabled': True})
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
@@ -113,6 +115,7 @@ class Solver(Base):
             '--disable-java',
             '--disable-popup-blocking',
             '--disable-prompt-on-repost',
+            '--disable-setuid-sandbox',
             '--disable-sync',
             '--disable-translate',
             '--disable-web-security',
@@ -124,12 +127,13 @@ class Solver(Base):
             # Automation arguments
             '--enable-automation',
             '--password-store=basic',
-            '--use-mock-keychain',
-        ]
+            '--use-mock-keychain']
         if self.proxy:
             args.append(f"--proxy-server={self.proxy}")
         if "args" in self.options:
             args.extend(self.options.pop("args"))
+        if "headless" in self.options:
+            self.headless = self.options["headless"]
         self.options.update({
             "headless": self.headless,
             "args": args,
@@ -146,8 +150,7 @@ class Solver(Base):
         jquery_js = await util.load_file(self.jquery_data)
         override_js = await util.load_file(self.override_data)
         navigator_config = generate_navigator_js(
-            os=("linux", "mac", "win"), navigator=("chrome")
-        )
+            os=("linux", "mac", "win"), navigator=("chrome"))
         navigator_config["mediaDevices"] = False
         navigator_config["webkitGetUserMedia"] = False
         navigator_config["mozGetUserMedia"] = False
@@ -157,8 +160,7 @@ class Solver(Base):
         dump = json.dumps(navigator_config)
         _navigator = f"const _navigator = {dump};"
         await self.page.evaluateOnNewDocument(
-            "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js)
-        )
+            "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js))
         return navigator_config["userAgent"]
 
     async def wait_for_deface(self):
@@ -179,10 +181,8 @@ class Solver(Base):
     document.close();
 }
 """
-                % html_code
-            )
-            % self.sitekey
-        )
+                % html_code)
+            % self.sitekey)
         await self.page.evaluate(deface_js)
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
@@ -205,12 +205,15 @@ class Solver(Base):
         user_agent = await self.cloak_navigator()
         await self.page.setUserAgent(user_agent)
         try:
-            await self.page.goto(
-                self.url,
-                timeout=self.page_load_timeout,
-                waitUntil="domcontentloaded",)
+            await self.loop.create_task(
+                self.page.goto(
+                    self.url,
+                    timeout=self.page_load_timeout,
+                    waitUntil="domcontentloaded",))
         except asyncio.TimeoutError:
-            raise PageError("Problem loading page")
+            raise PageError("Page loading timed-out")
+        except Exception as exc:
+            raise PageError(f"Page raised an error: `{exc}`")
 
     async def deface(self):
         try:
@@ -250,7 +253,8 @@ class Solver(Base):
             solve = self.image.solve_by_image
         else:
             self.audio = SolveAudio(
-                self.image_frame,
+                self.page,
+                self.loop,
                 self.proxy,
                 self.proxy_auth,
                 self.proc_id)
@@ -295,8 +299,7 @@ class Solver(Base):
         try:
             await self.image_frame.waitForFunction(
                 "$('#recaptcha-audio-button').length",
-                timeout=self.animation_timeout,
-            )
+                timeout=self.animation_timeout)
         except ButtonError:
             raise ButtonError("Audio button missing, aborting")
 
@@ -308,7 +311,6 @@ class Solver(Base):
             self.log("Clicking audio button")
             audio_button = await self.image_frame.J("#recaptcha-audio-button")
             await self.click_button(audio_button)
-
         try:
             result = await self.check_detection(self.animation_timeout)
         except SafePassage:

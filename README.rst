@@ -51,8 +51,6 @@ Check out 1-minute presentation of the script in action, with only
 .. figure:: https://github.com/mikeyy/nonoCAPTCHA/blob/presentation/presentation.gif
    :alt: nonoCAPTCHA preview
 
-   nonoCAPTCHA preview
-
 Compatibility
 -------------
 
@@ -79,7 +77,7 @@ Installation
 Configuration
 -------------
 
-Please edit config.example.py and save as config.py
+Please edit nonocaptcha.example.yaml and save as nonocaptcha.yaml
 
 Usage
 -----
@@ -113,19 +111,12 @@ If you want to use it in your own script
    if solution:
         print(solution)
 
-Or use the included async script app.py/run.py
+Donations
+---------
 
-*Edit variable count for amount of threads to use*
+The use of proxies are required for my continuous updates and fixes on
+nonoCAPTCHA. Any donations would be a great help in allowing me to purchase 
+these proxies, that are clearly expensive. If anyone is willing to share
+their proxies, I wouldn't hesitate to accept the offer.
 
-.. code:: shell
-
-   $ python examples/run.py
-
-Use the included mini-server and access
-http://localhost:5000/get?pageurl=PAGEURL&sitekey=SITEKEY
-
-*Replace PAGEURL and SITEKEY with the websites ReCAPTCHA details.*
-
-.. code:: shell
-
-   $ python examples/app.py
+Bitcoin: 1BfWQWAZBsSKCNQZgsq2vwaKxYvkrhb14u

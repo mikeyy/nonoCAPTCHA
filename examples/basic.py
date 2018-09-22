@@ -3,7 +3,7 @@ import sys
 
 from nonocaptcha.solver import Solver
 
-if len(sys.argv) == 3:
+if len(sys.argv) == 4:
     pageurl, sitekey, proxy = sys.argv[1:]
 else:
     print('Invalid number of arguments (pageurl, sitekey, proxy)')
@@ -12,6 +12,8 @@ else:
 
 loop = asyncio.get_event_loop()
 options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+if proxy.lower() == "none":
+    proxy = None
 client = Solver(pageurl, sitekey, options=options, proxy=proxy)
 try:
     result = loop.run_until_complete(client.start())
