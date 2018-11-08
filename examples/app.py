@@ -33,7 +33,7 @@ proxy_username, proxy_password = (None, None)
 parent_loop = asyncio.get_event_loop()
 # I'm not sure exactly if FastChildWatcher() is really any faster, requires
 # further research.
-asyncio.set_child_watcher(asyncio.FastChildWatcher())
+asyncio.set_child_watcher(asyncio.SafeChildWatcher())
 asyncio.get_child_watcher().attach_loop(parent_loop)
 
 app = web.Application()
