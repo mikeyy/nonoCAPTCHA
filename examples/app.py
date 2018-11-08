@@ -33,7 +33,7 @@ proxy_username, proxy_password = (None, None)
 
 if sys.platform == "win32":
     parent_loop = asyncio.ProactorEventLoop()
-    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop(parent_loop)
 else:
     parent_loop = asyncio.get_event_loop()
 
