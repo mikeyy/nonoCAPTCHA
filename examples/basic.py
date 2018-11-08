@@ -11,7 +11,10 @@ else:
 
 
 loop = asyncio.get_event_loop()
-options = {"headless": False, "ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+options = {
+    "headless": False,
+    "ignoreHTTPSErrors": True,
+    "args": ["--timeout 5"]}
 if proxy.lower() == "none":
     proxy = None
 client = Solver(pageurl, sitekey, options=options, proxy=proxy)
