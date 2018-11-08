@@ -1,20 +1,8 @@
 TODO
 =======
-
-* Add type casing
-* Rewrite the library for optimal asynchronicity and better readability, while 
-reflecting standard coding practice e.g.
-    * Accept user-defined loop
-    * Assign expensive(slow) operations as a Task, rather than awaiting
-    * Locate blocking synchronized operations
-    * Determine practical solution for Timeout usage, reducing Exceptions
-    * Possibly remove certain speech-to-text services
-    * Research other speech-to-text services for implementation
-    * And more
-* Find and fix nasty bugs that appear under certain circumstances, e.g.
-    * A browser signaled to terminate raises an IncompleteReadError exception,
-      one out of 100 instances.
-* Complete unfinished work in the repo
-* Review and formulate working comprehensive examples
-* Scrutinize the repo in unison for areas insisting improvement
-* And more...
+1. Define parameters that are interchangeable and list them along with explanations to the README.
+1. Output version number when script starts
+1.  Add logging for displaying error messages during runtime, and option to output to file
+1. Ensure script can run auto-piloted, without user interaction and safely integrating with Jetson TX2
+1.  Build an API for customizing the eye, including but not limited to color, shape, focus. This should have a separate option for developers with flexible yet breakable settings control.
+1. Brainstorm.
