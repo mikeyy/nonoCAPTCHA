@@ -30,9 +30,12 @@ proxies = ProxyDB(last_banned_timeout=BANNED_TIMEOUT)
 proxy_source = None  # Can be URL or file location
 proxy_username, proxy_password = (None, None)
 
-parent_loop = asyncio.get_event_loop()
-# I'm not sure exactly if FastChildWatcher() is really any faster, requires
-# further research.
+if sys.platform == "win32":
+    loop = asyncio.ProactorEventLoop()
+    asyncio.set_event_loop(loop)
+else:
+    loop = asyncio.get_event_loop()
+
 asyncio.set_child_watcher(asyncio.SafeChildWatcher())
 asyncio.get_child_watcher().attach_loop(parent_loop)
 
