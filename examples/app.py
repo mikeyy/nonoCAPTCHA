@@ -10,6 +10,7 @@ temporary profile folders.
 
 import asyncio
 import shutil
+import sys
 
 from aiohttp import web
 from async_timeout import timeout
@@ -31,10 +32,10 @@ proxy_source = None  # Can be URL or file location
 proxy_username, proxy_password = (None, None)
 
 if sys.platform == "win32":
-    loop = asyncio.ProactorEventLoop()
+    parent_loop = asyncio.ProactorEventLoop()
     asyncio.set_event_loop(loop)
 else:
-    loop = asyncio.get_event_loop()
+    parent_loop = asyncio.get_event_loop()
 
 asyncio.set_child_watcher(asyncio.SafeChildWatcher())
 asyncio.get_child_watcher().attach_loop(parent_loop)
