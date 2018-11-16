@@ -9,6 +9,7 @@ temporary profile folders.
 """
 
 import asyncio
+import contextlib
 import shutil
 import sys
 
@@ -34,10 +35,10 @@ proxy_username, proxy_password = (None, None)
 if sys.platform == "win32":
     parent_loop = asyncio.ProactorEventLoop()
     asyncio.set_event_loop(parent_loop)
+
 else:
     parent_loop = asyncio.get_event_loop()
-
-asyncio.set_child_watcher(asyncio.SafeChildWatcher())
+    
 asyncio.get_child_watcher().attach_loop(parent_loop)
 
 app = web.Application()

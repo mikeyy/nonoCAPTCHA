@@ -79,6 +79,7 @@ class SolveImage(Base):
         self.title = title
         print(f'Image of {title}')
         self.pieces = pieces
+        os.mkdir(PICTURES)
         self.cur_image_path = os.path.join(PICTURES, f'{hash(image)}')
         os.mkdir(self.cur_image_path)
         file_path = os.path.join(self.cur_image_path, f'{title}.jpg')

@@ -101,6 +101,8 @@ class Launcher(launcher.Launcher):
                 await self.proc.wait()
             except OSError:
                 pass
+            finally:
+                self.proc.kill()
 
     async def killChrome(self):
         """Terminate chromium process."""

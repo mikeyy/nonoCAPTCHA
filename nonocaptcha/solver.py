@@ -242,7 +242,7 @@ class Solver(Base):
 
     async def _solve(self):
         # Coming soon...
-        solve_image = True
+        solve_image = False
         if solve_image:
             self.image = SolveImage(
                 self.browser,
