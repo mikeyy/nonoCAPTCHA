@@ -9,7 +9,6 @@ temporary profile folders.
 """
 
 import asyncio
-import contextlib
 import shutil
 import sys
 
