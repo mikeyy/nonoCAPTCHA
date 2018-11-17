@@ -36,8 +36,7 @@ if sys.platform == "win32":
     asyncio.set_event_loop(parent_loop)
 else:
     parent_loop = asyncio.get_event_loop()
-
-asyncio.get_child_watcher().attach_loop(parent_loop)
+    asyncio.get_child_watcher().attach_loop(parent_loop)
 
 app = web.Application()
 
@@ -71,7 +70,10 @@ class TaskRerun(object):
     def prepare_loop(self):
         #  Surrounding the context around run_forever never releases the lock!
         with self._lock:
-            self._loop = asyncio.new_event_loop()
+            if sys.platform == "win32":
+                self._loop = asyncio.ProactorEventLoop()
+            else:
+                self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
         self._loop.run_forever()
 
