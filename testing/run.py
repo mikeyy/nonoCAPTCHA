@@ -5,7 +5,7 @@ from speech import Amazon, Azure, Sphinx, DeepSpeech, play_audio, settings
 
 
 speech_service = settings["service"]
-audio_dir = "recap-audio"
+audio_dir = "audio_files"
 post_play_audio = True
 
 
