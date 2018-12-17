@@ -1,10 +1,10 @@
 debug: true
 headless: false
-keyboard_traverse: false 
+keyboard_traverse: false
 block_images: true
 timeout:
     page_load: 30
-    deface: 30
+    iframe: 30
     animation: 5
 
 speech:
@@ -14,7 +14,7 @@ speech:
     pocketsphinx:
         model_dir: pocketsphinx/model
     azure:
-        api_subkey: 
+        api_subkey:
     amazon:
         secret_key_id:
         secret_access_key:

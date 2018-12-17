@@ -17,7 +17,7 @@ from nonocaptcha.audio import SolveAudio
 from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
 from nonocaptcha import util
-from nonocaptcha.exceptions import (SafePassage, ButtonError, DefaceError,
+from nonocaptcha.exceptions import (SafePassage, ButtonError, IframeError,
                                     PageError)
 
 
@@ -35,6 +35,7 @@ class Solver(Base):
         proxy=None,
         proxy_auth=None,
         options={},
+        enable_deface=True,
         **kwargs,
     ):
         self.options = merge_dict(options, kwargs)
@@ -43,6 +44,7 @@ class Solver(Base):
         self.loop = loop or asyncio.get_event_loop()
         self.proxy = f"http://{proxy}" if proxy else proxy
         self.proxy_auth = proxy_auth
+        self.enable_deface = enable_deface
         self.proc_id = self.proc_count
         type(self).proc_count += 1
 
@@ -61,7 +63,9 @@ class Solver(Base):
             self.log(f"Starting solver with proxy {self.proxy}")
             await self.set_bypass_csp()
             await self.goto()
-            await self.deface()
+            if self.enable_deface:
+                await self.deface()
+            await self.wait_for_frames()
             result = await self.solve()
         except BaseException as e:
             print(traceback.format_exc())
@@ -163,7 +167,7 @@ class Solver(Base):
             "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js))
         return navigator_config["userAgent"]
 
-    async def wait_for_deface(self):
+    async def deface(self):
         """Overwrite current page with reCAPTCHA widget and wait for image
            iframe to appear on dom before continuing.
 
@@ -184,6 +188,8 @@ class Solver(Base):
                 % html_code)
             % self.sitekey)
         await self.page.evaluate(deface_js)
+
+    async def _frames(self):
         func = """() => {
     frame = $("iframe[src*='api2/bframe']")
     $(frame).load( function() {
@@ -198,7 +204,13 @@ class Solver(Base):
         window.dispatchEvent(evt);
     }
 }"""
-        await self.page.waitForFunction(func, timeout=self.deface_timeout)
+        await self.page.waitForFunction(func, timeout=self.iframe_timeout)
+
+    async def wait_for_frames(self):
+        try:
+            await self._frames()
+        except asyncio.TimeoutError:
+            raise IframeError("Problem locating reCAPTCHA frames")
 
     async def goto(self):
         """Navigate to address"""
@@ -214,12 +226,6 @@ class Solver(Base):
             raise PageError("Page loading timed-out")
         except Exception as exc:
             raise PageError(f"Page raised an error: `{exc}`")
-
-    async def deface(self):
-        try:
-            await self.loop.create_task(self.wait_for_deface())
-        except asyncio.TimeoutError:
-            raise DefaceError("Problem defacing page")
 
     async def solve(self):
         """Click checkbox, otherwise attempt to decipher audio"""

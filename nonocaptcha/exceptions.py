@@ -35,7 +35,7 @@ class ButtonError(nonocaptchaError):
     pass
 
 
-class DefaceError(nonocaptchaError):
+class IframeError(nonocaptchaError):
     """ Raised when defacing page times out. """
     pass
 
