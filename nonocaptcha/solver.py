@@ -171,23 +171,12 @@ class Solver(Base):
         """Overwrite current page with reCAPTCHA widget and wait for image
            iframe to appear on dom before continuing.
 
-           Function x is an odd hack for multiline text, but it works.
+           Websites toggled to highest-security will most often fail, such as
+           Google reCAPTCHA's demo page. Looking for alternatives for
+           circumvention.
         """
         html_code = await util.load_file(self.deface_data)
-        deface_js = (
-            (
-                """() => {
-    var x = (function () {/*
-        %s
-    */}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1];
-    document.open();
-    document.write(x)
-    document.close();
-}
-"""
-                % html_code)
-            % self.sitekey)
-        await self.page.evaluate(deface_js)
+        await self.page.setContent(html_code % self.sitekey)
 
     async def _frames(self):
         func = """() => {
