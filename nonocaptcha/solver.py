@@ -56,15 +56,14 @@ class Solver(Base):
             self.browser = await self.get_new_browser()
             self.page = await self.browser.newPage()
             if self.should_block_images:
-                await self.page.setRequestInterception(True)
-                self.block_images()
+                await self.block_images()
+            if self.enable_deface:
+                await self.inject_widget()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
             self.log(f"Starting solver with proxy {self.proxy}")
             await self.set_bypass_csp()
             await self.goto()
-            if self.enable_deface:
-                await self.deface()
             await self.wait_for_frames()
             result = await self.solve()
         except BaseException as e:
@@ -83,18 +82,35 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             return result
 
-    def block_images(self):
+    async def inject_widget(self):
+        async def handle_request(request):
+            if (request.url == self.url):
+                deface_code = await util.load_file(self.deface_data)
+                await request.respond({
+                    'status': 200,
+                    'contentType': 'text/html',
+                    'body': deface_code % self.sitekey
+                })
+            else:
+                await request.continue_()
+        await self.enable_interception()
+        self.page.on('request', handle_request)
+
+    async def block_images(self):
         async def handle_request(request):
             if (request.resourceType == 'image'):
                 await request.abort()
             else:
                 await request.continue_()
-
+        await self.enable_interception()
         self.page.on('request', handle_request)
+
+    async def enable_interception(self):
+        await self.page.setRequestInterception(True)
 
     async def cleanup(self):
         if self.browser:
-            await self.browser.close()
+            await self.launcher.killChrome()
             self.log('Browser closed')
 
     async def set_bypass_csp(self):
@@ -168,29 +184,41 @@ class Solver(Base):
         return navigator_config["userAgent"]
 
     async def deface(self):
-        """Overwrite current page with reCAPTCHA widget and wait for image
-           iframe to appear on dom before continuing.
+        """ ***DEPRECATED***
+        Create a DIV element and append to current body for explicit loading
+        of reCAPTCHA widget.
 
-           Websites toggled to highest-security will most often fail, such as
-           Google reCAPTCHA's demo page. Looking for alternatives for
-           circumvention.
+        Websites toggled to highest-security will most often fail, such as
+        Google reCAPTCHA's demo page. Looking for alternatives for
+        circumvention.
         """
-        html_code = await util.load_file(self.deface_data)
-        await self.page.setContent(html_code % self.sitekey)
+        deface_js = (
+                """() => {
+    widget = jQuery("<div id=recaptcha-widget>").appendTo("body");
+    parent.window.recapReady = function(){
+        grecaptcha.render(document.getElementById('recaptcha-widget'), {
+            sitekey: '%s',
+            callback: function () {
+                console.log('recaptcha callback');
+            }
+        });
+    }
+}""" % self.sitekey)
+        await self.page.evaluate(deface_js)
+        recaptcha_url = ("https://www.google.com/recaptcha/api.js"
+                         "?onload=recapReady&render=explicit")
+        await self.page.addScriptTag(url=recaptcha_url)
+
 
     async def _frames(self):
+        """Wait for image iframe to appear on dom before continuing."""
         func = """() => {
-    frame = $("iframe[src*='api2/bframe']")
-    $(frame).load( function() {
+    frame = jQuery("iframe[src*='api2/bframe']")
+    jQuery(frame).load( function() {
         window.ready_eddy = true;
     });
     if(window.ready_eddy){
         return true;
-    }else{
-        // I don't think this is necessary but it won't hurt...
-        var evt = document.createEvent('Event');
-        evt.initEvent('load', false, false);
-        window.dispatchEvent(evt);
     }
 }"""
         await self.page.waitForFunction(func, timeout=self.iframe_timeout)
@@ -273,7 +301,7 @@ class Solver(Base):
         """Wait for checkbox to appear."""
         try:
             await self.checkbox_frame.waitForFunction(
-                "$('#recaptcha-anchor').length",
+                "jQuery('#recaptcha-anchor').length",
                 timeout=self.animation_timeout)
         except ButtonError:
             raise ButtonError("Checkbox missing, aborting")
@@ -293,7 +321,7 @@ class Solver(Base):
         """Wait for audio button to appear."""
         try:
             await self.image_frame.waitForFunction(
-                "$('#recaptcha-audio-button').length",
+                "jQuery('#recaptcha-audio-button').length",
                 timeout=self.animation_timeout)
         except ButtonError:
             raise ButtonError("Audio button missing, aborting")
@@ -314,5 +342,5 @@ class Solver(Base):
             return result
 
     async def g_recaptcha_response(self):
-        code = await self.page.evaluate("$('#g-recaptcha-response').val()")
+        code = await self.page.evaluate("jQuery('#g-recaptcha-response').val()")
         return code
