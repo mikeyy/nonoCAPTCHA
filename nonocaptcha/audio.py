@@ -55,7 +55,7 @@ class SolveAudio(Base):
 
         try:
             audio_url = await self.image_frame.evaluate(
-                '$("#audio-source").attr("src")')
+                'jQuery("#audio-source").attr("src")')
             if not isinstance(audio_url, str):
                 raise DownloadError("Audio url is not valid, aborting")
         except CancelledError:
@@ -99,7 +99,7 @@ class SolveAudio(Base):
             await self.click_reload_button()
             func = (
                 f'"{audio_url}" !== '
-                f'$(".rc-audiochallenge-tdownload-link").attr("href")')
+                f'jQuery(".rc-audiochallenge-tdownload-link").attr("href")')
             try:
                 await self.image_frame.waitForFunction(
                     func, timeout=self.animation_timeout)
