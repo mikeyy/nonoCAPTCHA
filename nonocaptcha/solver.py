@@ -209,7 +209,6 @@ class Solver(Base):
                          "?onload=recapReady&render=explicit")
         await self.page.addScriptTag(url=recaptcha_url)
 
-
     async def _frames(self):
         """Wait for image iframe to appear on dom before continuing."""
         func = """() => {
@@ -342,5 +341,6 @@ class Solver(Base):
             return result
 
     async def g_recaptcha_response(self):
-        code = await self.page.evaluate("jQuery('#g-recaptcha-response').val()")
+        code = await self.page.evaluate(
+            "jQuery('#g-recaptcha-response').val()")
         return code
