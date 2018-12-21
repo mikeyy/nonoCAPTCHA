@@ -23,3 +23,5 @@ for (const key of Object.keys(_navigator)) {
         value: _navigator[key]
     });
 }
+
+jQuery.noConflict();
