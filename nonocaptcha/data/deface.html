@@ -1,18 +1,14 @@
-<html>
-    <head>
-      <script src="https://www.google.com/recaptcha/api.js?onload=recaptchaCallback&render=explicit" async defer></script>
-      <script type="text/javascript">
-        var recaptchaCallback = function () {
-          grecaptcha.render("recaptcha", {
-              sitekey: '%s',
-              callback: function () {
-                  void 0;
-              }
-          });
+<div id="recaptcha"></div>
+
+<script type="text/javascript">
+  var recapReady = function () {
+    grecaptcha.render("recaptcha", {
+        sitekey: '%s',
+        callback: function () {
+            void 0;
         }
-      </script>
-    </head>
-    <body>
-      <div id="recaptcha"></div>
-    </body>
-</html>
+    });
+  }
+</script>
+
+<script src="https://www.google.com/recaptcha/api.js?onload=recapReady&render=explicit" async defer></script>

@@ -35,16 +35,22 @@ class Solver(Base):
         proxy=None,
         proxy_auth=None,
         options={},
-        enable_deface=True,
-        **kwargs,
-    ):
+        enable_injection=True,  # Required for pages that don't initially
+                                # render the widget.
+        retain_source=True,  # Pre-load page source and insert widget code.
+                             # Useful for bypassing high-security thresholds.
+                             # This can cause problems if the page has a widget
+                             # already or doesn't include a </body> tag.
+        **kwargs
+                ):
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
         self.loop = loop or asyncio.get_event_loop()
         self.proxy = f"http://{proxy}" if proxy else proxy
         self.proxy_auth = proxy_auth
-        self.enable_deface = enable_deface
+        self.enable_deface = enable_injection
+        self.retain_source = retain_source
         self.proc_id = self.proc_count
         type(self).proc_count += 1
 
@@ -85,11 +91,16 @@ class Solver(Base):
     async def inject_widget(self):
         async def handle_request(request):
             if (request.url == self.url):
-                deface_code = await util.load_file(self.deface_data)
+                deface_code = (
+                    await util.load_file(self.deface_data) % self.sitekey)
+                if self.retain_source:
+                    source = await util.get_page(self.url)
+                    index = source.find('</body>')
+                    deface_code = source[:index] + deface_code + source[index:]
                 await request.respond({
                     'status': 200,
                     'contentType': 'text/html',
-                    'body': deface_code % self.sitekey
+                    'body': deface_code
                 })
             else:
                 await request.continue_()
