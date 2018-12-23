@@ -49,7 +49,7 @@ class Solver(Base):
         self.loop = loop or asyncio.get_event_loop()
         self.proxy = f"http://{proxy}" if proxy else proxy
         self.proxy_auth = proxy_auth
-        self.enable_deface = enable_injection
+        self.enable_injection = enable_injection
         self.retain_source = retain_source
         self.proc_id = self.proc_count
         type(self).proc_count += 1
@@ -63,7 +63,7 @@ class Solver(Base):
             self.page = await self.browser.newPage()
             if self.should_block_images:
                 await self.block_images()
-            if self.enable_deface:
+            if self.enable_injection:
                 await self.inject_widget()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
