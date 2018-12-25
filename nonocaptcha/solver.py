@@ -89,21 +89,30 @@ class Solver(Base):
             return result
 
     async def inject_widget(self):
+        def insert(source):
+            head_index = source.find('</head>')
+            source = source[:head_index] + script_tag + source[head_index:]
+            body_index = source.find('</body>')
+            return source[:body_index] + widget_code + source[body_index:]
+
         async def handle_request(request):
             if (request.url == self.url):
-                deface_code = (
-                    await util.load_file(self.deface_data) % self.sitekey)
                 if self.retain_source:
                     source = await util.get_page(self.url)
-                    index = source.find('</body>')
-                    deface_code = source[:index] + deface_code + source[index:]
+                    filters = ['grecaptcha.render', 'g-recaptcha']
+                    if not [filter for filter in filters if filter in source]:
+                        source = insert(source)
                 await request.respond({
                     'status': 200,
                     'contentType': 'text/html',
-                    'body': deface_code
+                    'body': source
                 })
             else:
                 await request.continue_()
+        recaptcha_source = "https://www.google.com/recaptcha/api.js"
+        script_tag = (f"<script src={recaptcha_source} async defer></script>")
+        widget_code = (f"<div class=g-recaptcha data-sitekey={self.sitekey}>"
+                       "</div>")
         await self.enable_interception()
         self.page.on('request', handle_request)
 
