@@ -15,7 +15,7 @@ from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
 from pyppeteer.errors import BrowserError
-from pyppeteer.helper import addEventListener, debugError, removeEventListeners
+from pyppeteer.helper import addEventListener, removeEventListeners
 from pyppeteer.util import check_chromium, chromium_executable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
