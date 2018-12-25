@@ -109,7 +109,7 @@ class Solver(Base):
                 })
             else:
                 await request.continue_()
-        recaptcha_source = "https://www.google.com/recaptcha/api.js"
+        recaptcha_source = "https://www.google.com/recaptcha/api.js?hl=en"
         script_tag = (f"<script src={recaptcha_source} async defer></script>")
         widget_code = (f"<div class=g-recaptcha data-sitekey={self.sitekey}>"
                        "</div>")
