@@ -1,6 +1,12 @@
 History
 =======
-### Current Version (2018-09-14)
+### Current Version (2018-12-25)
+* Implement working circumvention around detection
+* Add option to enable/disable deface
+* Add option to retain content of original page source
+* Add Pyppeteer 0.0.25 to requirements
+
+### Version 1.8.8 (2018-09-14)
 * Add Pyppeteer 0.0.24 to requirements
 
 ### Version 1.8.7 (2018-09-14)
@@ -68,15 +74,15 @@ History
 * Remove proxy settings from configuration file
 * Remove proxy protocol attribute from Solver (Aiohttp only supports HTTP)
 * Fix proxy authentication when downloading audio file
-* Add flake8 for auto-testing in repository 
+* Add flake8 for auto-testing in repository
 
 ### Version 1.7.7 (2018-07-10)
 * Fix new Chromium update with Pyppeteer 0.0.19
 
-### Version 1.7.6 (2018-07-10) 
+### Version 1.7.6 (2018-07-10)
 * Fix check_detection timeout
 
-### Version 1.7.5 (2018-07-10) 
+### Version 1.7.5 (2018-07-10)
 * Fix importing of non-existent/removed Exceptions
 
 ### Version 1.7.4 (2018-07-08)
@@ -115,10 +121,10 @@ History
 ### Version 1.5.7 (2018-07-03)
 * Fix bugs
 
-### Version 1.5.6 (2018-07-03) 
+### Version 1.5.6 (2018-07-03)
 * speech.py
     * Remove playback left behind from debugging
-    
+
 ### Version 1.5.5 (2018-07-03)
 * audio.py
     * Fix change from InvalidDownload to DownloadError
@@ -350,7 +356,7 @@ History
 * config.example.py
     * Added debug setting
     * Lowered success_timeout to 5 seconds
-    
+
 ### Version 0.0.2 (2018-06-15)
 
 * README.md
