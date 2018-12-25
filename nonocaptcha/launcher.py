@@ -15,7 +15,8 @@ from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
 from pyppeteer.errors import BrowserError
-from pyppeteer.util import check_chromium, chromium_excutable
+from pyppeteer.helper import addEventListener, debugError, removeEventListeners
+from pyppeteer.util import check_chromium, chromium_executable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
 
@@ -54,7 +55,7 @@ class Launcher(launcher.Launcher):
         else:
             if not check_chromium():
                 download_chromium()
-            self.exec = str(chromium_excutable())
+            self.exec = str(chromium_executable())
         self.cmd = [self.exec] + self.chrome_args
 
     async def launch(self):
@@ -77,7 +78,7 @@ class Launcher(launcher.Launcher):
 
     async def _get_ws_endpoint(self) -> str:
         url = self.url + '/json/version'
-        while self.proc.returncode is None:
+        while self.proc.returncode is None and not self.chromeClosed:
             await asyncio.sleep(0.1)
             try:
                 with urlopen(url) as f:
@@ -92,6 +93,25 @@ class Launcher(launcher.Launcher):
                 )
             )
         return data['webSocketDebuggerUrl']
+
+    async def ensureInitialPage(self, browser):
+        """Wait for initial page target to be created."""
+        for target in browser.targets():
+            if target.type == 'page':
+                return
+
+        initialPagePromise = self._loop.create_future()
+
+        def initialPageCallback():
+            initialPagePromise.set_result(True)
+
+        def check_target(target):
+            if target.type == 'page':
+                initialPageCallback()
+
+        listeners = [addEventListener(browser, 'targetcreated', check_target)]
+        await initialPagePromise
+        removeEventListeners(listeners)
 
     async def waitForChromeToClose(self):
         if self.proc.returncode is None and not self.chromeClosed:
