@@ -52,12 +52,12 @@ class SolveAudio(Base):
 
     async def get_audio_response(self):
         """Download audio data then send to speech-to-text API for answer"""
-
         try:
             audio_url = await self.image_frame.evaluate(
                 'jQuery("#audio-source").attr("src")')
+            print(type(audio_url))
             if not isinstance(audio_url, str):
-                raise DownloadError("Audio url is not valid, aborting")
+                raise DownloadError(f"Audio url is not valid, expected `str` but received {type(audio_url)}")
         except CancelledError:
             raise DownloadError("Audio url not found, aborting")
 

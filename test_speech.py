@@ -1,12 +1,21 @@
 import asyncio
 import os
 
-from speech import Amazon, Azure, Sphinx, DeepSpeech, play_audio, settings
+from pydub import AudioSegment, playback
+
+from nonocaptcha.base import settings
+from nonocaptcha.util import threaded
+from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech
 
 
-speech_service = settings["service"]
+speech_service = settings["speech"]["service"]
 audio_dir = "audio_files"
 post_play_audio = True
+
+
+@threaded
+def play_audio(mp3_filename):
+    playback.play(AudioSegment.from_mp3(mp3_filename))
 
 
 async def solve(service, audio_file):

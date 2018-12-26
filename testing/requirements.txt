@@ -1,6 +1,0 @@
-aiobotocore
-aiofiles
-pyyaml
-pydub
-requests
-websockets
