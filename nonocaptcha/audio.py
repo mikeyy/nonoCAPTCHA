@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """ Audio solving module. """
 
 import os
@@ -30,8 +29,7 @@ class SolveAudio(Base):
         await self.get_frames()
         for i in range(10):
             try:
-                answer = await self.loop.create_task(
-                    self.get_audio_response())
+                answer = await self.loop.create_task(self.get_audio_response())
             except DownloadError:
                 raise
             except ReloadError:
@@ -55,9 +53,9 @@ class SolveAudio(Base):
         try:
             audio_url = await self.image_frame.evaluate(
                 'jQuery("#audio-source").attr("src")')
-            print(type(audio_url))
             if not isinstance(audio_url, str):
-                raise DownloadError(f"Audio url is not valid, expected `str` but received {type(audio_url)}")
+                raise DownloadError(f"Audio url is not valid, expected `str`",
+                                    "instead received {type(audio_url)}")
         except CancelledError:
             raise DownloadError("Audio url not found, aborting")
 
@@ -118,7 +116,7 @@ class SolveAudio(Base):
             self.log("Pressing Enter")
             await response_input.press("Enter")
         else:
-            verify_button = await self.image_frame.J(
-                "#recaptcha-verify-button")
+            verify_button = await self.image_frame.J("#recaptcha-verify-button"
+                                                     )
             self.log("Clicking verify")
             await self.click_button(verify_button)

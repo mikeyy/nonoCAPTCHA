@@ -125,8 +125,7 @@ class Launcher(launcher.Launcher):
             options['stderr'] = asyncio.subprocess.STDOUT
 
         self.proc = await asyncio.subprocess.create_subprocess_exec(
-            *self.cmd,
-            **options)
+            *self.cmd, **options)
         # Signal handlers for exits used to be here
         connectionDelay = self.slowMo
         self.browserWSEndpoint = await self._get_ws_endpoint()
@@ -190,7 +189,8 @@ class Launcher(launcher.Launcher):
                 await self.connection.dispose()
             except Exception:
                 pass
-        if self.temporaryUserDataDir and os.path.exists(self.temporaryUserDataDir):
+        if self.temporaryUserDataDir and os.path.exists(
+                self.temporaryUserDataDir):
             # Force kill chrome only when using temporary userDataDir
             await self.waitForChromeToClose()
             self._cleanup_tmp_user_data_dir()
