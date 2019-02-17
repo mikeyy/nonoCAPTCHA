@@ -128,8 +128,8 @@ class Solver(Base):
         await self.page.setRequestInterception(True)
 
     async def cleanup(self):
-        if self.browser:
-            await self.browser.close()
+        if self.launcher:
+            await self.launcher.killChrome()
             self.log('Browser closed')
 
     async def set_bypass_csp(self):
