@@ -15,7 +15,7 @@ from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
 from pyppeteer.errors import BrowserError
-from pyppeteer.util import check_chromium, chromium_excutable
+from pyppeteer.util import check_chromium, chromium_executable
 from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
 
@@ -54,7 +54,7 @@ class Launcher(launcher.Launcher):
         else:
             if not check_chromium():
                 download_chromium()
-            self.exec = str(chromium_excutable())
+            self.exec = str(chromium_executable())
         self.cmd = [self.exec] + self.chrome_args
 
     async def launch(self):
