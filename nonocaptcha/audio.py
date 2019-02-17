@@ -54,7 +54,7 @@ class SolveAudio(Base):
             audio_url = await self.image_frame.evaluate(
                 'jQuery("#audio-source").attr("src")')
             if not isinstance(audio_url, str):
-                raise DownloadError(f"Audio url is not valid, expected `str`",
+                raise DownloadError(f"Audio url is not valid, expected `str`"
                                     "instead received {type(audio_url)}")
         except CancelledError:
             raise DownloadError("Audio url not found, aborting")
@@ -108,15 +108,11 @@ class SolveAudio(Base):
         self.log("Typing audio response")
         response_input = await self.image_frame.J("#audio-response")
         length = random.uniform(70, 130)
-        await response_input.type(text=answer, delay=length)
+        await self.loop.create_task(
+            response_input.type(text=answer, delay=length))
 
     async def click_verify(self):
-        if self.keyboard_traverse:
-            response_input = await self.image_frame.J("#audio-response")
-            self.log("Pressing Enter")
-            await response_input.press("Enter")
-        else:
-            verify_button = await self.image_frame.J("#recaptcha-verify-button"
-                                                     )
-            self.log("Clicking verify")
-            await self.click_button(verify_button)
+        self.log("Clicking verify")
+        verify_button = await self.image_frame.J("#recaptcha-verify-button"
+                                                 )
+        await self.click_button(verify_button)

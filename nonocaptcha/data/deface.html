@@ -1,14 +1,14 @@
-<div id="recaptcha"></div>
+<html>
 
-<script type="text/javascript">
-  var recapReady = function () {
-    grecaptcha.render("recaptcha", {
-        sitekey: '%s',
-        callback: function () {
-            void 0;
-        }
-    });
-  }
-</script>
+<head>
+    <title>nonoCAPTCHA</title>
+    <script src=https://recaptcha.net/recaptcha/api.js async></script>
+</head>
 
-<script src="https://www.google.com/recaptcha/api.js?onload=recapReady&render=explicit" async defer></script>
+<body>
+    <form action=? method=POST>
+        <div class=g-recaptcha data-sitekey=%s></div>
+    </form>
+</body>
+
+</html>

@@ -12,11 +12,11 @@ import traceback
 from pyppeteer.util import merge_dict
 from user_agent import generate_navigator_js
 
+from nonocaptcha import util
 from nonocaptcha.base import Base
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
-from nonocaptcha import util
 from nonocaptcha.exceptions import (SafePassage, ButtonError, IframeError,
                                     PageError)
 
@@ -105,8 +105,7 @@ class Solver(Base):
                 await request.respond({
                     'status': 200,
                     'contentType': 'text/html',
-                    'body': source
-                })
+                    'body': source})
             else:
                 await request.continue_()
         recaptcha_source = "https://www.google.com/recaptcha/api.js?hl=en"
@@ -130,7 +129,7 @@ class Solver(Base):
 
     async def cleanup(self):
         if self.browser:
-            await self.launcher.killChrome()
+            await self.browser.close()
             self.log('Browser closed')
 
     async def set_bypass_csp(self):
@@ -229,22 +228,19 @@ class Solver(Base):
                          "?onload=recapReady&render=explicit")
         await self.page.addScriptTag(url=recaptcha_url)
 
-    async def _frames(self):
-        """Wait for image iframe to appear on dom before continuing."""
-        func = """() => {
-    frame = jQuery("iframe[src*='api2/bframe']")
-    jQuery(frame).load( function() {
-        window.ready_eddy = true;
-    });
-    if(window.ready_eddy){
-        return true;
-    }
-}"""
-        await self.page.waitForFunction(func, timeout=self.iframe_timeout)
-
     async def wait_for_frames(self):
         try:
-            await self._frames()
+            """Wait for image iframe to appear on dom before continuing."""
+            func = """() => {
+        frame = jQuery("iframe[src*='api2/bframe']")
+        jQuery(frame).load( function() {
+            window.ready_eddy = true;
+        });
+        if(window.ready_eddy){
+            return true;
+        }
+    }"""
+            await self.page.waitForFunction(func, timeout=self.iframe_timeout)
         except asyncio.TimeoutError:
             raise IframeError("Problem locating reCAPTCHA frames")
 
@@ -327,14 +323,9 @@ class Solver(Base):
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
-        if self.keyboard_traverse:
-            self.body = await self.page.J("body")
-            await self.body.press("Tab")
-            await self.body.press("Enter")
-        else:
-            self.log("Clicking checkbox")
-            checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
-            await self.click_button(checkbox)
+        self.log("Clicking checkbox")
+        checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
+        await self.click_button(checkbox)
 
     async def wait_for_audio_button(self):
         """Wait for audio button to appear."""
@@ -347,12 +338,9 @@ class Solver(Base):
 
     async def click_audio_button(self):
         """Click audio button after it appears."""
-        if self.keyboard_traverse:
-            await self.body.press("Enter")
-        else:
-            self.log("Clicking audio button")
-            audio_button = await self.image_frame.J("#recaptcha-audio-button")
-            await self.click_button(audio_button)
+        self.log("Clicking audio button")
+        audio_button = await self.image_frame.J("#recaptcha-audio-button")
+        await self.click_button(audio_button)
         try:
             result = await self.check_detection(self.animation_timeout)
         except SafePassage:

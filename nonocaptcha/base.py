@@ -28,8 +28,7 @@ except FileNotFoundError:
     from shutil import copyfile
 
     copyfile(
-        f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml"
-    )
+        f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml")
     sys.exit(0)
 
 
@@ -46,7 +45,6 @@ class Base(Clicker):
         logger.setLevel("DEBUG")
     proc_id = 0
     headless = settings["headless"]
-    keyboard_traverse = settings["keyboard_traverse"]
     should_block_images = settings["block_images"]
     page_load_timeout = settings["timeout"]["page_load"] * 1000
     iframe_timeout = settings["timeout"]["iframe"] * 1000
