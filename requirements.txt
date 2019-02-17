@@ -7,7 +7,7 @@ pillow==5.2.0
 pocketsphinx==0.1.15
 psutil==5.4.6
 pydub==0.22.1
-pyppeteer==0.0.23
+pyppeteer==0.0.25
 pyyaml>=4.2b1
 requests==2.20.0
 user-agent==0.1.9
