@@ -89,7 +89,7 @@ class Solver(Base):
             return result
 
     async def inject_widget(self):
-        def insert(source):
+        def insert(source="<html><head></head><body></body></html>"):
             head_index = source.find('</head>')
             source = source[:head_index] + script_tag + source[head_index:]
             body_index = source.find('</body>')
@@ -102,6 +102,8 @@ class Solver(Base):
                     filters = ['grecaptcha.render', 'g-recaptcha']
                     if not [filter for filter in filters if filter in source]:
                         source = insert(source)
+                else:
+                    source = insert()
                 await request.respond({
                     'status': 200,
                     'contentType': 'text/html',
