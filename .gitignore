@@ -81,3 +81,6 @@ proxies.txt
 # speech-to-text module folders
 deepspeech
 pocketsphinx
+
+# visual studio code editor configs
+.vscode

@@ -15,6 +15,10 @@ speech:
         model_dir: pocketsphinx/model
     azure:
         api_subkey:
+    azurespeech:
+        region:
+        subscription_key:
+        language_type:
     amazon:
         secret_key_id:
         secret_access_key:
