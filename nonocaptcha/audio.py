@@ -11,7 +11,7 @@ from asyncio import TimeoutError, CancelledError
 from aiohttp.client_exceptions import ClientError
 
 from nonocaptcha import util
-from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech
+from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech, AzureSpeech
 from nonocaptcha.base import Base
 from nonocaptcha.exceptions import DownloadError, ReloadError, TryAgain
 
@@ -27,7 +27,7 @@ class SolveAudio(Base):
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
         await self.get_frames()
-        for i in range(10):
+        for _ in range(10):
             try:
                 answer = await self.loop.create_task(self.get_audio_response())
             except DownloadError:
@@ -73,8 +73,15 @@ class SolveAudio(Base):
         else:
             answer = None
             service = self.speech_service.lower()
-            if service in ["azure", "pocketsphinx", "deepspeech"]:
-                if service == "azure":
+            if service in [
+                "azure",
+                "pocketsphinx",
+                "deepspeech",
+                "azurespeech"
+            ]:
+                if service == "azurespeech":
+                    speech = AzureSpeech()
+                elif service == "azure":
                     speech = Azure()
                 elif service == "pocketsphinx":
                     speech = Sphinx()

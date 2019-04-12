@@ -13,6 +13,7 @@ import struct
 import sys
 import time
 import websockets
+import requests
 
 from datetime import datetime
 from uuid import uuid4
@@ -176,6 +177,63 @@ class Amazon(object):
         # Close clients
         await upload._endpoint._aio_session.close()
         await transcribe._endpoint._aio_session.close()
+
+
+class AzureSpeech(object):
+    API_REGION = settings["speech"]["azurespeech"]["region"]
+    SUB_KEY = settings["speech"]["azurespeech"]["subscription_key"]
+    language_type = settings["speech"]["azurespeech"]['language_type']
+
+    @util.threaded
+    def extract_json_body(self, response):
+        return json.loads(response)
+
+    async def bytes_from_file(self, filename):
+        async with aiofiles.open(filename, "rb") as f:
+            chunk = await f.read()
+            return chunk
+
+    async def get_text(self, mp3_filename):
+        ''' return text result or None '''
+        # convert mp3 file to WAV
+        wav_filename = await mp3_to_wav(mp3_filename)
+        # read bytes from WAV file.
+        wav_bytes = await self.bytes_from_file(wav_filename)
+        # get result of speech
+        headers = {
+            'Ocp-Apim-Subscription-Key': self.SUB_KEY,
+            'Accept': 'application/json;text/xml',
+            'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+        }
+
+        speech_to_text_url = (
+            f"https://{self.API_REGION}.stt.speech.microsoft.com/speech/"
+            f"recognition/conversation/cognitiveservices/v1?"
+            f"language={self.language_type}&format=detailed"
+        )
+
+        response = requests.post(
+            speech_to_text_url,
+            headers=headers,
+            data=wav_bytes
+        )
+        if response.status_code == 200:
+            print(response.content)
+            content = await self.extract_json_body(response.content)
+            if (
+                "RecognitionStatus" in content
+                and content["RecognitionStatus"] == "Success"
+            ):
+                answer = content["NBest"][0]["Lexical"]
+                return answer
+            if (
+                "RecognitionStatus" in content
+                and content["RecognitionStatus"] == "EndOfDictation"
+            ):
+                return
+        else:
+            print(response.status_code)
+            return None
 
 
 class Azure(object):
