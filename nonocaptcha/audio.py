@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """ Audio solving module. """
-
 import os
 import random
 import shutil
@@ -9,11 +8,11 @@ import tempfile
 
 from asyncio import TimeoutError, CancelledError
 from aiohttp.client_exceptions import ClientError
-
-from nonocaptcha import util
-from nonocaptcha.speech import Amazon, Azure, Sphinx, DeepSpeech, AzureSpeech
 from nonocaptcha.base import Base
 from nonocaptcha.exceptions import DownloadError, ReloadError, TryAgain
+from nonocaptcha import util
+
+from nonocaptcha.speech import AzureSpeech, Amazon, Azure, DeepSpeech, Sphinx, Google, WitAI
 
 
 class SolveAudio(Base):
@@ -23,26 +22,37 @@ class SolveAudio(Base):
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.proc_id = proc_id
+        self.service = self.speech_service.lower()
 
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
         await self.get_frames()
-        for _ in range(10):
+        answer = None
+        for _ in range(2):
             try:
                 answer = await self.loop.create_task(self.get_audio_response())
+                # Secondary Recognition
+                self.service = self.speech_secondary_service.lower()
             except DownloadError:
-                raise
+                self.log('Download Error!')
+                # raise
             except ReloadError:
-                raise
+                self.log('Reload Error!')
+                # raise
             else:
                 if not answer:
                     continue
+                else:
+                    if len(answer) < 4:
+                        continue
             await self.type_audio_response(answer)
             await self.click_verify()
             try:
                 result = await self.check_detection(self.animation_timeout)
             except TryAgain:
                 continue
+            except Exception:
+                raise Exception('You must solve more captchas.')
             else:
                 return result
         else:
@@ -61,6 +71,8 @@ class SolveAudio(Base):
 
         self.log("Downloading audio file")
         try:
+            self.log("audio file: {0}".format(str(audio_url)))
+            # Get the challenge audio to send to Google
             audio_data = await self.loop.create_task(
                 util.get_page(
                     audio_url,
@@ -68,37 +80,19 @@ class SolveAudio(Base):
                     proxy_auth=self.proxy_auth,
                     binary=True,
                     timeout=self.page_load_timeout))
+            self.log("Downloaded audio file")
         except ClientError as e:
             self.log(f"Error `{e}` occured during audio download, retrying")
         else:
-            answer = None
-            service = self.speech_service.lower()
-            if service in [
-                "azure",
-                "pocketsphinx",
-                "deepspeech",
-                "azurespeech"
-            ]:
-                if service == "azurespeech":
-                    speech = AzureSpeech()
-                elif service == "azure":
-                    speech = Azure()
-                elif service == "pocketsphinx":
-                    speech = Sphinx()
-                else:
-                    speech = DeepSpeech()
-                tmpd = tempfile.mkdtemp()
-                tmpf = os.path.join(tmpd, "audio.mp3")
-                await util.save_file(tmpf, data=audio_data, binary=True)
-                answer = await self.loop.create_task(speech.get_text(tmpf))
-                shutil.rmtree(tmpd)
-            else:
-                speech = Amazon()
-                answer = await self.loop.create_task(
-                    speech.get_text(audio_data))
-            if answer:
+            answer = await self.get_answer(audio_data, self.service)
+            if answer is not None:
                 self.log(f'Received answer "{answer}"')
+                answer = await self.add_error_humans_to_text(answer)
+                self.log(f'Received human answer "{answer}"')
                 return answer
+            elif self.service is self.speech_service.lower():
+                # Secondary Recognition
+                return None
 
             self.log("No answer, reloading")
             await self.click_reload_button()
@@ -115,11 +109,60 @@ class SolveAudio(Base):
         self.log("Typing audio response")
         response_input = await self.image_frame.J("#audio-response")
         length = random.uniform(70, 130)
-        await self.loop.create_task(
-            response_input.type(text=answer, delay=length))
+        try:
+            await self.loop.create_task(
+                response_input.type(text=answer, delay=length))
+        except Exception:
+            raise Exception('Try again later')
 
     async def click_verify(self):
         self.log("Clicking verify")
-        verify_button = await self.image_frame.J("#recaptcha-verify-button"
-                                                 )
+        verify_button = await self.image_frame.J("#recaptcha-verify-button")
         await self.click_button(verify_button)
+
+    async def get_answer(self, audio_data, service):
+        answer = None
+        if service in [
+            "azure",
+            "pocketsphinx",
+            "deepspeech",
+            "azurespeech",
+            "google",
+            "wit.ai"
+        ]:
+            self.log('Initialize a new recognizer')
+            if service == "azurespeech":
+                self.log('Using Azure Speech Recognition')
+                speech = AzureSpeech()
+            elif service == "azure":
+                self.log('Using Azure Recognition')
+                speech = Azure()
+            elif service == "pocketsphinx":
+                self.log('Using Sphinx Recognition')
+                speech = Sphinx()
+            elif service == "google":
+                self.log('Using Google Speech Recognition')
+                speech = Google()
+            elif service == "wit.ai":
+                self.log('Using Wit.AI Recognition')
+                speech = WitAI()
+            else:
+                speech = DeepSpeech()
+            tmpd = tempfile.mkdtemp()
+            tmpf = os.path.join(tmpd, "audio.mp3")
+            await util.save_file(tmpf, data=audio_data, binary=True)
+            answer = await self.loop.create_task(speech.get_text(tmpf))
+            shutil.rmtree(tmpd)
+        else:
+            speech = Amazon()
+            answer = await self.loop.create_task(
+                speech.get_text(audio_data))
+        return answer
+
+    async def add_error_humans_to_text(self, answer):
+        # Create Imperfections in text_output (The Humans is inperfect)
+        answer = answer[:-1] if 6 < len(answer) < 20 else answer
+        answer = answer.split(' ')[0] + ' ' + answer.split(' ')[1] \
+            if 30 > len(answer) > 20 and len(answer.split(' ')) > 2 else answer
+        answer = answer if answer[-1:] != ' ' else answer[:-1]
+        return answer

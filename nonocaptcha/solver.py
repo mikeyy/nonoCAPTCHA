@@ -17,8 +17,8 @@ from nonocaptcha.base import Base
 from nonocaptcha.audio import SolveAudio
 from nonocaptcha.image import SolveImage
 from nonocaptcha.launcher import Launcher
-from nonocaptcha.exceptions import (SafePassage, ButtonError, IframeError,
-                                    PageError)
+from nonocaptcha.exceptions import (SafePassage, ButtonError, IframeError, PageError)
+from nonocaptcha.util import get_proxy
 
 
 class Solver(Base):
@@ -28,30 +28,33 @@ class Solver(Base):
     proc = None
 
     def __init__(
-        self,
-        pageurl,
-        sitekey,
-        loop=None,
-        proxy=None,
-        proxy_auth=None,
-        options={},
-        enable_injection=True,  # Required for pages that don't initially
-                                # render the widget.
-        retain_source=True,  # Pre-load page source and insert widget code.
-                             # Useful for bypassing high-security thresholds.
-                             # This can cause problems if the page has a widget
-                             # already or doesn't include a </body> tag.
-        **kwargs
-                ):
+            self,
+            pageurl,
+            sitekey,
+            loop=None,
+            proxy=None,
+            proxy_auth=None,
+            options=None,
+            enable_injection=True,  # Required for pages that don't initially
+            # render the widget.
+            retain_source=True,  # Pre-load page source and insert widget code.
+            # Useful for bypassing high-security thresholds.
+            # This can cause problems if the page has a widget
+            # already or doesn't include a </body> tag.
+            **kwargs
+    ):
+        if options is None:
+            options = {}
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
         self.loop = loop or asyncio.get_event_loop()
-        self.proxy = f"http://{proxy}" if proxy else proxy
+        self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.enable_injection = enable_injection
         self.retain_source = retain_source
         self.proc_id = self.proc_count
+        self.method = 'audio'
         type(self).proc_count += 1
 
     async def start(self):
@@ -61,7 +64,7 @@ class Solver(Base):
         try:
             self.browser = await self.get_new_browser()
             self.page = await self.browser.newPage()
-            if self.should_block_images:
+            if self.method != 'images':
                 await self.block_images()
             if self.enable_injection:
                 await self.inject_widget()
@@ -72,16 +75,19 @@ class Solver(Base):
             await self.goto()
             await self.wait_for_frames()
             result = await self.solve()
-        except BaseException as e:
-            print(traceback.format_exc())
-            self.log(f"{e} {type(e)}")
         except Exception as e:
             traceback.print_exc(file=sys.stdout)
             raise e
+        except BaseException as e:
+            print(traceback.format_exc())
+            self.log(f"{e} {type(e)}")
         finally:
             if isinstance(result, dict):
                 status = result['status'].capitalize()
                 self.log(f"Result: {status}")
+                await self.cleanup()
+                return None
+                # await self.click_send_form_buttom()
             end = time.time()
             elapsed = end - start
             await self.cleanup()
@@ -96,7 +102,7 @@ class Solver(Base):
             return source[:body_index] + widget_code + source[body_index:]
 
         async def handle_request(request):
-            if (request.url == self.url):
+            if request.url == self.url:
                 if self.retain_source:
                     source = await util.get_page(self.url)
                     filters = ['grecaptcha.render', 'g-recaptcha']
@@ -104,12 +110,19 @@ class Solver(Base):
                         source = insert(source)
                 else:
                     source = insert()
-                await request.respond({
-                    'status': 200,
-                    'contentType': 'text/html',
-                    'body': source})
+                try:
+                    await request.respond({
+                        'status': 200,
+                        'contentType': 'text/html',
+                        'body': source})
+                except Exception:
+                    pass
             else:
-                await request.continue_()
+                try:
+                    await request.continue_()
+                except Exception:
+                    pass
+
         recaptcha_source = "https://www.google.com/recaptcha/api.js?hl=en"
         script_tag = (f"<script src={recaptcha_source} async defer></script>")
         widget_code = (f"<div class=g-recaptcha data-sitekey={self.sitekey}>"
@@ -123,6 +136,7 @@ class Solver(Base):
                 await request.abort()
             else:
                 await request.continue_()
+
         await self.enable_interception()
         self.page.on('request', handle_request)
 
@@ -170,11 +184,15 @@ class Solver(Base):
             '--password-store=basic',
             '--use-mock-keychain']
         if self.proxy:
-            args.append(f"--proxy-server={self.proxy}")
+            if self.proxy == 'auto':
+                proxy = get_proxy(self.proxys)
+            args.append(f"--proxy-server={proxy}")
         if "args" in self.options:
             args.extend(self.options.pop("args"))
         if "headless" in self.options:
             self.headless = self.options["headless"]
+        if "method" in self.options:
+            self.method = self.options["method"]
         self.options.update({
             "headless": self.headless,
             "args": args,
@@ -191,7 +209,7 @@ class Solver(Base):
         jquery_js = await util.load_file(self.jquery_data)
         override_js = await util.load_file(self.override_data)
         navigator_config = generate_navigator_js(
-            os=("linux", "mac", "win"), navigator=("chrome"))
+            os=("linux", "mac", "win"), navigator="chrome")
         navigator_config["mediaDevices"] = False
         navigator_config["webkitGetUserMedia"] = False
         navigator_config["mozGetUserMedia"] = False
@@ -255,7 +273,7 @@ class Solver(Base):
                 self.page.goto(
                     self.url,
                     timeout=self.page_load_timeout,
-                    waitUntil="domcontentloaded",))
+                    waitUntil="domcontentloaded", ))
         except asyncio.TimeoutError:
             raise PageError("Page loading timed-out")
         except Exception as exc:
@@ -263,9 +281,7 @@ class Solver(Base):
 
     async def solve(self):
         """Click checkbox, otherwise attempt to decipher audio"""
-        await self.get_frames()
-        await self.loop.create_task(self.wait_for_checkbox())
-        await self.click_checkbox()
+        await self.resolver_click_checkbox()
         try:
             result = await self.loop.create_task(
                 self.check_detection(self.animation_timeout))
@@ -273,6 +289,9 @@ class Solver(Base):
             return await self._solve()
         else:
             if result["status"] == "success":
+                """Send Data to Buttom"""
+                # await self.loop.create_task(self.wait_for_send_button())
+                # await self.click_send_buttom()
                 code = await self.g_recaptcha_response()
                 if code:
                     result["code"] = code
@@ -282,23 +301,31 @@ class Solver(Base):
 
     async def _solve(self):
         # Coming soon...
-        solve_image = False
-        if solve_image:
+        self.log('Solving ...')
+        if self.proxy == 'auto':
+            proxy = get_proxy(self.proxys)
+        else:
+            proxy = self.proxy
+        if self.method == 'images':
+            self.log('Use Image Solver')
             self.image = SolveImage(
-                self.browser,
+                self.page,
                 self.image_frame,
-                self.proxy,
+                proxy,
                 self.proxy_auth,
                 self.proc_id)
             solve = self.image.solve_by_image
         else:
+            self.log('Use Audo Solver')
             self.audio = SolveAudio(
                 self.page,
                 self.loop,
-                self.proxy,
+                proxy,
                 self.proxy_auth,
                 self.proc_id)
+            self.log('Wait for Audio Buttom ...')
             await self.loop.create_task(self.wait_for_audio_button())
+            self.log('Clicking Audio Buttom ...')
             result = await self.click_audio_button()
             if isinstance(result, dict):
                 if result["status"] == "detected":
@@ -322,12 +349,19 @@ class Solver(Base):
                 timeout=self.animation_timeout)
         except ButtonError:
             raise ButtonError("Checkbox missing, aborting")
+        except Exception as ex:
+            self.log(ex)
+            # Try Click
+            await self.click_checkbox()
 
     async def click_checkbox(self):
         """Click checkbox on page load."""
-        self.log("Clicking checkbox")
-        checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
-        await self.click_button(checkbox)
+        try:
+            checkbox = await self.checkbox_frame.J("#recaptcha-anchor")
+            await self.click_button(checkbox)
+        except Exception as ex:
+            self.log(ex)
+            raise Exception(ex)
 
     async def wait_for_audio_button(self):
         """Wait for audio button to appear."""
@@ -337,10 +371,12 @@ class Solver(Base):
                 timeout=self.animation_timeout)
         except ButtonError:
             raise ButtonError("Audio button missing, aborting")
+        except Exception as ex:
+            self.log(ex)
+            raise Exception(ex)
 
     async def click_audio_button(self):
         """Click audio button after it appears."""
-        self.log("Clicking audio button")
         audio_button = await self.image_frame.J("#recaptcha-audio-button")
         await self.click_button(audio_button)
         try:
@@ -354,3 +390,15 @@ class Solver(Base):
         code = await self.page.evaluate(
             "jQuery('#g-recaptcha-response').val()")
         return code
+
+    async def click_send_form_buttom(self):
+        await self.page.click("input[name='send_form']")
+        await self. page.waitForNavigation()
+
+    async def resolver_click_checkbox(self):
+        self.log('Solvering ...')
+        await self.get_frames()
+        self.log('Wait for CheckBox ...')
+        await self.loop.create_task(self.wait_for_checkbox())
+        self.log('Click CheckBox ...')
+        await self.click_checkbox()

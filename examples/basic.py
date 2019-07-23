@@ -14,6 +14,7 @@ loop = asyncio.get_event_loop()
 options = {
     "headless": False,
     "ignoreHTTPSErrors": True,
+    "method": 'images',
     "args": ["--timeout 5"]}
 if proxy.lower() == "none":
     proxy = None

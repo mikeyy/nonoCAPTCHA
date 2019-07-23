@@ -138,7 +138,7 @@ async def work(pageurl, sitekey, loop):
     if proxy_username and proxy_password:
         proxy_auth = {"username": proxy_username,
                       "password": proxy_password}
-    options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
+    options = {"ignoreHTTPSErrors": True, "method": 'images', "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
         sitekey,

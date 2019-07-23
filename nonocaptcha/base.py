@@ -31,6 +31,22 @@ except FileNotFoundError:
         f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml")
     sys.exit(0)
 
+try:
+    import json
+    proxys = json.loads(open("proxys.json").read())
+except FileNotFoundError:
+    print(
+        "Solver can't run without a configuration file!\n"
+        "An example (proxys.example.json) has been copied to your folder."
+    )
+
+    import sys
+    from shutil import copyfile
+
+    copyfile(
+        f"{package_dir}/proxys.example.json", "proxys.example.json")
+    sys.exit(0)
+
 
 class Clicker:
     @staticmethod
@@ -50,9 +66,11 @@ class Base(Clicker):
     iframe_timeout = settings["timeout"]["iframe"] * 1000
     animation_timeout = settings["timeout"]["animation"] * 1000
     speech_service = settings["speech"]["service"]
+    speech_secondary_service = settings["speech"]["secondary_service"]
     deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
     jquery_data = os.path.join(package_dir, settings["data"]["jquery_js"])
     override_data = os.path.join(package_dir, settings["data"]["override_js"])
+    proxys = proxys
 
     async def get_frames(self):
         self.checkbox_frame = next(
@@ -105,6 +123,8 @@ class Base(Clicker):
             await self.page.waitForFunction(func, timeout=timeout)
         except asyncio.TimeoutError:
             raise SafePassage()
+        except Exception as ex:
+            self.log(ex)
         else:
             if await self.page.evaluate("parent.window.wasdetected === true;"):
                 status = "detected"

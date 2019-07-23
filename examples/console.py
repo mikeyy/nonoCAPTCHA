@@ -88,6 +88,7 @@ class Run(object):
             )
         options = {
             "ignoreHTTPSErrors": True,
+            "method": 'images',
             "args": args
         }
         proxy = self.proxies.get() if proxy_source else None

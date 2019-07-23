@@ -10,7 +10,8 @@ timeout:
                   # clicking the widget's checkbox
 
 speech:
-    service: pocketsphinx
+    service: pocketsphinx # Recommed use wit.ai visit https://wit.ai/
+    secondary_service: google # It not required key (english audio)
     deepspeech:
         model_dir: deepspeech/models
     pocketsphinx:
@@ -26,6 +27,8 @@ speech:
         secret_access_key:
         region:
         s3_bucket:
+    wit.ai:
+        secret_key:
 
 data:
     deface_html: data/deface.html

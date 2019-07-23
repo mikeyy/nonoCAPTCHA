@@ -10,7 +10,6 @@ import os
 
 from urllib.request import urlopen
 from urllib.error import URLError
-
 from pyppeteer import launcher
 from pyppeteer.browser import Browser
 from pyppeteer.connection import Connection
@@ -20,7 +19,7 @@ from pyppeteer.util import download_chromium, merge_dict, get_free_port
 
 
 class Launcher(launcher.Launcher):
-    """Chrome parocess launcher class."""
+    """Chrome process launcher class."""
 
     def __init__(self, options,  # noqa: C901
                  **kwargs) -> None:
