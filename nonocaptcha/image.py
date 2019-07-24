@@ -102,7 +102,7 @@ class SolveImage(Base):
                     # Save Image
                     await util.save_file(file_path, image, binary=True)
 
-                    result = predict(file_path)
+                    result = await predict(file_path)
                     self.log('result  #' + str(selected[i]) + ' ' + str(result))
                     if self.title == 'vehicles':
                         if 'car' in result or 'truck' in result:
@@ -125,12 +125,12 @@ class SolveImage(Base):
             # For pieces
             for i in range(self.pieces):
                 # Predict everyone
-                result = predict(os.path.join(self.cur_image_path, f'{i}.jpg'))
+                result = await predict(os.path.join(self.cur_image_path, f'{i}.jpg'))
                 self.log('result #' + str(i) + ' ' + str(result))
                 if self.title.replace('_', ' ') in result:
                     selected.append(i)
         else:
-            result = predict(image_path, self.title.replace('_', ' '))
+            result = await predict(image_path, self.title.replace('_', ' '))
             if result is not False:
                 image_obj = Image.open(result)
                 util.split_image(image_obj, self.pieces, self.cur_image_path)
@@ -170,18 +170,20 @@ class SolveImage(Base):
             raise Exception(ex)
 
     async def search_title(self, title):
-        list_title = ('bus', 'car', 'bicycle', 'fire_hydrant', 'crosswalk', 'stair', 'bridge', 'traffic_light', 'vehicles', 'motorcycle')
+        list_title = ('bus', 'car', 'bicycle', 'fire_hydrant', 'crosswalk', 'stair', 'bridge', 'traffic_light', 'vehicles', 'motorcycle', 'boat', 'chimneys')
         posible_titles = (
             ('autobuses', 'autobús', 'bus', 'buses'),
-            ('automóviles', 'cars', 'car'),
+            ('automóviles', 'cars', 'car', 'coches', 'coche'),
             ('bicicletas', 'bicycles', 'bicycle', 'bici'),
-            ('boca de incendios', 'boca_de_incendios', 'una_boca_de_incendios', 'fire_hydrant', 'a_fire_hydrant'),
-            ('cruces_peatonales', 'crosswalk', 'crosswalks', 'cross_walks', 'cross_walk'),
+            ('boca de incendios', 'boca_de_incendios', 'una_boca_de_incendios', 'fire_hydrant', 'a_fire_hydrant', 'bocas_de_incendios'),
+            ('cruces_peatonales', 'crosswalk', 'crosswalks', 'cross_walks', 'cross_walk', 'pasos_de_peatones'),
             ('escaleras', 'stair', 'stairs'),
             ('puentes', 'bridge', 'bridges'),
             ('semaforos', 'semaphore', 'semaphores', 'traffic_lights', 'traffic_light', 'semáforos'),
             ('vehículos', 'vehicles'),
-            ('motocicletas', 'motocicleta', 'motorcycle', 'motorcycle')
+            ('motocicletas', 'motocicleta', 'motorcycle', 'motorcycle'),
+            ('boat', 'boats', 'barcos', 'barco'),
+            ('chimeneas', 'chimneys', 'chimney', 'chimenea')
         )
         self.log(f'Searching title: {title}')
         i = 0
