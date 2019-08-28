@@ -71,7 +71,10 @@ class SolveImage(Base):
                 if chooses:
                     await self.cycle_selected(chooses)
                     await self.click_verify()
-                    if await self.is_error():
+                    if await self.is_one_selected():
+                        await self.click_reload_button()
+                        break
+                    elif await self.is_error():
                         await self.click_reload_button()
                 else:
                     await self.click_reload_button()
@@ -242,6 +245,12 @@ class SolveImage(Base):
     async def image_no(self):
         self.log('image_n: ' + str(len([i async for i in self.get_images()])))
         return len([i async for i in self.get_images()])
+
+    async def is_one_selected(self):
+        data = (
+            'document.getElementsByClassName("rc-imageselect-tileselected").length'
+        )
+        return False if 0 == await self.image_frame.evaluate(data) else True
 
     async def is_finish(self):
         try:
