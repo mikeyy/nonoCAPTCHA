@@ -49,8 +49,18 @@ except FileNotFoundError:
 
 
 class Clicker:
-    @staticmethod
-    async def click_button(button):
+    async def click_button(self, button):
+        bb = await button.boundingBox()
+        await self.page.mouse.move(
+            random.uniform(0, 800),
+            random.uniform(0, 600),
+            steps=int(random.uniform(200, 500))
+        )
+        await self.page.mouse.move(
+            bb["x"], bb["y"], steps=int(random.uniform(200, 500))
+        )
+        await button.hover()
+        await asyncio.sleep(random.uniform(1, 3))
         click_delay = random.uniform(30, 170)
         await button.click(delay=click_delay)
 

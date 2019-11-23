@@ -59,6 +59,7 @@ aiohttp
 
 # Config file
 nonocaptcha.yaml
+proxys.json
 
 # Mac's DS_Store
 .DS_Store
@@ -84,3 +85,10 @@ pocketsphinx
 
 # visual studio code editor configs
 .vscode
+
+# Pycharm
+venv
+.idea
+
+# Images Project
+nonocaptcha/data/*

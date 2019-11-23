@@ -18,21 +18,18 @@ from bs4 import BeautifulSoup
 from functools import partial, wraps
 
 __all__ = [
+    'get_event_loop',
     "save_file",
     "load_file",
     "get_page",
-    "threaded",
     "serialize",
     "deserialize"]
 
 
-def threaded(func):
-    @wraps(func)
-    async def wrap(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, partial(func, *args, **kwargs))
-
-    return wrap
+def get_event_loop():
+    if sys.platform == "win32":
+        return asyncio.ProactorEventLoop()
+    return asyncio.new_event_loop()
 
 
 async def save_file(file, data, binary=False):
@@ -47,8 +44,7 @@ async def load_file(file, binary=False):
         return await f.read()
 
 
-@threaded
-def get_page_win(
+async def get_page_win(
         url,
         proxy=None,
         proxy_auth=None,
@@ -85,7 +81,7 @@ async def get_page(
         verify=False,
         timeout=300):
     urllib3.disable_warnings()
-    if sys.platform != "win32":
+    if sys.platform == "win32":
         # SSL Doesn't work on aiohttp through ProactorLoop so we use Requests
         return await get_page_win(
             url, proxy, proxy_auth, binary, verify, timeout)

@@ -4,13 +4,13 @@
 """ Solver module. """
 
 import asyncio
-import json
+import random
 import sys
 import time
 import traceback
 
 from pyppeteer.util import merge_dict
-from user_agent import generate_navigator_js
+import fuckcaptcha as fucking
 
 from nonocaptcha import util
 from nonocaptcha.base import Base
@@ -36,7 +36,7 @@ class Solver(Base):
             proxy_auth=None,
             options=None,
             enable_injection=True,  # Required for pages that don't initially
-            # render the widget.
+            # render the widget. BROKEN, this is a noop
             retain_source=True,  # Pre-load page source and insert widget code.
             # Useful for bypassing high-security thresholds.
             # This can cause problems if the page has a widget
@@ -48,7 +48,7 @@ class Solver(Base):
         self.options = merge_dict(options, kwargs)
         self.url = pageurl
         self.sitekey = sitekey
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop or util.get_event_loop()
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.enable_injection = enable_injection
@@ -66,8 +66,6 @@ class Solver(Base):
             self.page = await self.browser.newPage()
             if self.method != 'images':
                 await self.block_images()
-            if self.enable_injection:
-                await self.inject_widget()
             if self.proxy_auth:
                 await self.page.authenticate(self.proxy_auth)
             self.log(f"Starting solver with proxy {self.proxy}")
@@ -85,8 +83,6 @@ class Solver(Base):
             if isinstance(result, dict):
                 status = result['status'].capitalize()
                 self.log(f"Result: {status}")
-                await self.cleanup()
-                return None
                 # await self.click_send_form_buttom()
             end = time.time()
             elapsed = end - start
@@ -94,45 +90,9 @@ class Solver(Base):
             self.log(f"Time elapsed: {elapsed}")
             return result
 
-    async def inject_widget(self):
-        def insert(source="<html><head></head><body></body></html>"):
-            head_index = source.find('</head>')
-            source = source[:head_index] + script_tag + source[head_index:]
-            body_index = source.find('</body>')
-            return source[:body_index] + widget_code + source[body_index:]
-
-        async def handle_request(request):
-            if request.url == self.url:
-                if self.retain_source:
-                    source = await util.get_page(self.url)
-                    filters = ['grecaptcha.render', 'g-recaptcha']
-                    if not [filter for filter in filters if filter in source]:
-                        source = insert(source)
-                else:
-                    source = insert()
-                try:
-                    await request.respond({
-                        'status': 200,
-                        'contentType': 'text/html',
-                        'body': source})
-                except Exception:
-                    pass
-            else:
-                try:
-                    await request.continue_()
-                except Exception:
-                    pass
-
-        recaptcha_source = "https://www.google.com/recaptcha/api.js?hl=en"
-        script_tag = (f"<script src={recaptcha_source} async defer></script>")
-        widget_code = (f"<div class=g-recaptcha data-sitekey={self.sitekey}>"
-                       "</div>")
-        await self.enable_interception()
-        self.page.on('request', handle_request)
-
     async def block_images(self):
         async def handle_request(request):
-            if (request.resourceType == 'image'):
+            if request.resourceType == 'image':
                 await request.abort()
             else:
                 await request.continue_()
@@ -202,26 +162,6 @@ class Solver(Base):
         browser = await self.launcher.launch()
         return browser
 
-    async def cloak_navigator(self):
-        """Emulate another browser's navigator properties and set webdriver
-           false, inject jQuery.
-        """
-        jquery_js = await util.load_file(self.jquery_data)
-        override_js = await util.load_file(self.override_data)
-        navigator_config = generate_navigator_js(
-            os=("linux", "mac", "win"), navigator="chrome")
-        navigator_config["mediaDevices"] = False
-        navigator_config["webkitGetUserMedia"] = False
-        navigator_config["mozGetUserMedia"] = False
-        navigator_config["getUserMedia"] = False
-        navigator_config["webkitRTCPeerConnection"] = False
-        navigator_config["webdriver"] = False
-        dump = json.dumps(navigator_config)
-        _navigator = f"const _navigator = {dump};"
-        await self.page.evaluateOnNewDocument(
-            "() => {\n%s\n%s\n%s}" % (_navigator, jquery_js, override_js))
-        return navigator_config["userAgent"]
-
     async def deface(self):
         """ ***DEPRECATED***
         Create a DIV element and append to current body for explicit loading
@@ -266,14 +206,15 @@ class Solver(Base):
 
     async def goto(self):
         """Navigate to address"""
-        user_agent = await self.cloak_navigator()
-        await self.page.setUserAgent(user_agent)
+        jquery_js = await util.load_file(self.jquery_data)
+        await self.page.evaluateOnNewDocument("() => {\n%s}" % jquery_js)
+        await fucking.bypass_detections(self.page)
         try:
             await self.loop.create_task(
                 self.page.goto(
                     self.url,
                     timeout=self.page_load_timeout,
-                    waitUntil="domcontentloaded", ))
+                    waitUntil="domcontentloaded",))
         except asyncio.TimeoutError:
             raise PageError("Page loading timed-out")
         except Exception as exc:
@@ -281,7 +222,12 @@ class Solver(Base):
 
     async def solve(self):
         """Click checkbox, otherwise attempt to decipher audio"""
-        await self.resolver_click_checkbox()
+        self.log('Solvering ...')
+        await self.get_frames()
+        self.log('Wait for CheckBox ...')
+        await self.loop.create_task(self.wait_for_checkbox())
+        self.log('Click CheckBox ...')
+        await self.click_checkbox()
         try:
             result = await self.loop.create_task(
                 self.check_detection(self.animation_timeout))
@@ -325,6 +271,9 @@ class Solver(Base):
                 self.proc_id)
             self.log('Wait for Audio Buttom ...')
             await self.loop.create_task(self.wait_for_audio_button())
+            for _ in range(int(random.uniform(3, 6))):
+                await self.click_tile()
+            await asyncio.sleep(random.uniform(1, 2))
             self.log('Clicking Audio Buttom ...')
             result = await self.click_audio_button()
             if isinstance(result, dict):
@@ -363,6 +312,11 @@ class Solver(Base):
             self.log(ex)
             raise Exception(ex)
 
+    async def click_tile(self):
+        self.log("Clicking random tile")
+        tiles = await self.image_frame.JJ(".rc-imageselect-tile")
+        await self.click_button(random.choice(tiles))
+
     async def wait_for_audio_button(self):
         """Wait for audio button to appear."""
         try:
@@ -394,11 +348,3 @@ class Solver(Base):
     async def click_send_form_buttom(self):
         await self.page.click("input[name='send_form']")
         await self. page.waitForNavigation()
-
-    async def resolver_click_checkbox(self):
-        self.log('Solvering ...')
-        await self.get_frames()
-        self.log('Wait for CheckBox ...')
-        await self.loop.create_task(self.wait_for_checkbox())
-        self.log('Click CheckBox ...')
-        await self.click_checkbox()

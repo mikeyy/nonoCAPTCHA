@@ -24,7 +24,7 @@ setup(
     author_email=module.authors_email,
     license=module.__license__,
     description=module.package_info,
-    url="https://github.com/mikeyy/nonoCAPTCHA",
+    url="https://github.com/MacKey-255/nonoCAPTCHA",
     long_description=open("README.rst").read(),
     platforms="all",
     classifiers=[

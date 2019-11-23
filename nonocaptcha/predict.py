@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -48,10 +50,30 @@ async def predict(file, obj=None):
             net = cv2.dnn.readNet(weight_file, file_cfg)
         except Exception as ex:
             yolo_url = 'https://pjreddie.com/media/files/yolov3.weights'
-            print('Downloading Yolo v3 Weight ...')
-            weight = await get_page(yolo_url, None, None, binary=True)
+            import urllib3
+            from tqdm import tqdm
+            with urllib3.PoolManager() as http:
+                # Get data from url.
+                # set preload_content=False means using stream later.
+                data = http.request('GET', yolo_url, preload_content=False)
+
+                try:
+                    total_length = int(data.headers['content-length'])
+                except (KeyError, ValueError, AttributeError):
+                    total_length = 0
+
+                process_bar = tqdm(total=total_length)
+
+                # 10 * 1024
+                _data = BytesIO()
+                for chunk in data.stream(10240):
+                    _data.write(chunk)
+                    process_bar.update(len(chunk))
+                process_bar.close()
             # Save Image
-            await save_file(weight_file, weight, binary=True)
+            #await save_file(weight_file, _data, binary=True)
+            with open(weight_file, 'wb') as f:
+                f.write(_data.getvalue())
             raise Exception(ex)
         blob = cv2.dnn.blobFromImage(image, scale, (416, 416), (0, 0, 0), True, crop=False)
         net.setInput(blob)
@@ -71,11 +93,30 @@ async def predict(file, obj=None):
         try:
             net = cv2.dnn.readNet(weight_file, file_cfg)
         except Exception as ex:
-            yolo_url = 'https://pjreddie.com/media/files/yolov3.weights'
-            print('Downloading Yolo v3 Weight ...')
-            weight = await get_page(yolo_url, None, None, binary=True)
+            import urllib3
+            from tqdm import tqdm
+            with urllib3.PoolManager() as http:
+                # Get data from url.
+                # set preload_content=False means using stream later.
+                data = http.request('GET', yolo_url, preload_content=False)
+
+                try:
+                    total_length = int(data.headers['content-length'])
+                except (KeyError, ValueError, AttributeError):
+                    total_length = 0
+
+                process_bar = tqdm(total=total_length)
+
+                # 10 * 1024
+                _data = BytesIO()
+                for chunk in data.stream(10240):
+                    _data.write(chunk)
+                    process_bar.update(len(chunk))
+                process_bar.close()
             # Save Image
-            await save_file(weight_file, weight, binary=True)
+            #await save_file(weight_file, _data, binary=True)
+            with open(weight_file, 'wb') as f:
+                f.write(_data.getvalue())
             raise Exception(ex)
         blob = cv2.dnn.blobFromImage(image, scale, (416, 416), (0, 0, 0), True, crop=False)
         net.setInput(blob)

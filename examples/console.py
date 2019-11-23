@@ -54,6 +54,7 @@ class Run(object):
 
     def __init__(self, loop):
         self.proxies = ProxyDB(last_banned_timeout=45*60)
+        self.loop = loop
         if proxy_source:
             asyncio.ensure_future(self.get_proxies(), loop=loop)
 
@@ -100,6 +101,7 @@ class Run(object):
             pageurl,
             sitekey,
             options=options,
+            loop=self.loop,
             proxy=proxy,
             proxy_auth=proxy_auth
         )
