@@ -75,6 +75,15 @@ Installation
 
    $ pip install goodbyecaptcha
 
+
+Deploy
+------
+
+.. code:: shell
+
+    rm -R dist/ && rm -R build/ && rm -R goodbyecaptcha.egg-info/ && python3.7 setup.py sdist && python3.7 setup.py sdist bdist_wheel && python3.7 -m twine check dist/* && python3.7 -m twine upload --skip-existing dist/* --verbose
+
+
 Configuration
 -------------
 

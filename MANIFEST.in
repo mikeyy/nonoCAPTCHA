@@ -1,5 +1,5 @@
-include nonocaptcha/data/*.*
-include nonocaptcha/nonocaptcha.example.yaml
+include goodbyecaptcha/data/*.*
+include goodbyecaptcha/goodbyecaptcha.example.yaml
 include README.rst
 include setup.py
 include CHANGES.md
