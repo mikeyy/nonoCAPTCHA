@@ -24,7 +24,7 @@ setup(
     author_email=module.authors_email,
     license=module.__license__,
     description=module.package_info,
-    url="https://github.com/MacKey-255/nonoCAPTCHA",
+    url="https://github.com/MacKey-255/GoodByeCatpcha",
     long_description=open("README.rst").read(),
     platforms="all",
     classifiers=[
@@ -34,7 +34,6 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: JavaScript",
         "Topic :: Scientific/Engineering",

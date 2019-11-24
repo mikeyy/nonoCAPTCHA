@@ -2,19 +2,19 @@
     :target: https://travis-ci.org/mikeyy/nonoCAPTCHA
 .. image:: https://img.shields.io/pypi/v/nonocaptcha.svg
     :alt: PyPI
-    :target: https://pypi.org/project/nonocaptcha/
+    :target: https://pypi.org/project/goodbyecaptcha/
 .. image:: https://img.shields.io/pypi/pyversions/nonocaptcha.svg
     :alt: PyPI - Python Version
-    :target: https://pypi.org/project/nonocaptcha/
+    :target: https://pypi.org/project/goodbyecaptcha/
 .. image:: https://img.shields.io/pypi/l/nonocaptcha.svg
-    :alt: PyPI - License   
-    :target: https://pypi.org/project/nonocaptcha/
+    :alt: PyPI - License
+    :target: https://pypi.org/project/goodbyecaptcha/
 .. image:: https://img.shields.io/pypi/status/nonocaptcha.svg
     :alt: PyPI - Status
-    :target: https://pypi.org/project/nonocaptcha/
+    :target: https://pypi.org/project/goodbyecaptcha/
 
 GoodByeCaptcha
-===========
+==============
 
 An async Python library to automate solving ReCAPTCHA v2 by images/audio using
 Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, Google Speech and
