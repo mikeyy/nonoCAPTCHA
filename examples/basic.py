@@ -1,14 +1,13 @@
 import asyncio
 import sys
 
-from nonocaptcha.solver import Solver
+from goodbyecaptcha.solver import Solver
 
 if len(sys.argv) == 4:
     pageurl, sitekey, proxy = sys.argv[1:]
 else:
     print('Invalid number of arguments (pageurl, sitekey, proxy)')
     sys.exit(0)
-
 
 options = {
     "headless": False,

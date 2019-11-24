@@ -9,16 +9,16 @@ import sys
 import time
 import traceback
 
-from pyppeteer.util import merge_dict
 import fuckcaptcha as fucking
+from pyppeteer.util import merge_dict
 
-from nonocaptcha import util
-from nonocaptcha.base import Base
-from nonocaptcha.audio import SolveAudio
-from nonocaptcha.image import SolveImage
-from nonocaptcha.launcher import Launcher
-from nonocaptcha.exceptions import (SafePassage, ButtonError, IframeError, PageError)
-from nonocaptcha.util import get_proxy
+from goodbyecaptcha import util
+from goodbyecaptcha.audio import SolveAudio
+from goodbyecaptcha.base import Base
+from goodbyecaptcha.exceptions import (SafePassage, ButtonError, IframeError, PageError)
+from goodbyecaptcha.image import SolveImage
+from goodbyecaptcha.launcher import Launcher
+from goodbyecaptcha.util import get_proxy
 
 
 class Solver(Base):
@@ -145,8 +145,8 @@ class Solver(Base):
             '--use-mock-keychain']
         if self.proxy:
             if self.proxy == 'auto':
-                proxy = get_proxy(self.proxys)
-            args.append(f"--proxy-server={proxy}")
+                self.proxy = get_proxy(self.proxys)
+            args.append(f"--proxy-server={self.proxy}")
         if "args" in self.options:
             args.extend(self.options.pop("args"))
         if "headless" in self.options:
@@ -214,7 +214,7 @@ class Solver(Base):
                 self.page.goto(
                     self.url,
                     timeout=self.page_load_timeout,
-                    waitUntil="domcontentloaded",))
+                    waitUntil="domcontentloaded", ))
         except asyncio.TimeoutError:
             raise PageError("Page loading timed-out")
         except Exception as exc:
@@ -347,4 +347,4 @@ class Solver(Base):
 
     async def click_send_form_buttom(self):
         await self.page.click("input[name='send_form']")
-        await self. page.waitForNavigation()
+        await self.page.waitForNavigation()

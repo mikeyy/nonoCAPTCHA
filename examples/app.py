@@ -11,21 +11,21 @@ temporary profile folders.
 import asyncio
 import shutil
 import sys
-
-from aiohttp import web
-from async_timeout import timeout
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from pathlib import Path
 from threading import RLock
 
-from nonocaptcha import util
-from nonocaptcha.proxy import ProxyDB
-from nonocaptcha.solver import Solver
+from aiohttp import web
+from async_timeout import timeout
+
+from goodbyecaptcha import util
+from goodbyecaptcha.proxy import ProxyDB
+from goodbyecaptcha.solver import Solver
 
 SECRET_KEY = "CHANGEME"
-BANNED_TIMEOUT = 45*60  # 45 minutes
-SOLVE_DURATION = 3*60  # 3 minutes
+BANNED_TIMEOUT = 45 * 60  # 45 minutes
+SOLVE_DURATION = 3 * 60  # 3 minutes
 
 proxies = ProxyDB(last_banned_timeout=BANNED_TIMEOUT)
 proxy_source = None  # Can be URL or file location
@@ -81,8 +81,8 @@ class TaskRerun(object):
         with self._lock:
             # Blocking occurs unless wrapped in an asyncio.Future object
             task = asyncio.wrap_future(
-                        asyncio.run_coroutine_threadsafe(
-                            self.seek(), self._loop))
+                asyncio.run_coroutine_threadsafe(
+                    self.seek(), self._loop))
             try:
                 # Wait for the Task to complete or Timeout
                 async with timeout(self.duration):
@@ -100,6 +100,7 @@ class TaskRerun(object):
                 task.result()
             except Exception:
                 pass
+
         while True:
             try:
                 # Deadlock occurs unless wrapped in an asyncio.Future object.

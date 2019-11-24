@@ -3,19 +3,18 @@
 
 """ ***IN TESTING*** """
 
-import os
 import asyncio
+import os
+from http.server import BaseHTTPRequestHandler
 from time import sleep
 
 from PIL import Image
-from http.server import BaseHTTPRequestHandler
 
-from nonocaptcha.exceptions import SafePassage
-
-from nonocaptcha import util
-from nonocaptcha.base import Base, settings
-from nonocaptcha import package_dir
-from nonocaptcha.predict import predict, is_marked
+from goodbyecaptcha import package_dir
+from goodbyecaptcha import util
+from goodbyecaptcha.base import Base, settings
+from goodbyecaptcha.exceptions import SafePassage
+from goodbyecaptcha.predict import predict, is_marked
 
 PICTURES = os.path.join(package_dir, settings['data']['pictures'])
 
@@ -42,6 +41,7 @@ class SolveImage(Base):
         self.pieces = None
         self.download = None
         self.loop = asyncio.get_event_loop()
+        self.method = 'images'
 
     async def start(self):
         self.log('Solving Image ...')
@@ -63,7 +63,7 @@ class SolveImage(Base):
             await self.click_image(chooses)
             if self.pieces == 16:
                 await self.click_verify()
-                sleep(self.animation_timeout/1000)
+                sleep(self.animation_timeout / 1000)
                 if await self.is_next():
                     continue
                 break
@@ -96,7 +96,7 @@ class SolveImage(Base):
             for image_url in images:
                 # Comprobate if is image change
                 if images != self.download:
-                    self.log('Download New Image: ' + image_url)
+                    self.log('Download New Image # {0}/{1}'.format(i + 1, len(images)))
                     image = await util.get_page(
                         image_url, self.proxy, self.proxy_auth, binary=True
                     )
@@ -141,7 +141,7 @@ class SolveImage(Base):
                 for i in range(16):
                     if is_marked(f"{self.cur_image_path}/{i}.jpg"):
                         selected.append(i)
-                os.remove(result)   # Clear tmp archive
+                os.remove(result)  # Clear tmp archive
         # Show Selected
         self.log('Selected: ' + str(selected))
         return selected
@@ -173,12 +173,15 @@ class SolveImage(Base):
             raise Exception(ex)
 
     async def search_title(self, title):
-        list_title = ('bus', 'car', 'bicycle', 'fire_hydrant', 'crosswalk', 'stair', 'bridge', 'traffic_light', 'vehicles', 'motorcycle', 'boat', 'chimneys')
+        list_title = (
+        'bus', 'car', 'bicycle', 'fire_hydrant', 'crosswalk', 'stair', 'bridge', 'traffic_light', 'vehicles',
+        'motorcycle', 'boat', 'chimneys')
         posible_titles = (
             ('autobuses', 'autobús', 'bus', 'buses'),
             ('automóviles', 'cars', 'car', 'coches', 'coche'),
             ('bicicletas', 'bicycles', 'bicycle', 'bici'),
-            ('boca de incendios', 'boca_de_incendios', 'una_boca_de_incendios', 'fire_hydrant', 'a_fire_hydrant', 'bocas_de_incendios'),
+            ('boca de incendios', 'boca_de_incendios', 'una_boca_de_incendios', 'fire_hydrant', 'a_fire_hydrant',
+             'bocas_de_incendios'),
             ('cruces_peatonales', 'crosswalk', 'crosswalks', 'cross_walks', 'cross_walk', 'pasos_de_peatones'),
             ('escaleras', 'stair', 'stairs'),
             ('puentes', 'bridge', 'bridges'),
@@ -270,7 +273,7 @@ class SolveImage(Base):
             'style["display"]'
         )
         result = await self.image_frame.evaluate(comprobate)
-        self.log('Not Error' if type(result) == 'str' else 'Error found')
+        self.log('Not Error' if type(result) == 'str' else 'Error!!!')
         return False if type(result) == 'str' else True
 
     async def is_next(self):

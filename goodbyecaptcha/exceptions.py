@@ -4,42 +4,42 @@
 """ Exceptions used in library. """
 
 
-class nonocaptchaError(Exception):
+class goodbyecaptchaError(Exception):
     """ nonoCAPTCHA base exception. """
 
 
-class SafePassage(nonocaptchaError):
+class SafePassage(goodbyecaptchaError):
     """ Raised when all checks have passed. Such as being detected or try
     again.
     """
     pass
 
 
-class TryAgain(nonocaptchaError):
+class TryAgain(goodbyecaptchaError):
     """ Raised when audio deciphering is incorrect and we can try again. """
     pass
 
 
-class ReloadError(nonocaptchaError):
+class ReloadError(goodbyecaptchaError):
     """ Raised when audio file doesn't reload to a new one. """
     pass
 
 
-class DownloadError(nonocaptchaError):
+class DownloadError(goodbyecaptchaError):
     """ Raised when downloading the audio file errors. """
     pass
 
 
-class ButtonError(nonocaptchaError):
+class ButtonError(goodbyecaptchaError):
     """ Raised when a button doesn't appear. """
     pass
 
 
-class IframeError(nonocaptchaError):
+class IframeError(goodbyecaptchaError):
     """ Raised when defacing page times out. """
     pass
 
 
-class PageError(nonocaptchaError):
+class PageError(goodbyecaptchaError):
     """ Raised when loading page times out. """
     pass

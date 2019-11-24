@@ -1,5 +1,4 @@
-import asyncio
-from nonocaptcha.solver import Solver
+from goodbyecaptcha.solver import Solver
 
 pageurl = "https://www.google.com/recaptcha/api2/demo"
 sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"

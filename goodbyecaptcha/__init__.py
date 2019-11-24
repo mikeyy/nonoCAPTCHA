@@ -7,7 +7,6 @@ import sys
 version_info = (2, 2, 0)
 __version__ = "{}.{}.{}".format(*version_info)
 
-
 authors = (("Michael Mooney", "mikeyy@mikeyy.com"),)
 
 authors_email = ", ".join("{}".format(email) for _, email in authors)
@@ -18,7 +17,7 @@ __author__ = ", ".join(
 )
 
 package_info = (
-    "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio"
+    "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio/images"
 )
 __maintainer__ = __author__
 

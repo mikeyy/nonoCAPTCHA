@@ -4,10 +4,9 @@
 """ Proxy manager module. """
 
 import time
-
 from threading import RLock
-from peewee import SqliteDatabase, Model, CharField, BooleanField, IntegerField
 
+from peewee import SqliteDatabase, Model, CharField, BooleanField, IntegerField
 
 database_filename = "proxy.db"
 database = db = SqliteDatabase(
@@ -80,20 +79,20 @@ class ProxyDB(object):
         try:
             proxy = (
                 Proxy.select(Proxy.proxy)
-                .where(
+                    .where(
                     (Proxy.active == 0)
                     & (Proxy.alive == 1)
                     & (
-                        (
-                            Proxy.last_banned + self.last_banned_timeout
-                            <= time.time()
-                        )
-                        | (Proxy.last_banned == 0)
+                            (
+                                    Proxy.last_banned + self.last_banned_timeout
+                                    <= time.time()
+                            )
+                            | (Proxy.last_banned == 0)
                     )
                 )
-                .order_by(Proxy.last_used)
-                .get()
-                .proxy
+                    .order_by(Proxy.last_used)
+                    .get()
+                    .proxy
             )
             self.set_active(proxy, is_active=True)
         except Proxy.DoesNotExist:

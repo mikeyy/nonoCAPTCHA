@@ -84,4 +84,4 @@ Install PyPI
 
 Finally, install nonoCAPTCHA
 
-   `pip install nonocaptcha`
+   `pip install goodbyecaptcha`

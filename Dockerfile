@@ -2,12 +2,13 @@
 # Dockerfile. After the build is complete, run "docker images" and copy the
 # most recent create image. Then run the command "docker run -i -t COPIEDIMAGE"
 # which will place you in the shell of the newly created container.
-# All files are located in /nonocaptcha.
+# All files are located in /goodbyecaptcha.
 
 
 # This Dockerfile assumes all required files/folders are in the relative
 # folder:
-# - nonocaptcha.yaml
+# - goodbyecaptcha.yaml
+# - proxys.yaml
 # - examples/app.py
 # - pocketsphinx (folder)
 # You may want to add proxies.txt at the bottom of this file.
@@ -74,20 +75,20 @@ RUN apt-get update \
     && python3.6 /tmp/get-pip.py \
     && apt-get remove -y curl \
     && apt autoremove -y \
-    && pip install nonocaptcha
+    && pip install goodbyecaptcha
 
-# Copies required files for running nonoCAPTCHA to the Docker container.
+# Copies required files for running goodbyecaptcha to the Docker container.
 # You can comment out pocketsphinx if you aren't using Pocketsphinx.
-RUN mkdir /nonocaptcha
-ADD pocketsphinx /nonocaptcha/pocketsphinx
-ADD nonocaptcha.yaml /nonocaptcha
-# ADD proxies.txt /nonocaptcha/proxies.txt
+RUN mkdir /goodbyecaptcha
+ADD pocketsphinx /goodbyecaptcha/pocketsphinx
+ADD goodbyecaptcha.yaml /goodbyecaptcha
+ADD proxys.json /goodbyecaptcha
 
 # This determines which file you want to copy over to the Docker container,
 # by default the aiohttp server is copied to the container.
-ADD examples/app.py /nonocaptcha
+ADD examples/app.py /goodbyecaptcha
 
 # Uncomment the lines below if you want to autostart the app and expose the
 # port on your machine, which can be accessed by going to http://localhost:5000
-# RUN python3.6 /nonocaptcha/app.py
+# RUN python3.6 /goodbyecaptcha/app.py
 # EXPOSE 5000

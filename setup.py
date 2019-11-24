@@ -1,9 +1,9 @@
 import os
-from setuptools import setup, find_packages
 from importlib.machinery import SourceFileLoader
 
+from setuptools import setup, find_packages
 
-module_name = "nonocaptcha"
+module_name = "goodbyecaptcha"
 
 module = SourceFileLoader(
     module_name, os.path.join(module_name, "__init__.py")

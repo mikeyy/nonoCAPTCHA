@@ -8,31 +8,33 @@ import logging
 import os
 import random
 
-from nonocaptcha import package_dir
-from nonocaptcha.exceptions import SafePassage, TryAgain
+from goodbyecaptcha import package_dir
+from goodbyecaptcha.exceptions import SafePassage, TryAgain
 
 FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(format=FORMAT)
 
 try:
     import yaml
-    with open("nonocaptcha.yaml") as f:
+
+    with open("goodbyecaptcha.yaml") as f:
         settings = yaml.load(f)
 except FileNotFoundError:
     print(
         "Solver can't run without a configuration file!\n"
-        "An example (nonocaptcha.example.yaml) has been copied to your folder."
+        "An example (goodbyecaptcha.example.yaml) has been copied to your folder."
     )
 
     import sys
     from shutil import copyfile
 
     copyfile(
-        f"{package_dir}/nonocaptcha.example.yaml", "nonocaptcha.example.yaml")
+        f"{package_dir}/goodbyecaptcha.example.yaml", "goodbyecaptcha.example.yaml")
     sys.exit(0)
 
 try:
     import json
+
     proxys = json.loads(open("proxys.json").read())
 except FileNotFoundError:
     print(
@@ -50,17 +52,18 @@ except FileNotFoundError:
 
 class Clicker:
     async def click_button(self, button):
-        bb = await button.boundingBox()
-        await self.page.mouse.move(
-            random.uniform(0, 800),
-            random.uniform(0, 600),
-            steps=int(random.uniform(200, 500))
-        )
-        await self.page.mouse.move(
-            bb["x"], bb["y"], steps=int(random.uniform(200, 500))
-        )
-        await button.hover()
-        await asyncio.sleep(random.uniform(1, 3))
+        if self.method != 'images':
+            bb = await button.boundingBox()
+            await self.page.mouse.move(
+                random.uniform(0, 800),
+                random.uniform(0, 600),
+                steps=int(random.uniform(40, 90))
+            )
+            await self.page.mouse.move(
+                bb["x"], bb["y"], steps=int(random.uniform(40, 90))
+            )
+            await button.hover()
+            await asyncio.sleep(random.uniform(1, 3))
         click_delay = random.uniform(30, 170)
         await button.click(delay=click_delay)
 

@@ -2,28 +2,28 @@
 # -*- coding: utf-8 -*-
 
 """ Speech module. Text-to-speech classes - Sphinx, Amazon, and Azure. """
-import io
-import aiobotocore
-import aiofiles
 import asyncio
+import io
 import json
 import os
 import re
 import struct
 import sys
 import time
-import websockets
-import requests
-import pocketsphinx
-import speech_recognition as sr
-
 from datetime import datetime
 from uuid import uuid4
-from pydub import AudioSegment
-from pocketsphinx.pocketsphinx import Decoder
 
-from nonocaptcha.base import settings
-from nonocaptcha import util
+import aiobotocore
+import aiofiles
+import pocketsphinx
+import requests
+import speech_recognition as sr
+import websockets
+from pocketsphinx.pocketsphinx import Decoder
+from pydub import AudioSegment
+
+from goodbyecaptcha import util
+from goodbyecaptcha.base import settings
 
 
 async def mp3_to_wav(mp3_filename):
@@ -281,14 +281,14 @@ class AzureSpeech(object):
             print(response.content)
             content = await self.extract_json_body(response.content)
             if (
-                "RecognitionStatus" in content
-                and content["RecognitionStatus"] == "Success"
+                    "RecognitionStatus" in content
+                    and content["RecognitionStatus"] == "Success"
             ):
                 answer = content["NBest"][0]["Lexical"]
                 return answer
             if (
-                "RecognitionStatus" in content
-                and content["RecognitionStatus"] == "EndOfDictation"
+                    "RecognitionStatus" in content
+                    and content["RecognitionStatus"] == "EndOfDictation"
             ):
                 return
         else:
@@ -348,14 +348,14 @@ class Azure(object):
                 response = await websocket.recv()
                 content = await self.extract_json_body(response)
                 if (
-                    "RecognitionStatus" in content
-                    and content["RecognitionStatus"] == "Success"
+                        "RecognitionStatus" in content
+                        and content["RecognitionStatus"] == "Success"
                 ):
                     answer = content["NBest"][0]["Lexical"]
                     return answer
                 if (
-                    "RecognitionStatus" in content
-                    and content["RecognitionStatus"] == "EndOfDictation"
+                        "RecognitionStatus" in content
+                        and content["RecognitionStatus"] == "EndOfDictation"
                 ):
                     return
                 await asyncio.sleep(1)

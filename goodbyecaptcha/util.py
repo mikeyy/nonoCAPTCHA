@@ -2,26 +2,26 @@
 # -*- coding: utf-8 -*-
 
 """ Utility functions. """
-import glob
-import os
-import sys
-import aiohttp
-import aiofiles
 import asyncio
-import pickle
-import requests
+import glob
 import itertools
+import os
+import pickle
 import random
+import sys
 
+import aiofiles
+import requests
 import urllib3
 from bs4 import BeautifulSoup
-from functools import partial, wraps
 
 __all__ = [
     'get_event_loop',
     "save_file",
     "load_file",
     "get_page",
+    "get_random_proxy",
+    "get_proxy",
     "serialize",
     "deserialize"]
 
@@ -81,24 +81,8 @@ async def get_page(
         verify=False,
         timeout=300):
     urllib3.disable_warnings()
-    if sys.platform == "win32":
-        # SSL Doesn't work on aiohttp through ProactorLoop so we use Requests
-        return await get_page_win(
-            url, proxy, proxy_auth, binary, verify, timeout)
-    else:
-        if proxy_auth:
-            proxy_auth = aiohttp.BasicAuth(
-                proxy_auth['username'], proxy_auth['password'])
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                    url,
-                    proxy=proxy,
-                    proxy_auth=proxy_auth,
-                    verify_ssl=verify,
-                    timeout=timeout) as response:
-                if binary:
-                    return await response.read()
-                return await response.text()
+    return await get_page_win(
+        url, proxy, proxy_auth, binary, verify, timeout)
 
 
 def serialize(obj, p):
@@ -120,7 +104,7 @@ def split_image(image_obj, pieces, save_to):
     for x, y in itertools.product(range(row_length), repeat=2):
         cropped = image_obj.crop((interval * x, interval * y,
                                   interval * (x + 1), interval * (y + 1)))
-        cropped.save(os.path.join(save_to, f'{y*row_length+x}.jpg'))
+        cropped.save(os.path.join(save_to, f'{y * row_length + x}.jpg'))
 
 
 def get_proxies():
@@ -130,7 +114,9 @@ def get_proxies():
     proxies = list()
     for element in parser.find('table', {'id': 'proxylisttable'}).find_all('tr')[1:-1]:
         more = element.find_all('td')[:2]
-        proxies.append(str(more[0]).replace('<td>', '').replace('</td>', '') + ':' + str(more[1]).replace('<td>', '').replace('</td>', '').replace('https://', '').replace('http://', ''))
+        proxies.append(
+            str(more[0]).replace('<td>', '').replace('</td>', '') + ':' + str(more[1]).replace('<td>', '').replace(
+                '</td>', '').replace('https://', '').replace('http://', ''))
     return proxies
 
 
@@ -156,8 +142,8 @@ def get_train_and_test(path, out):
         # Percentage of images to be used for the test set
         percentage_test = 20
         # Create and/or truncate train.txt and test.txt
-        file_train = open(os.path.join(out,'data_train.txt'), 'a')
-        file_test = open(os.path.join(out,'data_test.txt'), 'a')
+        file_train = open(os.path.join(out, 'data_train.txt'), 'a')
+        file_test = open(os.path.join(out, 'data_test.txt'), 'a')
         # Populate train.txt and test.txt
         counter = 1
         index_test = round(100 / percentage_test)
@@ -169,4 +155,3 @@ def get_train_and_test(path, out):
             else:
                 file_train.write(directory + "/" + title + '.jpg' + "\n")
                 counter = counter + 1
-

@@ -3,8 +3,8 @@ from io import BytesIO
 import cv2
 import numpy as np
 from PIL import Image
-from nonocaptcha import package_dir
-from nonocaptcha.util import get_page, save_file
+
+from goodbyecaptcha import package_dir
 
 
 # It need better
@@ -13,7 +13,7 @@ def is_marked(img_path):
     w, h = img.size
     for i in range(w):
         for j in range(h):
-            r, g, b = img.getpixel((i,j))
+            r, g, b = img.getpixel((i, j))
             # Detect Color Blue
             if r == 0 and g == 0 and b == 254:
                 return True
@@ -54,7 +54,6 @@ async def predict(file, obj=None):
             from tqdm import tqdm
             with urllib3.PoolManager() as http:
                 # Get data from url.
-                # set preload_content=False means using stream later.
                 data = http.request('GET', yolo_url, preload_content=False)
 
                 try:
@@ -71,7 +70,6 @@ async def predict(file, obj=None):
                     process_bar.update(len(chunk))
                 process_bar.close()
             # Save Image
-            #await save_file(weight_file, _data, binary=True)
             with open(weight_file, 'wb') as f:
                 f.write(_data.getvalue())
             raise Exception(ex)
@@ -93,11 +91,11 @@ async def predict(file, obj=None):
         try:
             net = cv2.dnn.readNet(weight_file, file_cfg)
         except Exception as ex:
+            yolo_url = 'https://pjreddie.com/media/files/yolov3.weights'
             import urllib3
             from tqdm import tqdm
             with urllib3.PoolManager() as http:
                 # Get data from url.
-                # set preload_content=False means using stream later.
                 data = http.request('GET', yolo_url, preload_content=False)
 
                 try:
@@ -114,7 +112,6 @@ async def predict(file, obj=None):
                     process_bar.update(len(chunk))
                 process_bar.close()
             # Save Image
-            #await save_file(weight_file, _data, binary=True)
             with open(weight_file, 'wb') as f:
                 f.write(_data.getvalue())
             raise Exception(ex)

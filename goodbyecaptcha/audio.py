@@ -5,14 +5,14 @@ import os
 import random
 import shutil
 import tempfile
-
 from asyncio import TimeoutError, CancelledError
-from aiohttp.client_exceptions import ClientError
-from nonocaptcha.base import Base
-from nonocaptcha.exceptions import DownloadError, ReloadError, TryAgain
-from nonocaptcha import util
 
-from nonocaptcha.speech import AzureSpeech, Amazon, Azure, DeepSpeech, Sphinx, Google, WitAI
+from aiohttp.client_exceptions import ClientError
+
+from goodbyecaptcha import util
+from goodbyecaptcha.base import Base
+from goodbyecaptcha.exceptions import DownloadError, ReloadError, TryAgain
+from goodbyecaptcha.speech import AzureSpeech, Amazon, Azure, DeepSpeech, Sphinx, Google, WitAI
 
 
 class SolveAudio(Base):
@@ -23,6 +23,7 @@ class SolveAudio(Base):
         self.proxy_auth = proxy_auth
         self.proc_id = proc_id
         self.service = self.speech_service.lower()
+        self.method = 'audio'
 
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
