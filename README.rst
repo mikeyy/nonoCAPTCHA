@@ -13,14 +13,16 @@
     :alt: PyPI - Status
     :target: https://pypi.org/project/nonocaptcha/
 
-nonoCAPTCHA
+GoodByeCaptcha
 ===========
 
-An async Python library to automate solving ReCAPTCHA v2 by audio using
-Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, and Amazon's Transcribe 
-Speech-to-Text API. Built with Pyppeteer for Chrome automation framework
-and similarities to Puppeteer, PyDub for easily converting MP3 files into WAV, 
-aiohttp for async minimalistic web-server, and Python’s built-in AsyncIO
+An async Python library to automate solving ReCAPTCHA v2 by images/audio using
+Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, Google Speech and
+Amazon's Transcribe Speech-to-Text API. Also image recognition to detect
+the object suggested in the captcha. Built with Pyppeteer for Chrome
+automation framework and similarities to Puppeteer, PyDub for easily
+converting MP3 files into WAV, aiohttp for async minimalistic web-server,
+and Python’s built-in AsyncIO
 for convenience.
 
 Disclaimer
@@ -60,24 +62,23 @@ Requirements
 ------------
 
 Python
-`3.6.0 <https://www.python.org/downloads/release/python-360/>`__ -
 `3.7.0 <https://www.python.org/downloads/release/python-370/>`__,
 `FFmpeg <https://ffmpeg.org/download.html>`__, a `Microsoft
 Azure <https://portal.azure.com/>`__ account for Bing Speech API access, an
-Amazon Web Services account for Transcribe and S3 access, and for Pocketsphinx
+Amazon Web Services account for Transcribe and S3 access, Wit.AI, and for Pocketsphinx
 you'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Ubuntu.
 
 Installation
 ------------
 
-.. code:: shell
+code:: shell
 
-   $ pip install nonocaptcha
+   $ pip install goodbyecaptcha
 
 Configuration
 -------------
 
-Please edit nonocaptcha.example.yaml and save as nonocaptcha.yaml
+Please edit goodbyecaptcha.example.yaml and save as goodbyecaptcha.yaml
 
 Usage
 -----
@@ -86,37 +87,30 @@ If you want to use it in your own script
 
 .. code:: python
 
-   import asyncio
-   from nonocaptcha.solver import Solver
+    from goodbyecaptcha.solver import Solver
 
-   pageurl = "https://www.google.com/recaptcha/api2/demo"
-   sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
+    pageurl = "https://www.google.com/recaptcha/api2/demo"
+    sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
 
-   proxy = "127.0.0.1:1000"
-   auth_details = {
-        "username": "user",
-        "password": "pass"
-   }
-   args = ["--timeout 5"]
-   options = {"ignoreHTTPSErrors": True, "args": args}
-   client = Solver(
-        pageurl,
-        sitekey,
-        options=options,
-        proxy=proxy,
-        proxy_auth=auth_details,
-   )
+    proxy = "127.0.0.1:1000"
+    auth_details = {"username": "user", "password": "pass"}
+    args = ["--timeout 5"]
+    options = {"ignoreHTTPSErrors": True, "method": 'images', "args": args}
+    client = Solver(
+        pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
+    )
 
-   solution = asyncio.get_event_loop().run_until_complete(client.start())
-   if solution:
+    solution = client.loop.run_until_complete(client.start())
+    if solution:
         print(solution)
 
 Donations
 ---------
 
 The use of proxies are required for my continuous updates and fixes on
-nonoCAPTCHA. Any donations would be a great help in allowing me to purchase 
-these proxies, that are clearly expensive. If anyone is willing to share
-their proxies, I wouldn't hesitate to accept the offer.
+nonoCAPTCHA and GoodByeCaptcha. Any donations would be a great help in
+allowing me to purchase these proxies, that are clearly expensive.
+If anyone is willing to share their proxies, I wouldn't hesitate to accept
+the offer.
 
 Bitcoin: 1BfWQWAZBsSKCNQZgsq2vwaKxYvkrhb14u
