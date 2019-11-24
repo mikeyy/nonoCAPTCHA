@@ -71,7 +71,7 @@ you'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Ubuntu.
 Installation
 ------------
 
-code:: shell
+.. code:: shell
 
    $ pip install goodbyecaptcha
 
@@ -97,7 +97,10 @@ If you want to use it in your own script
     args = ["--timeout 5"]
     options = {"ignoreHTTPSErrors": True, "method": 'images', "args": args}
     client = Solver(
+        # With Proxy
         pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
+        # Without Proxy
+        # pageurl, sitekey, options=options
     )
 
     solution = client.loop.run_until_complete(client.start())
