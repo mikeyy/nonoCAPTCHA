@@ -52,6 +52,8 @@ Check out 1-minute presentation of the script in action, with only
 
 .. figure:: https://github.com/mikeyy/nonoCAPTCHA/blob/presentation/presentation.gif
    :alt: nonoCAPTCHA preview
+   
+https://www.youtube.com/watch?v=zgwetyKmg5g
 
 Compatibility
 -------------
