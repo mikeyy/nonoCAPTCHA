@@ -10,6 +10,7 @@ import time
 import traceback
 
 import fuckcaptcha as fucking
+from pyppeteer.launcher import Launcher
 from pyppeteer.util import merge_dict
 
 from goodbyecaptcha import util
@@ -17,8 +18,7 @@ from goodbyecaptcha.audio import SolveAudio
 from goodbyecaptcha.base import Base
 from goodbyecaptcha.exceptions import (SafePassage, ButtonError, IframeError, PageError)
 from goodbyecaptcha.image import SolveImage
-from goodbyecaptcha.launcher import Launcher
-from goodbyecaptcha.util import get_proxy
+from goodbyecaptcha.util import get_random_proxy
 
 
 class Solver(Base):
@@ -54,7 +54,7 @@ class Solver(Base):
         self.enable_injection = enable_injection
         self.retain_source = retain_source
         self.proc_id = self.proc_count
-        self.method = 'audio'
+        self.method = 'audio'  # Default Method
         type(self).proc_count += 1
 
     async def start(self):
@@ -109,8 +109,7 @@ class Solver(Base):
             self.log('Browser closed')
 
     async def set_bypass_csp(self):
-        await self.page._client.send(
-            "Page.setBypassCSP", {'enabled': True})
+        await self.page._client.send("Page.setBypassCSP", {'enabled': True})
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
@@ -145,7 +144,7 @@ class Solver(Base):
             '--use-mock-keychain']
         if self.proxy:
             if self.proxy == 'auto':
-                self.proxy = get_proxy(self.proxys)
+                self.proxy = get_random_proxy()
             args.append(f"--proxy-server={self.proxy}")
         if "args" in self.options:
             args.extend(self.options.pop("args"))
@@ -249,7 +248,7 @@ class Solver(Base):
         # Coming soon...
         self.log('Solving ...')
         if self.proxy == 'auto':
-            proxy = get_proxy(self.proxys)
+            proxy = get_random_proxy()
         else:
             proxy = self.proxy
         if self.method == 'images':

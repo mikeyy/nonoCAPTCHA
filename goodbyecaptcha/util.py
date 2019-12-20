@@ -137,8 +137,8 @@ def get_train_and_test(path, out):
             folders.append(os.path.join(r, folder))
 
     for directory in folders:
-        dir = directory.split('/')[-1:][0]
-        print('Extract Train and Test of Directory:', dir)
+        file = directory.split('/')[-1:][0]
+        print('Extract Train and Test of Directory:', file)
         # Percentage of images to be used for the test set
         percentage_test = 20
         # Create and/or truncate train.txt and test.txt

@@ -4,10 +4,10 @@
 import os.path
 import sys
 
-version_info = (2, 2, 1)
+version_info = (2, 2, 2)
 __version__ = "{}.{}.{}".format(*version_info)
 
-authors = (("Michael Mooney", "mikeyy@mikeyy.com"),)
+authors = (("Michael Mooney", "mikeyy@mikeyy.com"), ("MacKey-255", "mackeyfuturo@gmail.com"))
 
 authors_email = ", ".join("{}".format(email) for _, email in authors)
 

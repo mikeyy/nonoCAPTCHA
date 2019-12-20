@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""" ***IN TESTING*** """
-
 import asyncio
 import os
 from http.server import BaseHTTPRequestHandler
@@ -66,16 +64,31 @@ class SolveImage(Base):
                 sleep(self.animation_timeout / 1000)
                 if await self.is_next():
                     continue
+                if await self.is_error():
+                    print('IS_ERROR')
+                    await self.click_reload_button()
+                    continue
                 break
             elif self.pieces == 9:
                 if chooses:
-                    await self.cycle_selected(chooses)
-                    await self.click_verify()
                     if await self.is_one_selected():
-                        await self.click_reload_button()
-                        break
-                    elif await self.is_error():
-                        await self.click_reload_button()
+                        print('IS ONE SELECTION')
+                        await self.click_verify()
+                        if await self.is_finish():
+                            break
+                        if await self.is_error():
+                            print('IS ERROR')
+                            await self.click_reload_button()
+                            continue
+                    else:
+                        await self.cycle_selected(chooses)
+                        await self.click_verify()
+                        if await self.is_finish():
+                            break
+                        if await self.is_error():
+                            print('IS ERROR')
+                            await self.click_reload_button()
+                            continue
                 else:
                     await self.click_reload_button()
                 if await self.is_finish():
@@ -173,9 +186,9 @@ class SolveImage(Base):
             raise Exception(ex)
 
     async def search_title(self, title):
-        list_title = (
-        'bus', 'car', 'bicycle', 'fire_hydrant', 'crosswalk', 'stair', 'bridge', 'traffic_light', 'vehicles',
-        'motorcycle', 'boat', 'chimneys')
+        list_title = ('bus', 'car', 'bicycle', 'fire_hydrant', 'crosswalk',
+                      'stair', 'bridge', 'traffic_light', 'vehicles',
+                      'motorcycle', 'boat', 'chimneys')
         posible_titles = (
             ('autobuses', 'autobús', 'bus', 'buses'),
             ('automóviles', 'cars', 'car', 'coches', 'coche'),
@@ -193,8 +206,8 @@ class SolveImage(Base):
         )
         self.log(f'Searching title: {title}')
         i = 0
-        for list in posible_titles:
-            if title in list:
+        for objects in posible_titles:
+            if title in objects:
                 self.log(f'Found title: {title} in {list_title[i]}')
                 return list_title[i]
             i += 1
@@ -216,19 +229,6 @@ class SolveImage(Base):
         return name1 if name1 else name2
 
     async def create_folder(self, title, image):
-        """
-        # In Test Folder
-        if not os.path.exists(PICTURES):
-            os.mkdir(PICTURES)
-        if not os.path.exists(os.path.join(PICTURES, 'test')):
-            os.mkdir(os.path.join(PICTURES, 'test'))
-        if not os.path.exists(os.path.join(os.path.join(PICTURES, 'test'), f'{title}')):
-            os.mkdir(os.path.join(os.path.join(PICTURES, 'test'), f'{title}'))
-        # Save Image
-        self.cur_image_path = os.path.join(os.path.join(os.path.join(PICTURES, 'test'), f'{title}'), f'{hash(image)}')
-        if not os.path.exists(self.cur_image_path):
-            os.mkdir(self.cur_image_path)
-        """
         if not os.path.exists(PICTURES):
             os.mkdir(PICTURES)
         if not os.path.exists(os.path.join(PICTURES, f'{title}')):
@@ -250,10 +250,13 @@ class SolveImage(Base):
         return len([i async for i in self.get_images()])
 
     async def is_one_selected(self):
-        data = (
-            'document.getElementsByClassName("rc-imageselect-tileselected").length'
+        comprobate = (
+            'document.getElementsByClassName("rc-image-tile-overlay")[0].'
+            'style["opacity"]'
         )
-        return False if 0 == await self.image_frame.evaluate(data) else True
+        result = await self.image_frame.evaluate(comprobate)
+        print(result)
+        return True if result != '' else False
 
     async def is_finish(self):
         try:
@@ -287,9 +290,9 @@ class SolveImage(Base):
             image_url, self.proxy, self.proxy_auth, binary=True
         )
 
-    async def get_images_block(self, list):
+    async def get_images_block(self, images):
         images_url = []
-        for element in list:
+        for element in images:
             image_url = (
                 f'document.getElementsByClassName("rc-image-tile-wrapper")[{element}].'
                 'getElementsByTagName("img")[0].src'

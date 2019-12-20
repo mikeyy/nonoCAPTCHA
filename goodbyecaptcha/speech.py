@@ -254,7 +254,7 @@ class AzureSpeech(object):
             return chunk
 
     async def get_text(self, mp3_filename):
-        ''' return text result or None '''
+        """ return text result or None """
         # convert mp3 file to WAV
         wav_filename = await mp3_to_wav(mp3_filename)
         # read bytes from WAV file.

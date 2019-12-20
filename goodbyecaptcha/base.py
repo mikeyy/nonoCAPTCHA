@@ -32,23 +32,6 @@ except FileNotFoundError:
         f"{package_dir}/goodbyecaptcha.example.yaml", "goodbyecaptcha.example.yaml")
     sys.exit(0)
 
-try:
-    import json
-
-    proxys = json.loads(open("proxys.json").read())
-except FileNotFoundError:
-    print(
-        "Solver can't run without a configuration file!\n"
-        "An example (proxys.example.json) has been copied to your folder."
-    )
-
-    import sys
-    from shutil import copyfile
-
-    copyfile(
-        f"{package_dir}/proxys.example.json", "proxys.example.json")
-    sys.exit(0)
-
 
 class Clicker:
     async def click_button(self, button):
@@ -83,7 +66,6 @@ class Base(Clicker):
     deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
     jquery_data = os.path.join(package_dir, settings["data"]["jquery_js"])
     override_data = os.path.join(package_dir, settings["data"]["override_js"])
-    proxys = proxys
 
     async def get_frames(self):
         self.checkbox_frame = next(
@@ -139,6 +121,7 @@ class Base(Clicker):
         except Exception as ex:
             self.log(ex)
         else:
+            status = '?'
             if await self.page.evaluate("parent.window.wasdetected === true;"):
                 status = "detected"
             elif await self.page.evaluate("parent.window.success === true"):
@@ -146,7 +129,6 @@ class Base(Clicker):
             elif await self.page.evaluate("parent.window.tryagain === true"):
                 await self.page.evaluate("parent.window.tryagain = false;")
                 raise TryAgain()
-
             return {"status": status}
 
     def log(self, message):

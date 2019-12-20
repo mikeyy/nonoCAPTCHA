@@ -59,7 +59,7 @@ aiohttp
 
 # Config file
 goodbyecaptcha.yaml
-proxys.json
+publish.sh
 
 # Mac's DS_Store
 .DS_Store

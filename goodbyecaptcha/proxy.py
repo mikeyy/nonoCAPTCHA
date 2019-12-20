@@ -79,7 +79,7 @@ class ProxyDB(object):
         try:
             proxy = (
                 Proxy.select(Proxy.proxy)
-                    .where(
+                .where(
                     (Proxy.active == 0)
                     & (Proxy.alive == 1)
                     & (
@@ -90,9 +90,9 @@ class ProxyDB(object):
                             | (Proxy.last_banned == 0)
                     )
                 )
-                    .order_by(Proxy.last_used)
-                    .get()
-                    .proxy
+                .order_by(Proxy.last_used)
+                .get()
+                .proxy
             )
             self.set_active(proxy, is_active=True)
         except Proxy.DoesNotExist:
