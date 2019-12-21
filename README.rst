@@ -1,13 +1,13 @@
-.. image:: https://img.shields.io/pypi/v/nonocaptcha.svg
+.. image:: https://img.shields.io/pypi/v/goodbyecaptcha.svg
     :alt: PyPI
     :target: https://pypi.org/project/goodbyecaptcha/
-.. image:: https://img.shields.io/pypi/pyversions/nonocaptcha.svg
+.. image:: https://img.shields.io/pypi/pyversions/goodbyecaptcha.svg
     :alt: PyPI - Python Version
     :target: https://pypi.org/project/goodbyecaptcha/
-.. image:: https://img.shields.io/pypi/l/nonocaptcha.svg
+.. image:: https://img.shields.io/pypi/l/goodbyecaptcha.svg
     :alt: PyPI - License
     :target: https://pypi.org/project/goodbyecaptcha/
-.. image:: https://img.shields.io/pypi/status/nonocaptcha.svg
+.. image:: https://img.shields.io/pypi/status/goodbyecaptcha.svg
     :alt: PyPI - Status
     :target: https://pypi.org/project/goodbyecaptcha/
 
