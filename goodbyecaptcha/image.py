@@ -45,58 +45,42 @@ class SolveImage(Base):
         self.log('Solving Image ...')
         await self.set_title()
         image = await self.download_image()
-
         await self.create_folder(self.title, image)
         file_path = os.path.join(self.cur_image_path, f'{self.title}.jpg')
-        # Save Image
-        await util.save_file(file_path, image, binary=True)
-        # Detect Type Captcha
-        self.pieces = await self.image_no()
+        await util.save_file(file_path, image, binary=True)  # Save Image
+        self.pieces = await self.image_no()  # Detect Type Captcha (9 or 16)
         return file_path
 
     async def solve_by_image(self):
         while True:
-            file_path = await self.start()
-            chooses = await self.choose(file_path)
+            file_path = await self.start()  # Detect pieces and get images
+            chooses = await self.choose(file_path)  # Choose images of the title
             await self.click_image(chooses)
             if self.pieces == 16:
                 await self.click_verify()
-                sleep(self.animation_timeout / 1000)
-                if await self.is_next():
-                    continue
-                if await self.is_error():
-                    print('IS_ERROR')
+                if not await self.is_next() and not await self.is_finish():
                     await self.click_reload_button()
-                    continue
-                break
             elif self.pieces == 9:
                 if chooses:
                     if await self.is_one_selected():
-                        print('IS ONE SELECTION')
                         await self.click_verify()
-                        if await self.is_finish():
-                            break
-                        if await self.is_error():
-                            print('IS ERROR')
+                        if not await self.is_next() and not await self.is_finish():
                             await self.click_reload_button()
-                            continue
                     else:
                         await self.cycle_selected(chooses)
                         await self.click_verify()
-                        if await self.is_finish():
-                            break
-                        if await self.is_error():
-                            print('IS ERROR')
+                        if not await self.is_next() and not await self.is_finish():
                             await self.click_reload_button()
-                            continue
                 else:
                     await self.click_reload_button()
-                if await self.is_finish():
-                    break
-                continue
-            break
-        if await self.is_finish():
-            return {'status': 'success'}
+            if await self.is_finish():
+                return {'status': 'success'}
+            try:
+                result = await self.check_detection(self.animation_timeout)
+                return result
+            except SafePassage:
+                pass
+            continue
         return {'status': '?'}
 
     async def cycle_selected(self, selected):
@@ -181,6 +165,7 @@ class SolveImage(Base):
         element = await self.image_frame.querySelector('#recaptcha-verify-button')
         try:
             await self.click_button(element)
+            sleep(self.animation_timeout / 1000)
         except Exception as ex:
             self.log(ex)
             raise Exception(ex)
@@ -251,12 +236,10 @@ class SolveImage(Base):
 
     async def is_one_selected(self):
         comprobate = (
-            'document.getElementsByClassName("rc-image-tile-overlay")[0].'
-            'style["opacity"]'
+            'document.getElementsByClassName("rc-imageselect-tileselected").'
+            'length === 0'
         )
-        result = await self.image_frame.evaluate(comprobate)
-        print(result)
-        return True if result != '' else False
+        return not await self.image_frame.evaluate(comprobate)
 
     async def is_finish(self):
         try:
@@ -269,25 +252,15 @@ class SolveImage(Base):
                 return True
         return False
 
-    # Not Tested
-    async def is_error(self):
-        comprobate = (
-            'document.getElementsByClassName("rc-imageselect-error-select-more")[0].'
-            'style["display"]'
-        )
-        result = await self.image_frame.evaluate(comprobate)
-        self.log('Not Error' if type(result) == 'str' else 'Error!!!')
-        return False if type(result) == 'str' else True
-
     async def is_next(self):
         image_url = await self.get_image_url()
         return False if image_url == self.download else True
 
     async def download_image(self):
         self.log('Downloading Image ...')
-        self.download = image_url = await self.get_image_url()
+        self.download = await self.get_image_url()
         return await util.get_page(
-            image_url, self.proxy, self.proxy_auth, binary=True
+            self.download, self.proxy, self.proxy_auth, binary=True
         )
 
     async def get_images_block(self, images):

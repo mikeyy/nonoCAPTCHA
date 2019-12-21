@@ -7,6 +7,7 @@ import asyncio
 import logging
 import os
 import random
+from time import sleep
 
 from goodbyecaptcha import package_dir
 from goodbyecaptcha.exceptions import SafePassage, TryAgain
@@ -76,6 +77,8 @@ class Base(Clicker):
         )
 
     async def click_reload_button(self):
+        self.log('Click reload ...')
+        sleep(self.animation_timeout / 1000)
         reload_button = await self.image_frame.J("#recaptcha-reload-button")
         await self.click_button(reload_button)
 
@@ -107,7 +110,7 @@ class Base(Clicker):
         }
     }
 
-    var checkbox_anchor = jQuery("#recaptcha-anchor", checkbox_frame);
+    var checkbox_anchor = jQuery(".recaptcha-checkbox", checkbox_frame);
     if(checkbox_anchor.attr("aria-checked") === "true"){
         parent.window.success = true;
         return true;
@@ -119,7 +122,7 @@ class Base(Clicker):
         except asyncio.TimeoutError:
             raise SafePassage()
         except Exception as ex:
-            self.log(ex)
+            self.log('FATAL ERROR: {0}'.format(ex))
         else:
             status = '?'
             if await self.page.evaluate("parent.window.wasdetected === true;"):

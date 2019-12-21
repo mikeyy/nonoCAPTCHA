@@ -17,7 +17,7 @@ __author__ = ", ".join(
 )
 
 package_info = (
-    "An asynchronized Python library to automate solving ReCAPTCHA v2 by audio/images"
+    "An asynchronized Python library to automate solving ReCAPTCHA v2 by images/audio"
 )
 __maintainer__ = __author__
 

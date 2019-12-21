@@ -1,5 +1,3 @@
-.. image:: https://travis-ci.org/mikeyy/nonoCAPTCHA.svg?branch=master
-    :target: https://travis-ci.org/mikeyy/nonoCAPTCHA
 .. image:: https://img.shields.io/pypi/v/nonocaptcha.svg
     :alt: PyPI
     :target: https://pypi.org/project/goodbyecaptcha/
@@ -36,24 +34,13 @@ the persons in question. The author will not be held responsible in the
 event any criminal charges be brought against any individuals misusing
 the information in this GitHub Repository to break the law.
 
-Public
-------
-
-This script was first featured on Reddit at
-`/r/Python <https://reddit.com/r/Python>`__ - `see
-here <https://www.reddit.com/r/Python/comments/8oqp7v/hey_i_made_a_google_recaptcha_solver_bot_too/>`__
-for the thread. I’ve finally decided to release the script.
-
 Preview
 -------
 
-Check out 1-minute presentation of the script in action, with only
-8 threads!
+Check out 1-minute presentation of the script in action
 
-.. figure:: https://github.com/mikeyy/nonoCAPTCHA/blob/presentation/presentation.gif
-   :alt: nonoCAPTCHA preview
-   
-https://www.youtube.com/watch?v=zgwetyKmg5g
+.. image:: https://img.youtube.com/vi/zgwetyKmg5g/0.jpg
+   :target: https://www.youtube.com/watch?v=zgwetyKmg5g
 
 Compatibility
 -------------
@@ -70,13 +57,14 @@ Azure <https://portal.azure.com/>`__ account for Bing Speech API access, an
 Amazon Web Services account for Transcribe and S3 access, Wit.AI, and for Pocketsphinx
 you'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Ubuntu.
 
+Train the yolov3 neural network to improve image recognition
+
 Installation
 ------------
 
 .. code:: shell
 
    $ pip install goodbyecaptcha
-
 
 Configuration
 -------------
@@ -97,8 +85,9 @@ If you want to use it in your own script
 
     proxy = "127.0.0.1:1000"
     auth_details = {"username": "user", "password": "pass"}
+    method = 'images'  # 'audio'
     args = ["--timeout 5"]
-    options = {"ignoreHTTPSErrors": True, "method": 'images', "args": args}
+    options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
     client = Solver(
         # With Proxy
         pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
@@ -110,13 +99,3 @@ If you want to use it in your own script
     if solution:
         print(solution)
 
-Donations
----------
-
-The use of proxies are required for my continuous updates and fixes on
-nonoCAPTCHA and GoodByeCaptcha. Any donations would be a great help in
-allowing me to purchase these proxies, that are clearly expensive.
-If anyone is willing to share their proxies, I wouldn't hesitate to accept
-the offer.
-
-Bitcoin: 1BfWQWAZBsSKCNQZgsq2vwaKxYvkrhb14u
