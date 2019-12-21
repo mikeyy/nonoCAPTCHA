@@ -4,8 +4,8 @@
 import os.path
 import sys
 
-version_info = (2, 2, 2)
-__version__ = "{}.{}.{}".format(*version_info)
+version_info = (2, 3)
+__version__ = "{}.{}".format(*version_info)
 
 authors = (("Michael Mooney", "mikeyy@mikeyy.com"), ("MacKey-255", "mackeyfuturo@gmail.com"))
 
