@@ -70,7 +70,9 @@ class Solver(Base):
                 await self.page.authenticate(self.proxy_auth)
             self.log(f"Starting solver with proxy {self.proxy}")
             await self.set_bypass_csp()
+            await self.on_goto()
             await self.goto()
+            await self.on_start()
             await self.wait_for_frames()
             result = await self.solve()
         except Exception as e:
@@ -86,6 +88,7 @@ class Solver(Base):
                 # await self.click_send_form_buttom()
             end = time.time()
             elapsed = end - start
+            await self.on_finish()
             await self.cleanup()
             self.log(f"Time elapsed: {elapsed}")
             return result
@@ -347,3 +350,13 @@ class Solver(Base):
     async def click_send_form_buttom(self):
         await self.page.click("input[name='send_form']")
         await self.page.waitForNavigation()
+
+    # Events
+    async def on_goto(self):
+        pass
+
+    async def on_start(self):
+        pass
+
+    async def on_finish(self):
+        pass

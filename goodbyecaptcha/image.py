@@ -178,7 +178,7 @@ class SolveImage(Base):
             ('autobuses', 'autobús', 'bus', 'buses'),
             ('automóviles', 'cars', 'car', 'coches', 'coche'),
             ('bicicletas', 'bicycles', 'bicycle', 'bici'),
-            ('boca de incendios', 'boca_de_incendios', 'una_boca_de_incendios', 'fire_hydrant', 'a_fire_hydrant',
+            ('boca de incendios', 'boca_de_incendios', 'una_boca_de_incendios', 'fire_hydrant', 'fire_hydrants', 'a_fire_hydrant',
              'bocas_de_incendios'),
             ('cruces_peatonales', 'crosswalk', 'crosswalks', 'cross_walks', 'cross_walk', 'pasos_de_peatones'),
             ('escaleras', 'stair', 'stairs'),
