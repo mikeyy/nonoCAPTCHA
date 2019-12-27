@@ -9,7 +9,10 @@ method = 'images'  # 'audio'
 args = ["--timeout 5"]
 options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
 client = Solver(
+    # With Proxy
     pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
+    # Without Proxy
+    # pageurl, sitekey, options=options
 )
 
 solution = client.loop.run_until_complete(client.start())

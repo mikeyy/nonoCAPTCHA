@@ -218,6 +218,8 @@ class SolveImage(Base):
             os.mkdir(PICTURES)
         if not os.path.exists(os.path.join(PICTURES, f'{title}')):
             os.mkdir(os.path.join(PICTURES, f'{title}'))
+        if not os.path.exists(os.path.join(package_dir, 'tmp')):
+            os.mkdir(os.path.join(package_dir, 'tmp'))
         # Save Image
         self.cur_image_path = os.path.join(os.path.join(PICTURES, f'{title}'), f'{hash(image)}')
         if not os.path.exists(self.cur_image_path):

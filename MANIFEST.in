@@ -1,5 +1,6 @@
 include goodbyecaptcha/data/*.*
-include goodbyecaptcha/models/*.*
+include goodbyecaptcha/models/yolov3.cfg
+include goodbyecaptcha/models/yolov3.txt
 include goodbyecaptcha/goodbyecaptcha.example.yaml
 include README.rst
 include setup.py
