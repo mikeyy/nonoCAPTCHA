@@ -40,7 +40,7 @@ setup(
         "Topic :: Software Development :: Libraries",
         "Topic :: Utilities"
     ],
-    package_data={'data': ['*.*']},
+    package_data={'data': ['*.*'], 'models': ['*.*']},
     include_package_data=True,
     packages=find_packages(),
     install_requires=load_requirements("requirements.txt"),
