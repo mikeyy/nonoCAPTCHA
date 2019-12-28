@@ -12,6 +12,7 @@ import traceback
 import fuckcaptcha as fucking
 from pyppeteer.launcher import Launcher
 from pyppeteer.util import merge_dict
+from pyppeteer_stealth import stealth
 
 from goodbyecaptcha import util
 from goodbyecaptcha.audio import SolveAudio
@@ -71,6 +72,7 @@ class Solver(Base):
             self.log(f"Starting solver with proxy {self.proxy}")
             await self.set_bypass_csp()
             await self.on_goto()
+            await stealth(self.page)
             await self.goto()
             await self.on_start()
             await self.wait_for_frames()

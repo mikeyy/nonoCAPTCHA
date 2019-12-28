@@ -13,7 +13,7 @@ docutils==0.15.2
 entrypoints==0.3
 flake8==3.5.0
 fuckcaptcha==0.1.0
-idna==2.7
+idna==2.8
 jmespath==0.9.4
 mccabe==0.6.1
 multidict==4.6.1
@@ -28,6 +28,7 @@ pydub==0.22.1
 pyee==6.0.0
 pyflakes==1.6.0
 pyppeteer==0.0.25
+pyppeteer-stealth==1.0.0
 python-dateutil==2.8.1
 PyYAML==5.1.2
 requests==2.22.0
@@ -35,7 +36,7 @@ six==1.13.0
 soupsieve==1.9.5
 SpeechRecognition==3.8.1
 tqdm==4.39.0
-urllib3==1.25.7
+urllib3==1.24.3
 user-agent==0.1.9
 websockets==6.0
 wrapt==1.11.2
