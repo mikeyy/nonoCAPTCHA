@@ -34,14 +34,6 @@ the persons in question. The author will not be held responsible in the
 event any criminal charges be brought against any individuals misusing
 the information in this GitHub Repository to break the law.
 
-Preview
--------
-
-Check out 1-minute presentation of the script in action
-
-.. image:: https://img.youtube.com/vi/zgwetyKmg5g/0.jpg
-   :target: https://www.youtube.com/watch?v=zgwetyKmg5g
-
 Compatibility
 -------------
 
@@ -65,6 +57,12 @@ Installation
 .. code:: shell
 
    $ pip install goodbyecaptcha
+
+Install tutorial
+----------------
+
+.. image:: https://img.youtube.com/vi/hPYMUdQ2aV8/0.jpg
+   :target: https://www.youtube.com/watch?v=hPYMUdQ2aV8
 
 Configuration
 -------------
