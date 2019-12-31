@@ -1,5 +1,7 @@
-include nonocaptcha/data/*.*
-include nonocaptcha/nonocaptcha.example.yaml
+include goodbyecaptcha/data/*.*
+include goodbyecaptcha/models/yolov3.cfg
+include goodbyecaptcha/models/yolov3.txt
+include goodbyecaptcha/goodbyecaptcha.example.yaml
 include README.rst
 include setup.py
 include CHANGES.md

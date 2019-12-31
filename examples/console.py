@@ -8,7 +8,6 @@ import random
 import sys
 
 from async_timeout import timeout
-
 from nonocaptcha import util
 from nonocaptcha.proxy import ProxyDB
 from nonocaptcha.solver import Solver
@@ -53,7 +52,8 @@ class Run(object):
     proxies_loading = True
 
     def __init__(self, loop):
-        self.proxies = ProxyDB(last_banned_timeout=45*60)
+        self.proxies = ProxyDB(last_banned_timeout=45 * 60)
+        self.loop = loop
         if proxy_source:
             asyncio.ensure_future(self.get_proxies(), loop=loop)
 
@@ -88,6 +88,7 @@ class Run(object):
             )
         options = {
             "ignoreHTTPSErrors": True,
+            "method": 'images',
             "args": args
         }
         proxy = self.proxies.get() if proxy_source else None
@@ -99,6 +100,7 @@ class Run(object):
             pageurl,
             sitekey,
             options=options,
+            loop=self.loop,
             proxy=proxy,
             proxy_auth=proxy_auth
         )

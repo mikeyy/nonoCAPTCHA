@@ -82,6 +82,6 @@ Install PyPI
    && apt autoremove -y
 ```
 
-Finally, install nonoCAPTCHA
+Finally, install goodbyecaptcha
 
-   `pip install nonocaptcha`
+   `pip install goodbyecaptcha`

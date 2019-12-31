@@ -1,0 +1,37 @@
+debug: true  # Output current actions and resulting state in console
+headless: false  # Run Chrome without a GUI (background)
+keyboard_traverse: false  # Emulate keyboard shortcuts instead of mouse behaviors
+block_images: true  # Reject requests to all image resource types
+
+timeout:
+    page_load: 30  # Length to wait for page load in seconds
+    iframe: 30  # Length to wait for iframe to render in seconds
+    animation: 5  # Length to wait for animations, such as spinning wheel after
+                  # clicking the widget's checkbox
+
+speech:
+    service: pocketsphinx # Recommed use wit.ai visit https://wit.ai/
+    secondary_service: google # It not required key (english audio)
+    deepspeech:
+        model_dir: deepspeech/models
+    pocketsphinx:
+        model_dir: pocketsphinx/model
+    azure:
+        api_subkey:
+    azurespeech:
+        region:
+        subscription_key:
+        language_type:
+    amazon:
+        secret_key_id:
+        secret_access_key:
+        region:
+        s3_bucket:
+    wit.ai:
+        secret_key:
+
+data:
+    deface_html: data/deface.html
+    jquery_js: data/jquery.js
+    override_js: data/override.js
+    pictures: data/pictures

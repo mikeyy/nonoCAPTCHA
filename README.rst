@@ -1,26 +1,26 @@
-.. image:: https://travis-ci.org/mikeyy/nonoCAPTCHA.svg?branch=master
-    :target: https://travis-ci.org/mikeyy/nonoCAPTCHA
-.. image:: https://img.shields.io/pypi/v/nonocaptcha.svg
+.. image:: https://img.shields.io/pypi/v/goodbyecaptcha.svg
     :alt: PyPI
-    :target: https://pypi.org/project/nonocaptcha/
-.. image:: https://img.shields.io/pypi/pyversions/nonocaptcha.svg
+    :target: https://pypi.org/project/goodbyecaptcha/
+.. image:: https://img.shields.io/pypi/pyversions/goodbyecaptcha.svg
     :alt: PyPI - Python Version
-    :target: https://pypi.org/project/nonocaptcha/
-.. image:: https://img.shields.io/pypi/l/nonocaptcha.svg
-    :alt: PyPI - License   
-    :target: https://pypi.org/project/nonocaptcha/
-.. image:: https://img.shields.io/pypi/status/nonocaptcha.svg
+    :target: https://pypi.org/project/goodbyecaptcha/
+.. image:: https://img.shields.io/pypi/l/goodbyecaptcha.svg
+    :alt: PyPI - License
+    :target: https://pypi.org/project/goodbyecaptcha/
+.. image:: https://img.shields.io/pypi/status/goodbyecaptcha.svg
     :alt: PyPI - Status
-    :target: https://pypi.org/project/nonocaptcha/
+    :target: https://pypi.org/project/goodbyecaptcha/
 
-nonoCAPTCHA
-===========
+GoodByeCaptcha
+==============
 
-An async Python library to automate solving ReCAPTCHA v2 by audio using
-Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, and Amazon's Transcribe 
-Speech-to-Text API. Built with Pyppeteer for Chrome automation framework
-and similarities to Puppeteer, PyDub for easily converting MP3 files into WAV, 
-aiohttp for async minimalistic web-server, and Python’s built-in AsyncIO
+An async Python library to automate solving ReCAPTCHA v2 by images/audio using
+Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, Google Speech and
+Amazon's Transcribe Speech-to-Text API. Also image recognition to detect
+the object suggested in the captcha. Built with Pyppeteer for Chrome
+automation framework and similarities to Puppeteer, PyDub for easily
+converting MP3 files into WAV, aiohttp for async minimalistic web-server,
+and Python’s built-in AsyncIO
 for convenience.
 
 Disclaimer
@@ -34,23 +34,6 @@ the persons in question. The author will not be held responsible in the
 event any criminal charges be brought against any individuals misusing
 the information in this GitHub Repository to break the law.
 
-Public
-------
-
-This script was first featured on Reddit at
-`/r/Python <https://reddit.com/r/Python>`__ - `see
-here <https://www.reddit.com/r/Python/comments/8oqp7v/hey_i_made_a_google_recaptcha_solver_bot_too/>`__
-for the thread. I’ve finally decided to release the script.
-
-Preview
--------
-
-Check out 1-minute presentation of the script in action, with only
-8 threads!
-
-.. figure:: https://github.com/mikeyy/nonoCAPTCHA/blob/presentation/presentation.gif
-   :alt: nonoCAPTCHA preview
-
 Compatibility
 -------------
 
@@ -60,24 +43,31 @@ Requirements
 ------------
 
 Python
-`3.6.0 <https://www.python.org/downloads/release/python-360/>`__ -
 `3.7.0 <https://www.python.org/downloads/release/python-370/>`__,
 `FFmpeg <https://ffmpeg.org/download.html>`__, a `Microsoft
 Azure <https://portal.azure.com/>`__ account for Bing Speech API access, an
-Amazon Web Services account for Transcribe and S3 access, and for Pocketsphinx
+Amazon Web Services account for Transcribe and S3 access, Wit.AI, and for Pocketsphinx
 you'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Ubuntu.
+
+Train the yolov3 neural network to improve image recognition
 
 Installation
 ------------
 
 .. code:: shell
 
-   $ pip install nonocaptcha
+   $ pip install goodbyecaptcha
+
+Install tutorial
+----------------
+
+.. image:: https://img.youtube.com/vi/hPYMUdQ2aV8/0.jpg
+   :target: https://www.youtube.com/watch?v=hPYMUdQ2aV8
 
 Configuration
 -------------
 
-Please edit nonocaptcha.example.yaml and save as nonocaptcha.yaml
+Please edit goodbyecaptcha.example.yaml and save as goodbyecaptcha.yaml
 
 Usage
 -----
@@ -86,37 +76,84 @@ If you want to use it in your own script
 
 .. code:: python
 
-   import asyncio
-   from nonocaptcha.solver import Solver
+    from goodbyecaptcha.solver import Solver
 
-   pageurl = "https://www.google.com/recaptcha/api2/demo"
-   sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
+    pageurl = "https://www.google.com/recaptcha/api2/demo"
+    sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
 
-   proxy = "127.0.0.1:1000"
-   auth_details = {
-        "username": "user",
-        "password": "pass"
-   }
-   args = ["--timeout 5"]
-   options = {"ignoreHTTPSErrors": True, "args": args}
-   client = Solver(
-        pageurl,
-        sitekey,
-        options=options,
-        proxy=proxy,
-        proxy_auth=auth_details,
-   )
+    proxy = "127.0.0.1:1000"
+    auth_details = {"username": "user", "password": "pass"}
+    method = 'images'  # 'audio'
+    args = ["--timeout 5"]
+    options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
+    client = Solver(
+        # With Proxy
+        pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
+        # Without Proxy
+        # pageurl, sitekey, options=options
+    )
 
-   solution = asyncio.get_event_loop().run_until_complete(client.start())
-   if solution:
+    solution = client.loop.run_until_complete(client.start())
+    if solution:
         print(solution)
 
-Donations
----------
+If you want to use events
 
-The use of proxies are required for my continuous updates and fixes on
-nonoCAPTCHA. Any donations would be a great help in allowing me to purchase 
-these proxies, that are clearly expensive. If anyone is willing to share
-their proxies, I wouldn't hesitate to accept the offer.
+.. code:: python
 
-Bitcoin: 1BfWQWAZBsSKCNQZgsq2vwaKxYvkrhb14u
+    from goodbyecaptcha.solver import Solver
+
+    pageurl = "https://www.google.com/recaptcha/api2/demo"
+    sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
+
+    proxy = "127.0.0.1:1000"
+    auth_details = {"username": "user", "password": "pass"}
+    method = 'images'  # 'audio'
+    args = ["--timeout 5"]
+    options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
+
+
+    class MySolver(Solver):
+        def __init__(self, pageurl, sitekey, loop=None, proxy=None, proxy_auth=None,
+                     options=None, enable_injection=True, retain_source=True, **kwargs):
+            super().__init__(pageurl, sitekey, loop=loop, proxy=proxy, proxy_auth=proxy_auth,
+                             options=options, enable_injection=enable_injection, retain_source=retain_source, **kwargs)
+
+        async def on_goto(self):
+            # Set Cookies and other stuff
+            await self.page.setCookie({
+                'name': 'cookie1',
+                'value': 'value1',
+                'domain': '.google.com'
+            })
+            self.log('Cookies ready!')
+
+        async def on_start(self):
+            # Set or Change data
+            self.log('Set data in form ...')
+            await self.page.type('input[name="input1"]', 'value')
+
+        async def on_finish(self):
+            # Click button Send
+            self.log('Clicking send button ...')
+            await self.page.click('input[id="recaptcha-demo-submit"]')
+            await self.page.waitForNavigation()
+            await self.page.screenshot({'path': 'image.png'})
+
+
+    client = MySolver(
+        # With Proxy
+        pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
+        # Without Proxy
+        # pageurl, sitekey, options=options
+    )
+
+    client.loop.run_until_complete(client.start())
+
+Training YoloV3
+---------------
+
+I recommend training yolov3 to improve the recaptcha resolution with the following information:
+ - `Dataset <https://storage.googleapis.com/openimages/web/download.html>`__
+ - `Tutorial Video <https://www.youtube.com/playlist?list=PLZBN9cDu0MSk4IFFnTOIDihvhnHWhAa8W>`__
+ - Object classes: `bicycle, bridge, bus, car, chimneys, crosswalk, fire hydrant, motorcycle, palm trees, parking meters, stair, taxis, tractors, traffic light, trees`

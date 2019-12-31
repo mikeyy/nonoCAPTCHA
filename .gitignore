@@ -15,6 +15,7 @@ lib/
 lib64/
 parts/
 sdist/
+dist/
 var/
 *.egg-info/
 .installed.cfg
@@ -58,7 +59,7 @@ aiomisc
 aiohttp
 
 # Config file
-nonocaptcha.yaml
+goodbyecaptcha.yaml
 
 # Mac's DS_Store
 .DS_Store
@@ -84,3 +85,11 @@ pocketsphinx
 
 # visual studio code editor configs
 .vscode
+
+# Pycharm
+venv
+.idea
+
+# Images Project
+goodbyecaptcha/data/pictures/*
+goodbyecaptcha/models/yolov3.weights
