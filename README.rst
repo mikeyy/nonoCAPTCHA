@@ -150,3 +150,10 @@ If you want to use events
 
     client.loop.run_until_complete(client.start())
 
+Training YoloV3
+---------------
+
+I recommend training yolov3 to improve the recaptcha resolution with the following information:
+ - `Dataset <https://storage.googleapis.com/openimages/web/download.html>`__
+ - `Tutorial Video <https://www.youtube.com/playlist?list=PLZBN9cDu0MSk4IFFnTOIDihvhnHWhAa8W>`__
+ - Object classes: `bicycle, bridge, bus, car, chimneys, crosswalk, fire hydrant, motorcycle, palm trees, parking meters, stair, taxis, tractors, traffic light, trees`
