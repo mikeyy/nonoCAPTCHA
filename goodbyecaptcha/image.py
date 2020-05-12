@@ -10,11 +10,9 @@ from PIL import Image
 
 from goodbyecaptcha import package_dir
 from goodbyecaptcha import util
-from goodbyecaptcha.base import Base, settings
+from goodbyecaptcha.base import Base
 from goodbyecaptcha.exceptions import SafePassage
 from goodbyecaptcha.predict import predict, is_marked
-
-PICTURES = os.path.join(package_dir, settings['data']['pictures'])
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -28,18 +26,17 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class SolveImage(Base):
-    def __init__(self, page, image_frame, proxy, proxy_auth, proc_id):
+    def __init__(self, page, image_frame, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
         self.page = page
         self.image_frame = image_frame
         self.proxy = proxy
         self.proxy_auth = proxy_auth
-        self.proc_id = proc_id
         self.cur_image_path = None
         self.title = None
         self.pieces = None
         self.download = None
-        self.loop = asyncio.get_event_loop()
-        self.method = 'images'
+
+        super(SolveImage, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, options=options, **kwargs)
 
     async def start(self):
         self.log('Solving Image ...')
@@ -201,27 +198,23 @@ class SolveImage(Base):
 
     async def pictures_of(self):
         el = await self.get_description_element()
-        of = await self.image_frame.evaluate(
-            'el => el.firstElementChild.innerText', el
-        )
+        of = await self.image_frame.evaluate('el => el.firstElementChild.innerText', el)
         return str(of).replace(' ', '_')
 
     async def get_description_element(self):
         name1 = await self.image_frame.querySelector('.rc-imageselect-desc')
-        name2 = await self.image_frame.querySelector(
-            '.rc-imageselect-desc-no-canonical'
-        )
+        name2 = await self.image_frame.querySelector('.rc-imageselect-desc-no-canonical')
         return name1 if name1 else name2
 
     async def create_folder(self, title, image):
-        if not os.path.exists(PICTURES):
-            os.mkdir(PICTURES)
-        if not os.path.exists(os.path.join(PICTURES, f'{title}')):
-            os.mkdir(os.path.join(PICTURES, f'{title}'))
+        if not os.path.exists(self.pictures):
+            os.mkdir(self.pictures)
+        if not os.path.exists(os.path.join(self.pictures, f'{title}')):
+            os.mkdir(os.path.join(self.pictures, f'{title}'))
         if not os.path.exists(os.path.join(package_dir, 'tmp')):
             os.mkdir(os.path.join(package_dir, 'tmp'))
         # Save Image
-        self.cur_image_path = os.path.join(os.path.join(PICTURES, f'{title}'), f'{hash(image)}')
+        self.cur_image_path = os.path.join(os.path.join(self.pictures, f'{title}'), f'{hash(image)}')
         if not os.path.exists(self.cur_image_path):
             os.mkdir(self.cur_image_path)
 

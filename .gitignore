@@ -92,4 +92,5 @@ venv
 
 # Images Project
 goodbyecaptcha/data/pictures/*
+goodbyecaptcha/tmp/*
 goodbyecaptcha/models/yolov3.weights

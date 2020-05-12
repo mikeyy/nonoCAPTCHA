@@ -38,8 +38,3 @@ class ButtonError(goodbyecaptchaError):
 class IframeError(goodbyecaptchaError):
     """ Raised when defacing page times out. """
     pass
-
-
-class PageError(goodbyecaptchaError):
-    """ Raised when loading page times out. """
-    pass

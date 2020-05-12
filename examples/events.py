@@ -11,11 +11,6 @@ options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
 
 
 class MySolver(Solver):
-    def __init__(self, pageurl, sitekey, loop=None, proxy=None, proxy_auth=None,
-                 options=None, enable_injection=True, retain_source=True, **kwargs):
-        super().__init__(pageurl, sitekey, loop=loop, proxy=proxy, proxy_auth=proxy_auth,
-                         options=options, enable_injection=enable_injection, retain_source=retain_source, **kwargs)
-
     async def on_goto(self):
         # Set Cookies and other stuff
         await self.page.setCookie({

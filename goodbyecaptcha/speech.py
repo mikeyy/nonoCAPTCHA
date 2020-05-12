@@ -3,7 +3,6 @@
 
 """ Speech module. Text-to-speech classes - Sphinx, Amazon, and Azure. """
 import asyncio
-import io
 import json
 import os
 import re
@@ -27,6 +26,7 @@ from goodbyecaptcha.base import settings
 
 
 async def mp3_to_wav(mp3_filename):
+    """Convert mp3 to wav"""
     wav_filename = mp3_filename.replace(".mp3", ".wav")
     segment = AudioSegment.from_mp3(mp3_filename)
     sound = segment.set_channels(1).set_frame_rate(16000)
@@ -34,17 +34,6 @@ async def mp3_to_wav(mp3_filename):
     sound = sound[+garbage:len(sound) - garbage]
     sound.export(wav_filename, format="wav")
     return wav_filename
-
-
-async def download_mp3_to_wav(url):
-    request = requests.get(url)
-    audio_file = io.BytesIO(request.content)
-    # Convert the audio to a compatible format in memory
-    converted_audio = io.BytesIO()
-    sound = AudioSegment.from_mp3(audio_file)
-    sound.export(converted_audio, format="wav")
-    converted_audio.seek(0)
-    return converted_audio
 
 
 class DeepSpeech(object):
