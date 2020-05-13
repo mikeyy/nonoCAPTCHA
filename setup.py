@@ -1,3 +1,4 @@
+import codecs
 import os
 from importlib.machinery import SourceFileLoader
 
@@ -25,7 +26,7 @@ setup(
     license=module.__license__,
     description=module.package_info,
     url="https://github.com/MacKey-255/GoodByeCatpcha",
-    long_description=open("README.rst").read(),
+    long_description=codecs.open("README.rst", encoding="utf-8").read(),
     platforms="all",
     classifiers=[
         "Development Status :: 5 - Production/Stable",

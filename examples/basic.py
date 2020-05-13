@@ -10,9 +10,8 @@ else:
     sys.exit(0)
 
 options = {
-    "headless": False,
     "ignoreHTTPSErrors": True,
-    "method": 'images',
+    "handleSIGINT": False, "handleSIGTERM": False, "handleSIGHUP": False,
     "args": ["--timeout 5"]
 }
 if proxy.lower() == "none":

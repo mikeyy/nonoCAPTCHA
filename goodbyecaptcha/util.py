@@ -77,11 +77,16 @@ async def get_page(url, proxy=None, proxy_auth=None, binary=False, verify=False,
                 "https": f"http://{username}:{password}@{proxy}"}
         else:
             proxies = {"http": proxy, "https": proxy}
-    with requests.Session() as session:
-        response = session.get(url, proxies=proxies, verify=verify, timeout=timeout)
-        if binary:
-            return response.content
-        return response.text
+    retry = 3  # Retry 3 times
+    while retry > 0:
+        try:
+            with requests.Session() as session:
+                response = session.get(url, proxies=proxies, verify=verify, timeout=timeout)
+                if binary:
+                    return response.content
+                return response.text
+        except requests.exceptions.ConnectionError:
+            retry -= 1
 
 
 def serialize(obj, p):

@@ -8,9 +8,7 @@
 # This Dockerfile assumes all required files/folders are in the relative
 # folder:
 # - goodbyecaptcha.yaml
-# - proxys.yaml
-# - examples/app.py
-# - pocketsphinx (folder)
+# - app.py
 # You may want to add proxies.txt at the bottom of this file.
 
 # We are using Ubuntu 16.04 for the base Docker image
@@ -65,30 +63,31 @@ RUN apt-get update \
     ffmpeg \
     swig \
     software-properties-common curl \
-    && add-apt-repository ppa:jonathonf/python-3.6 \
+    && add-apt-repository ppa:deadsnakes/ppa \
     && apt-get remove -y software-properties-common \
     && apt autoremove -y \
     && apt-get update \
-    && apt-get install -y python3.6 \
-    python3.6-dev \
+    && apt-get install -y python3.6 python3.6-dev \
     && curl -o /tmp/get-pip.py "https://bootstrap.pypa.io/get-pip.py" \
     && python3.6 /tmp/get-pip.py \
     && apt-get remove -y curl \
     && apt autoremove -y \
     && pip install goodbyecaptcha
+RUN pip install sanic json-api
 
-# Copies required files for running goodbyecaptcha to the Docker container.
+# Copies required files for running nonoCAPTCHA to the Docker container.
 # You can comment out pocketsphinx if you aren't using Pocketsphinx.
 RUN mkdir /goodbyecaptcha
-ADD pocketsphinx /goodbyecaptcha/pocketsphinx
+WORKDIR /goodbyecaptcha
+#ADD pocketsphinx /goodbyecaptcha/pocketsphinx
 ADD goodbyecaptcha.yaml /goodbyecaptcha
-ADD proxys.json /goodbyecaptcha
+# ADD proxies.txt /goodbyecaptcha/proxies.txt
 
 # This determines which file you want to copy over to the Docker container,
 # by default the aiohttp server is copied to the container.
-ADD examples/app.py /goodbyecaptcha
+ADD app.py /goodbyecaptcha
 
 # Uncomment the lines below if you want to autostart the app and expose the
 # port on your machine, which can be accessed by going to http://localhost:5000
-# RUN python3.6 /goodbyecaptcha/app.py
-# EXPOSE 5000
+EXPOSE 5000
+CMD ["python3.6", "/goodbyecaptcha/examples/app.py"]

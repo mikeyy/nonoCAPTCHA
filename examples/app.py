@@ -139,7 +139,9 @@ async def work(pageurl, sitekey, loop):
     if proxy_username and proxy_password:
         proxy_auth = {"username": proxy_username,
                       "password": proxy_password}
-    options = {"ignoreHTTPSErrors": True, "method": 'images', "args": ["--timeout 5"]}
+    options = {"ignoreHTTPSErrors": True,
+               "handleSIGINT": False, "handleSIGTERM": False, "handleSIGHUP": False,
+               "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
         sitekey,
@@ -162,6 +164,7 @@ async def get_solution(request):
     pageurl = params.get("pageurl")
     sitekey = params.get("sitekey")
     secret_key = params.get("secret_key")
+    response = {"error": "error"}
     if not pageurl or not sitekey or not secret_key:
         response = {"error": "invalid request"}
     else:

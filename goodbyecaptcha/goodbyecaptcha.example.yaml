@@ -5,7 +5,7 @@ method: images  # Method to resolve captcha (images/audio)
 
 timeout:
     page_load: 30  # Length to wait for page load in seconds
-    iframe: 30  # Length to wait for iframe to render in seconds
+    click: 2  # Length to wait for click verify or reload button (may vary depending on connection)
     animation: 5  # Length to wait for animations, such as spinning wheel after
                   # clicking the widget's checkbox
 
@@ -31,7 +31,5 @@ speech:
         secret_key:
 
 data:
-    deface_html: data/deface.html
     jquery_js: data/jquery.js
-    override_js: data/override.js
     pictures: data/pictures

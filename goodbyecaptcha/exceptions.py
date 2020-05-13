@@ -5,13 +5,11 @@
 
 
 class goodbyecaptchaError(Exception):
-    """ nonoCAPTCHA base exception. """
+    """ GoodByeCAPTCHA base exception. """
 
 
 class SafePassage(goodbyecaptchaError):
-    """ Raised when all checks have passed. Such as being detected or try
-    again.
-    """
+    """ Raised when all checks have passed. Such as being detected or try again. """
     pass
 
 

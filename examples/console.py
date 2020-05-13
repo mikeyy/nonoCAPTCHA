@@ -8,9 +8,9 @@ import random
 import sys
 
 from async_timeout import timeout
-from nonocaptcha import util
-from nonocaptcha.proxy import ProxyDB
-from nonocaptcha.solver import Solver
+from goodbyecaptcha import util
+from goodbyecaptcha.proxy import ProxyDB
+from goodbyecaptcha.solver import Solver
 
 threads = 1  # Max browsers to open
 sort_position = False
@@ -88,7 +88,7 @@ class Run(object):
             )
         options = {
             "ignoreHTTPSErrors": True,
-            "method": 'images',
+            "handleSIGINT": False, "handleSIGTERM": False, "handleSIGHUP": False,
             "args": args
         }
         proxy = self.proxies.get() if proxy_source else None

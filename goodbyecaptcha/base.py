@@ -51,18 +51,18 @@ class Base:
 
     # Import configurations
     logger = logging.getLogger(__name__)
-    if settings["debug"]:
+    debug = settings["debug"]
+    if debug:
         logger.setLevel("DEBUG")
     headless = settings["headless"]
     method = settings["method"]
+    keyboard_traverse = settings["keyboard_traverse"]
     page_load_timeout = settings["timeout"]["page_load"] * 1000
-    iframe_timeout = settings["timeout"]["iframe"] * 1000
+    click_timeout = settings["timeout"]["click"] * 1000
     animation_timeout = settings["timeout"]["animation"] * 1000
     speech_service = settings["speech"]["service"]
     speech_secondary_service = settings["speech"]["secondary_service"]
-    deface_data = os.path.join(package_dir, settings["data"]["deface_html"])
     jquery_data = os.path.join(package_dir, settings["data"]["jquery_js"])
-    override_data = os.path.join(package_dir, settings["data"]["override_js"])
     pictures = os.path.join(package_dir, settings['data']['pictures'])
 
     def __init__(self, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
@@ -74,19 +74,19 @@ class Base:
         patch_pyppeteer()  # Patch Pyppeter (Fix InvalidStateError and Download Chrome)
 
     async def get_frames(self):
+        """Get frames to checkbox and image_frame of reCaptcha"""
         self.checkbox_frame = next(frame for frame in self.page.frames if "api2/anchor" in frame.url)
         self.image_frame = next(frame for frame in self.page.frames if "api2/bframe" in frame.url)
 
     async def click_reload_button(self):
         """Click reload button"""
         self.log('Click reload ...')
-        await asyncio.sleep(self.animation_timeout / 1000)
         reload_button = await self.image_frame.J("#recaptcha-reload-button")
         await self.click_button(reload_button)
+        await asyncio.sleep(self.click_timeout / 1000)  # Wait for animations (Change other images)
 
     async def check_detection(self, timeout):
-        """Checks if "Try again later", "please solve more" modal appears
-        or success"""
+        """Checks if "Try again later", "please solve more" modal appears or success"""
 
         func = """(function() {
     checkbox_frame = parent.window.jQuery(
@@ -137,7 +137,8 @@ class Base:
             return {"status": status}
 
     async def click_button(self, button):
-        if self.method != 'images':
+        """Click button object"""
+        if self.keyboard_traverse:
             bb = await button.boundingBox()
             await self.page.mouse.move(
                 random.uniform(0, 800),
@@ -148,7 +149,7 @@ class Base:
                 bb["x"], bb["y"], steps=int(random.uniform(40, 90))
             )
             await button.hover()
-            await asyncio.sleep(random.uniform(1, 3))
+            await asyncio.sleep(random.uniform(0, 2))
         click_delay = random.uniform(30, 170)
         await button.click(delay=click_delay)
 
@@ -172,7 +173,7 @@ class Base:
     async def goto(self, url):
         """Navigate to address"""
         jquery_js = await load_file(self.jquery_data)
-        await self.page.evaluateOnNewDocument("() => {\n%s}" % jquery_js)  # Inject JQUERY
+        await self.page.evaluateOnNewDocument("() => {\n%s}" % jquery_js)  # Inject JQuery
         await fucking.bypass_detections(self.page)  # bypass reCAPTCHA detection in pyppeteer
         retry = 3  # Go to Page and Retry 3 times
         while True:
@@ -180,7 +181,7 @@ class Base:
                 await self.loop.create_task(self.page.goto(
                     url,
                     timeout=self.page_load_timeout * 1000,
-                    waitUntil=["domcontentloaded"]))
+                    waitUntil=["networkidle0", "domcontentloaded"]))
                 break
             except asyncio.TimeoutError as ex:
                 traceback.print_exc(file=sys.stdout)
@@ -270,6 +271,7 @@ class Base:
         self.page.on('request', handle_request)
 
     async def set_cookies(self, cookies=None):
+        """Set cookie list to current page"""
         if cookies:
             for cookie in cookies:
                 cookie['url'] = self.page.url
@@ -297,12 +299,15 @@ class Base:
 
     # Events
     async def on_goto(self):
+        """Run before to open URL"""
         pass
 
     async def on_start(self):
+        """Run after to open URL"""
         pass
 
     async def on_finish(self):
+        """Run after to finish the process"""
         pass
 
     def log(self, message):
