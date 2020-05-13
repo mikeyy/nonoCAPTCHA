@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-""" Speech module. Text-to-speech classes - Sphinx, Amazon, and Azure. """
+""" Speech module. Text-to-speech classes - Sphinx, Google, WitAI, Amazon, and Azure. """
 import asyncio
 import json
 import os
@@ -78,7 +78,6 @@ class Google(object):
             print("Google Speech Recognition could not understand audio")
         except sr.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
-
         return audio_output
 
 
@@ -115,31 +114,17 @@ class Sphinx(object):
 
     async def build_decoder(self):
         config = Decoder.default_config()
-        config.set_string(
-            "-dict", os.path.join(self.MODEL_DIR, "cmudict-en-us.dict")
-        )
-        config.set_string(
-            "-fdict", os.path.join(self.MODEL_DIR, "en-us/noisedict")
-        )
-        config.set_string(
-            "-featparams", os.path.join(self.MODEL_DIR, "en-us/feat.params")
-        )
-        config.set_string(
-            "-tmat", os.path.join(self.MODEL_DIR, "en-us/transition_matrices")
-        )
+        config.set_string("-dict", os.path.join(self.MODEL_DIR, "cmudict-en-us.dict"))
+        config.set_string("-fdict", os.path.join(self.MODEL_DIR, "en-us/noisedict"))
+        config.set_string("-featparams", os.path.join(self.MODEL_DIR, "en-us/feat.params"))
+        config.set_string("-tmat", os.path.join(self.MODEL_DIR, "en-us/transition_matrices"))
         config.set_string("-hmm", os.path.join(self.MODEL_DIR, "en-us"))
         config.set_string("-lm", os.path.join(self.MODEL_DIR, "en-us.lm.bin"))
         config.set_string("-mdef", os.path.join(self.MODEL_DIR, "en-us/mdef"))
         config.set_string("-mean", os.path.join(self.MODEL_DIR, "en-us/means"))
-        config.set_string(
-            "-sendump", os.path.join(self.MODEL_DIR, "en-us/sendump")
-        )
-        config.set_string(
-            "-var", os.path.join(self.MODEL_DIR, "en-us/variances")
-        )
-        null_path = "/dev/null"
-        if sys.platform == "win32":
-            null_path = "NUL"
+        config.set_string("-sendump", os.path.join(self.MODEL_DIR, "en-us/sendump"))
+        config.set_string("-var", os.path.join(self.MODEL_DIR, "en-us/variances"))
+        null_path = "NUL" if sys.platform == "win32" else "/dev/null"
         config.set_string("-logfn", null_path)
         return Decoder(config)
 
@@ -156,9 +141,7 @@ class Sphinx(object):
                     break
         decoder.end_utt()
         hyp = " ".join([seg.word for seg in decoder.seg()])
-        answer = " ".join(
-            re.sub("<[^<]+?>|\[[^<]+?\]|\([^<]+?\)", " ", hyp).split()
-        )
+        answer = " ".join(re.sub("<[^<]+?>|\[[^<]+?\]|\([^<]+?\)", " ", hyp).split())
         return answer
 
 
@@ -184,9 +167,7 @@ class Amazon(object):
         )
         filename = f"{uuid4().hex}.mp3"
         # Upload audio file to bucket
-        await upload.put_object(
-            Bucket=self.S3_BUCKET, Key=filename, Body=audio_data
-        )
+        await upload.put_object(Bucket=self.S3_BUCKET, Key=filename, Body=audio_data)
         job_name = uuid4().hex
         job_uri = (
             f"https://s3.{self.REGION_NAME}.amazonaws.com/{self.S3_BUCKET}/"
@@ -202,21 +183,14 @@ class Amazon(object):
         # Wait 90 seconds for transcription
         timeout = 90
         while time.time() > timeout:
-            status = await transcribe.get_transcription_job(
-                TranscriptionJobName=job_name
-            )
-            if status["TranscriptionJob"]["TranscriptionJobStatus"] in [
-                "COMPLETED",
-                "FAILED",
-            ]:
+            status = await transcribe.get_transcription_job(TranscriptionJobName=job_name)
+            if status["TranscriptionJob"]["TranscriptionJobStatus"] in ["COMPLETED", "FAILED"]:
                 break
             await asyncio.sleep(5)
         # Delete audio file from bucket
         await upload.delete_object(Bucket=self.S3_BUCKET, Key=filename)
         if "TranscriptFileUri" in status["TranscriptionJob"]["Transcript"]:
-            transcript_uri = status["TranscriptionJob"]["Transcript"][
-                "TranscriptFileUri"
-            ]
+            transcript_uri = status["TranscriptionJob"]["Transcript"]["TranscriptFileUri"]
             data = json.loads(await util.get_page(transcript_uri))
             transcript = data["results"]["transcripts"][0]["transcript"]
             return transcript
@@ -261,24 +235,14 @@ class AzureSpeech(object):
             f"language={self.language_type}&format=detailed"
         )
 
-        response = requests.post(
-            speech_to_text_url,
-            headers=headers,
-            data=wav_bytes
-        )
+        response = requests.post(speech_to_text_url, headers=headers, data=wav_bytes)
         if response.status_code == 200:
             print(response.content)
             content = await self.extract_json_body(response.content)
-            if (
-                    "RecognitionStatus" in content
-                    and content["RecognitionStatus"] == "Success"
-            ):
+            if "RecognitionStatus" in content and content["RecognitionStatus"] == "Success":
                 answer = content["NBest"][0]["Lexical"]
                 return answer
-            if (
-                    "RecognitionStatus" in content
-                    and content["RecognitionStatus"] == "EndOfDictation"
-            ):
+            if "RecognitionStatus" in content and content["RecognitionStatus"] == "EndOfDictation":
                 return
         else:
             print(response.status_code)
@@ -291,9 +255,7 @@ class Azure(object):
     async def extract_json_body(self, response):
         pattern = "^\r\n"  # header separator is an empty line
         m = re.search(pattern, response, re.M)
-        return json.loads(
-            response[m.end():]
-        )  # assuming that content type is json
+        return json.loads(response[m.end():])  # assuming that content type is json
 
     async def build_message(self, req_id, payload):
         message = b""
@@ -336,15 +298,9 @@ class Azure(object):
             while time.time() < timeout:
                 response = await websocket.recv()
                 content = await self.extract_json_body(response)
-                if (
-                        "RecognitionStatus" in content
-                        and content["RecognitionStatus"] == "Success"
-                ):
+                if "RecognitionStatus" in content and content["RecognitionStatus"] == "Success":
                     answer = content["NBest"][0]["Lexical"]
                     return answer
-                if (
-                        "RecognitionStatus" in content
-                        and content["RecognitionStatus"] == "EndOfDictation"
-                ):
+                if "RecognitionStatus" in content and content["RecognitionStatus"] == "EndOfDictation":
                     return
                 await asyncio.sleep(1)

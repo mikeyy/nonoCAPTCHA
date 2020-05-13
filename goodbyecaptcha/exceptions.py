@@ -13,6 +13,11 @@ class SafePassage(goodbyecaptchaError):
     pass
 
 
+class ResolveMoreLater(goodbyecaptchaError):
+    """ Raised when audio deciphering is incorrect and we can try again. """
+    pass
+
+
 class TryAgain(goodbyecaptchaError):
     """ Raised when audio deciphering is incorrect and we can try again. """
     pass

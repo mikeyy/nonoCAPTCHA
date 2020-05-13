@@ -23,8 +23,6 @@ class SolveImage(Base):
     def __init__(self, page, image_frame, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
         self.page = page
         self.image_frame = image_frame
-        self.proxy = proxy
-        self.proxy_auth = proxy_auth
 
         super(SolveImage, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, options=options, **kwargs)
 
@@ -151,17 +149,6 @@ class SolveImage(Base):
                 await self.click_button(elements[i])
             except Exception as ex:
                 self.log(ex)
-
-    async def click_verify(self):
-        """Click button of Verify"""
-        self.log('Verifying ...')
-        element = await self.image_frame.querySelector('#recaptcha-verify-button')
-        try:
-            await self.click_button(element)
-            await asyncio.sleep(self.click_timeout / 1000)  # Wait for animations (Change other images)
-        except Exception as ex:
-            self.log(ex)
-            raise Exception(ex)
 
     async def search_title(self, title):
         """Search title with classes"""

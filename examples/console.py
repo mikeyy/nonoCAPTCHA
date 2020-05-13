@@ -86,11 +86,7 @@ class Run(object):
                     "--window-size=400,400",
                 ]
             )
-        options = {
-            "ignoreHTTPSErrors": True,
-            "handleSIGINT": False, "handleSIGTERM": False, "handleSIGHUP": False,
-            "args": args
-        }
+        options = {"ignoreHTTPSErrors": True, "args": args}
         proxy = self.proxies.get() if proxy_source else None
         proxy_auth = None
         if proxy_username and proxy_password:

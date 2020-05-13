@@ -9,11 +9,7 @@ else:
     print('Invalid number of arguments (pageurl, sitekey, proxy)')
     sys.exit(0)
 
-options = {
-    "ignoreHTTPSErrors": True,
-    "handleSIGINT": False, "handleSIGTERM": False, "handleSIGHUP": False,
-    "args": ["--timeout 5"]
-}
+options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
 if proxy.lower() == "none":
     proxy = None
 client = Solver(pageurl, sitekey, options=options, proxy=proxy)

@@ -5,9 +5,8 @@ sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
 
 proxy = "127.0.0.1:1000"
 auth_details = {"username": "user", "password": "pass"}
-method = 'images'  # 'audio'
 args = ["--timeout 5"]
-options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
+options = {"ignoreHTTPSErrors": True, "args": args}
 
 
 class MySolver(Solver):

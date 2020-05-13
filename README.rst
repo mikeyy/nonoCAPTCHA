@@ -15,13 +15,12 @@ GoodByeCaptcha
 ==============
 
 An async Python library to automate solving ReCAPTCHA v2 by images/audio using
-Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, Google Speech and
+Mozilla's DeepSpeech, PocketSphinx, Microsoft Azure’s, Wit.AI, Google Speech or
 Amazon's Transcribe Speech-to-Text API. Also image recognition to detect
 the object suggested in the captcha. Built with Pyppeteer for Chrome
 automation framework and similarities to Puppeteer, PyDub for easily
 converting MP3 files into WAV, aiohttp for async minimalistic web-server,
-and Python’s built-in AsyncIO
-for convenience.
+and Python’s built-in AsyncIO for convenience.
 
 Disclaimer
 ----------
@@ -43,13 +42,23 @@ Requirements
 ------------
 
 Python
-`3.7.0 <https://www.python.org/downloads/release/python-370/>`__,
+`3.7 <https://www.python.org/downloads/release/python-370/>`__,
 `FFmpeg <https://ffmpeg.org/download.html>`__, a `Microsoft
 Azure <https://portal.azure.com/>`__ account for Bing Speech API access, an
-Amazon Web Services account for Transcribe and S3 access, Wit.AI, and for Pocketsphinx
-you'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Ubuntu.
+Amazon Web Services account for Transcribe and S3 access, a Wit.AI or for Pocketsphinx.
+You'll need pulseaudio, swig, libasound2-dev, and libpulse-dev under Debian.
 
-Train the yolov3 neural network to improve image recognition
+Train the yolov3 neural network to improve image recognition.
+
+
+Training YoloV3
+---------------
+
+I recommend training yolov3 to improve the recaptcha resolution with the following information:
+ - `Dataset <https://storage.googleapis.com/openimages/web/download.html>`__
+ - `Tutorial Video <https://www.youtube.com/playlist?list=PLZBN9cDu0MSk4IFFnTOIDihvhnHWhAa8W>`__
+ - Object classes: `bicycle, bridge, bus, car, chimneys, crosswalk, fire hydrant, motorcycle, palm trees, parking meters, stair, taxis, tractors, traffic light, trees`
+
 
 Installation
 ------------
@@ -83,9 +92,8 @@ If you want to use it in your own script
 
     proxy = "127.0.0.1:1000"
     auth_details = {"username": "user", "password": "pass"}
-    method = 'images'  # 'audio'
     args = ["--timeout 5"]
-    options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
+    options = {"ignoreHTTPSErrors": True, "args": args}
     client = Solver(
         # With Proxy
         pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
@@ -108,17 +116,11 @@ If you want to use events
 
     proxy = "127.0.0.1:1000"
     auth_details = {"username": "user", "password": "pass"}
-    method = 'images'  # 'audio'
     args = ["--timeout 5"]
-    options = {"ignoreHTTPSErrors": True, "method": method, "args": args}
+    options = {"ignoreHTTPSErrors": True, "args": args}
 
 
     class MySolver(Solver):
-        def __init__(self, pageurl, sitekey, loop=None, proxy=None, proxy_auth=None,
-                     options=None, enable_injection=True, retain_source=True, **kwargs):
-            super().__init__(pageurl, sitekey, loop=loop, proxy=proxy, proxy_auth=proxy_auth,
-                             options=options, enable_injection=enable_injection, retain_source=retain_source, **kwargs)
-
         async def on_goto(self):
             # Set Cookies and other stuff
             await self.page.setCookie({
@@ -149,11 +151,3 @@ If you want to use events
     )
 
     client.loop.run_until_complete(client.start())
-
-Training YoloV3
----------------
-
-I recommend training yolov3 to improve the recaptcha resolution with the following information:
- - `Dataset <https://storage.googleapis.com/openimages/web/download.html>`__
- - `Tutorial Video <https://www.youtube.com/playlist?list=PLZBN9cDu0MSk4IFFnTOIDihvhnHWhAa8W>`__
- - Object classes: `bicycle, bridge, bus, car, chimneys, crosswalk, fire hydrant, motorcycle, palm trees, parking meters, stair, taxis, tractors, traffic light, trees`

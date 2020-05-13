@@ -11,7 +11,7 @@ import traceback
 from shutil import copyfile
 
 import fuckcaptcha as fucking
-from pyppeteer.errors import TimeoutError, PageError, PyppeteerError
+from pyppeteer.errors import TimeoutError, PageError, PyppeteerError, NetworkError
 from pyppeteer.launcher import Launcher
 from pyppeteer.util import merge_dict
 from pyppeteer_stealth import stealth
@@ -136,6 +136,17 @@ class Base:
                 raise TryAgain()
             return {"status": status}
 
+    async def click_verify(self):
+        """Click button of Verify"""
+        self.log('Verifying ...')
+        element = await self.image_frame.querySelector('#recaptcha-verify-button')
+        try:
+            await self.click_button(element)
+            await asyncio.sleep(self.click_timeout / 1000)  # Wait for animations (Change other images)
+        except Exception as ex:
+            self.log(ex)
+            raise Exception(ex)
+
     async def click_button(self, button):
         """Click button object"""
         if self.keyboard_traverse:
@@ -158,8 +169,6 @@ class Base:
         if new_page:
             self.page_index += 1  # Add Actual Index
             self.page = await self.browser.newPage()
-        if self.method != 'images':
-            await self.block_images_css()
         if self.proxy_auth and self.proxy:
             await self.page.authenticate(self.proxy_auth)
             self.log(f"Open page with proxy {self.proxy}")
@@ -262,10 +271,13 @@ class Base:
         """Reject requests to all image and css resource types"""
 
         async def handle_request(request):
-            if request.resourceType == 'image' or request.resourceType == 'css':
-                await request.abort()
-            else:
-                await request.continue_()
+            try:
+                if request.resourceType == 'image' and request.resourceType == 'stylesheet':
+                    await request.abort()
+                else:
+                    await request.continue_()
+            except NetworkError:
+                pass
 
         await self.page.setRequestInterception(True)  # Enable interception
         self.page.on('request', handle_request)
