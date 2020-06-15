@@ -30,11 +30,13 @@ class SolveAudio(Base):
         self.log('Wait for Audio Buttom ...')
         await self.loop.create_task(self.wait_for_audio_button())
         self.log('Click random images ...')
-        for _ in range(int(random.uniform(3, 6))):
+        for _ in range(int(random.uniform(2, 5))):
+            await asyncio.sleep(random.uniform(0.2, 0.5))  # Wait 2-5 ms
             await self.click_tile()  # Click random images
-        await asyncio.sleep(random.uniform(1, 2))  # Wait 1-2 seg
+        await asyncio.sleep(random.uniform(1.5, 3.5))  # Wait 1-3 seg
         await self.click_verify()  # Click Verify button
         self.log('Clicking Audio Buttom ...')
+        await asyncio.sleep(random.uniform(1, 3))  # Wait 1-3 sec
         result = await self.click_audio_button()  # Click audio button
         if isinstance(result, dict):
             if result["status"] == "detected":  # Verify if detected
@@ -42,10 +44,14 @@ class SolveAudio(Base):
         # Start process
         await self.get_frames()
         answer = None
-        for _ in range(2):
+        # Start url for ...
+        start_url = self.page.url
+        for _ in range(8):
             try:
                 answer = await self.loop.create_task(self.get_audio_response())
+                temp = self.service
                 self.service = self.speech_secondary_service.lower()  # Secondary Recognition
+                self.speech_secondary_service = temp
             except TryAgain:
                 self.log('Try again Error!')
             except DownloadError:
@@ -60,9 +66,14 @@ class SolveAudio(Base):
                         continue
             await self.type_audio_response(answer)
             await self.click_verify()
+            await asyncio.sleep(2.0)  # Wait 2seg
+            if start_url != self.page.url:
+                return {'status': 'success'}
             try:
                 result = await self.check_detection(self.animation_timeout)
             except TryAgain:
+                continue
+            except SafePassage:
                 continue
             except Exception:
                 raise ResolveMoreLater('You must solve more captchas.')
@@ -143,8 +154,14 @@ class SolveAudio(Base):
 
     async def type_audio_response(self, answer):
         """Enter answer text on input"""
+        self.log("Waiting audio response")
+        response_input = None
+        for i in range(4):
+            response_input = await self.image_frame.J("#audio-response")
+            if response_input:
+                break
+            await asyncio.sleep(2.0)  # Wait 2seg
         self.log("Typing audio response")
-        response_input = await self.image_frame.J("#audio-response")
         length = random.uniform(70, 130)
         try:
             await self.loop.create_task(response_input.type(text=answer, delay=length))

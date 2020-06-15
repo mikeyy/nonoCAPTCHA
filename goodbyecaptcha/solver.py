@@ -19,9 +19,8 @@ from goodbyecaptcha.util import get_random_proxy
 
 
 class Solver(Base):
-    def __init__(self, pageurl, sitekey, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
+    def __init__(self, pageurl, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
         self.url = pageurl
-        self.sitekey = sitekey
         self.loop = loop or util.get_event_loop()
         self.proxy = proxy
         self.proxy_auth = proxy_auth
@@ -35,6 +34,7 @@ class Solver(Base):
         result = None
         try:
             self.browser = await self.get_new_browser()
+            self.context = await self.browser.createIncognitoBrowserContext()
             await self.open_page(self.url, new_page=False)  # Use first page
             result = await self.solve()
         except NetworkError as ex:
@@ -61,6 +61,14 @@ class Solver(Base):
             traceback.print_exc(file=sys.stdout)
             print(f"Error unexpected: {ex}")
         finally:
+            # Close all Context and Browser
+            if self.context:
+                await self.context.close()
+                self.context = None
+            if self.browser:
+                await self.browser.close()
+                self.browser = None
+            # Return result
             if isinstance(result, dict):
                 status = result['status'].capitalize()
                 print(f"Result: {status}")
@@ -74,7 +82,7 @@ class Solver(Base):
         try:
             await self.get_frames()
         except Exception:
-            raise IframeError("Problem locating reCAPTCHA frames")
+            return await self.get_code({'status': 'success'})
         self.log('Wait for CheckBox ...')
         await self.loop.create_task(self.wait_for_checkbox())
         self.log('Click CheckBox ...')
@@ -85,14 +93,7 @@ class Solver(Base):
         except SafePassage:
             return await self._solve()  # Start to solver
         else:
-            if result["status"] == "success":
-                """Send Data to Buttom"""
-                code = await self.g_recaptcha_response()
-                if code:
-                    result["code"] = code
-                    return result
-            else:
-                return result
+            return self.get_code(result)
 
     async def _solve(self):
         """Select method solver"""
@@ -108,14 +109,20 @@ class Solver(Base):
                                     proxy_auth=self.proxy_auth, options=self.options)
             solve = self.audio.solve_by_audio
 
-        result = await self.loop.create_task(solve())
-        if result["status"] == "success":
+        try:
+            result = await self.loop.create_task(solve())
+            return await self.get_code(result)
+        except PyppeteerError as ex:
+            raise TryAgain(ex)
+
+    async def get_code(self, result_status):
+        if result_status["status"] == "success":
             code = await self.g_recaptcha_response()
             if code:
-                result["code"] = code
-                return result
+                result_status["code"] = code
+                return result_status
         else:
-            return result
+            return result_status
 
     async def wait_for_checkbox(self):
         """Wait for checkbox to appear."""

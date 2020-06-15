@@ -10,7 +10,8 @@ import sys
 import traceback
 from shutil import copyfile
 
-import fuckcaptcha as fucking
+import fuckcaptcha
+from fake_useragent import UserAgent
 from pyppeteer.errors import TimeoutError, PageError, PyppeteerError, NetworkError
 from pyppeteer.launcher import Launcher
 from pyppeteer.util import merge_dict
@@ -20,7 +21,8 @@ from goodbyecaptcha import package_dir
 from goodbyecaptcha.exceptions import SafePassage, TryAgain
 from goodbyecaptcha.util import patch_pyppeteer, get_event_loop, load_file, get_random_proxy
 
-logging.basicConfig(format="%(asctime)s %(message)s")
+if len(logging.root.handlers) == 0:
+    logging.basicConfig(format="%(asctime)s %(message)s")
 
 try:
     import yaml
@@ -44,6 +46,7 @@ class Base:
     """Base control Pyppeteer"""
 
     browser = None
+    context = None
     launcher = None
     page = None
     page_index = 0
@@ -168,7 +171,7 @@ class Base:
         """Create new page"""
         if new_page:
             self.page_index += 1  # Add Actual Index
-            self.page = await self.browser.newPage()
+            self.page = await self.context.newPage()
         if self.proxy_auth and self.proxy:
             await self.page.authenticate(self.proxy_auth)
             self.log(f"Open page with proxy {self.proxy}")
@@ -183,7 +186,7 @@ class Base:
         """Navigate to address"""
         jquery_js = await load_file(self.jquery_data)
         await self.page.evaluateOnNewDocument("() => {\n%s}" % jquery_js)  # Inject JQuery
-        await fucking.bypass_detections(self.page)  # bypass reCAPTCHA detection in pyppeteer
+        await fuckcaptcha.bypass_detections(self.page)  # bypass reCAPTCHA detection in pyppeteer
         retry = 3  # Go to Page and Retry 3 times
         while True:
             try:
@@ -216,6 +219,7 @@ class Base:
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
+        agent = UserAgent().random
         args = [
             '--cryptauth-http-host ""',
             '--disable-accelerated-2d-canvas',
@@ -240,11 +244,11 @@ class Base:
             '--metrics-recording-only',
             '--no-first-run',
             '--safebrowsing-disable-auto-update',
-            '--no-sandbox',
             # Automation arguments
             '--enable-automation',
             '--password-store=basic',
-            '--use-mock-keychain']
+            '--use-mock-keychain',
+            '--user-agent="{0}"'.format(agent)]
         if self.proxy:
             if self.proxy == 'auto':
                 self.proxy = get_random_proxy()
@@ -256,9 +260,13 @@ class Base:
             "args": args,
             #  Silence Pyppeteer logs
             "logLevel": "CRITICAL"})
-        self.launcher = Launcher(self.options)
+        self.launcher = Launcher(self.options, handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False)
         browser = await self.launcher.launch()
-        self.page = (await browser.pages())[0]  # Set first page
+        # Set user-agent to all pages
+        pages = await browser.pages()
+        for page in pages:
+            await page.setUserAgent(agent)
+        self.page = pages[0]  # Set first page
         return browser
 
     async def page_switch(self, index=0):

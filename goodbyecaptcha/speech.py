@@ -4,6 +4,7 @@
 """ Speech module. Text-to-speech classes - Sphinx, Google, WitAI, Amazon, and Azure. """
 import asyncio
 import json
+import logging
 import os
 import re
 import struct
@@ -71,13 +72,12 @@ class Google(object):
         # recognize speech using Google Speech Recognition
         audio_output = None
         try:
-            print('recognize speech using Google Speech Recognition')
             audio_output = recognizer.recognize_google(audio)
             print("Google Speech Recognition: " + audio_output)
         except sr.UnknownValueError:
-            print("Google Speech Recognition could not understand audio")
+            logging.warning("Google Speech Recognition could not understand audio")
         except sr.RequestError as e:
-            print("Could not request results from Google Speech Recognition service; {0}".format(e))
+            logging.warning("Could not request results from Google Speech Recognition service; {0}".format(e))
         return audio_output
 
 
@@ -94,14 +94,13 @@ class WitAI(object):
         # recognize speech using WIT.AI Recognition
         audio_output = None
         try:
-            print('recognize speech using Wit.AI Recognition')
             # Llamamos al metodo de reconocimiento por wit y le pasamos el audio, y la key
             audio_output = recognizer.recognize_wit(audio, key=self.API_KEY)
             print("Wit.AI Recognition: " + audio_output)
         except sr.UnknownValueError:  # Definimos excepciones que se puedan presentar
-            print("Wit.ai could not understand audio")
+            logging.warning("Wit.ai could not understand audio")
         except sr.RequestError as e:
-            print("Could not request results from Wit.ia; {0}".format(e))
+            logging.warning("Could not request results from Wit.ia; {0}".format(e))
 
         return audio_output
 
