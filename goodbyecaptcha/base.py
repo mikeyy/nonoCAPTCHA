@@ -68,11 +68,12 @@ class Base:
     jquery_data = os.path.join(package_dir, settings["data"]["jquery_js"])
     pictures = os.path.join(package_dir, settings['data']['pictures'])
 
-    def __init__(self, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
+    def __init__(self, loop=None, proxy=None, proxy_auth=None, options=None, language='en-US', **kwargs):
         self.options = merge_dict({} if options is None else options, kwargs)
         self.loop = loop or get_event_loop()
         self.proxy = proxy
         self.proxy_auth = proxy_auth
+        self.language = language
 
         patch_pyppeteer()  # Patch Pyppeter (Fix InvalidStateError and Download Chrome)
 
@@ -186,6 +187,7 @@ class Base:
         """Navigate to address"""
         jquery_js = await load_file(self.jquery_data)
         await self.page.evaluateOnNewDocument("() => {\n%s}" % jquery_js)  # Inject JQuery
+        await self.page.setExtraHTTPHeaders({'Accept-Language': self.language})  # Forced set Language
         await fuckcaptcha.bypass_detections(self.page)  # bypass reCAPTCHA detection in pyppeteer
         retry = 3  # Go to Page and Retry 3 times
         while True:
@@ -248,6 +250,7 @@ class Base:
             '--enable-automation',
             '--password-store=basic',
             '--use-mock-keychain',
+            '--lang="{0}"'.format(self.language),
             '--user-agent="{0}"'.format(agent)]
         if self.proxy:
             if self.proxy == 'auto':

@@ -19,14 +19,14 @@ from goodbyecaptcha.util import get_random_proxy
 
 
 class Solver(Base):
-    def __init__(self, pageurl, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
+    def __init__(self, pageurl, loop=None, proxy=None, proxy_auth=None, options=None, lang='en-US', **kwargs):
         self.url = pageurl
         self.loop = loop or util.get_event_loop()
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.options = merge_dict({} if options is None else options, kwargs)
 
-        super(Solver, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, options=options)
+        super(Solver, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, language=lang, options=options)
 
     async def start(self):
         """Begin solving"""
@@ -68,6 +68,7 @@ class Solver(Base):
             if self.browser:
                 await self.browser.close()
                 self.browser = None
+            await self.cleanup()
             # Return result
             if isinstance(result, dict):
                 status = result['status'].capitalize()

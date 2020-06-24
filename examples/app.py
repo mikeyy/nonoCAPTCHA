@@ -130,10 +130,10 @@ class TaskRerun(object):
         gathered.cancel()
         await gathered
         self._loop.call_soon_threadsafe(self._loop.stop)
-        self.executor.shutdown()
+        self._executor.shutdown()
 
 
-async def work(pageurl, sitekey, loop):
+async def work(pageurl, loop):
     proxy = proxies.get()
     proxy_auth = None
     if proxy_username and proxy_password:
@@ -142,7 +142,6 @@ async def work(pageurl, sitekey, loop):
     options = {"ignoreHTTPSErrors": True, "args": ["--timeout 5"]}
     client = Solver(
         pageurl,
-        sitekey,
         loop=loop,
         options=options,
         proxy=proxy,
@@ -160,23 +159,21 @@ async def work(pageurl, sitekey, loop):
 async def get_solution(request):
     params = request.rel_url.query
     pageurl = params.get("pageurl")
-    sitekey = params.get("sitekey")
     secret_key = params.get("secret_key")
     response = {"error": "error"}
-    if not pageurl or not sitekey or not secret_key:
+    if not pageurl or not secret_key:
         response = {"error": "invalid request"}
     else:
         if secret_key != SECRET_KEY:
             response = {"error": "unauthorized attempt logged"}
         else:
-            if pageurl and sitekey:
-                coro = partial(work, pageurl, sitekey)
-                async with TaskRerun(coro, duration=SOLVE_DURATION) as t:
-                    result = await t.start()
-                if result:
-                    response = {"solution": result}
-                else:
-                    response = {"error": "worker timed-out"}
+            coro = partial(work, pageurl)
+            async with TaskRerun(coro, duration=SOLVE_DURATION) as t:
+                result = await t.start()
+            if result:
+                response = {"solution": result}
+            else:
+                response = {"error": "worker timed-out"}
     return web.json_response(response)
 
 

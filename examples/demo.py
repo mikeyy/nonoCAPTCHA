@@ -8,9 +8,9 @@ args = ["--timeout 5"]
 options = {"ignoreHTTPSErrors": True, "args": args}  # References: https://miyakogi.github.io/pyppeteer/reference.html
 client = Solver(
     # With Proxy
-    # pageurl, sitekey, options=options, proxy=proxy, proxy_auth=auth_details
+    # pageurl, lang='en-US', options=options, proxy=proxy, proxy_auth=auth_details
     # Without Proxy
-    pageurl, options=options
+    pageurl, lang='en-US', options=options
 )
 
 solution = client.loop.run_until_complete(client.start())

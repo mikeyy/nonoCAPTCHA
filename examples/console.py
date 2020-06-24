@@ -16,7 +16,6 @@ threads = 1  # Max browsers to open
 sort_position = False
 
 pageurl = "https://www.google.com/recaptcha/api2/demo"
-sitekey = "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-"
 
 proxy_source = None  # Can be URL or file location
 proxy_username, proxy_password = (None, None)
@@ -94,7 +93,6 @@ class Run(object):
                           "password": proxy_password}
         client = Solver(
             pageurl,
-            sitekey,
             options=options,
             loop=self.loop,
             proxy=proxy,

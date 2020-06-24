@@ -18,12 +18,12 @@ from goodbyecaptcha.speech import AzureSpeech, Amazon, Azure, DeepSpeech, Sphinx
 
 
 class SolveAudio(Base):
-    def __init__(self, page, image_frame, loop=None, proxy=None, proxy_auth=None, options=None, **kwargs):
+    def __init__(self, page, image_frame, loop=None, proxy=None, proxy_auth=None, lang='en-US', options=None, **kwargs):
         self.page = page
         self.image_frame = image_frame
         self.service = self.speech_service.lower()
 
-        super(SolveAudio, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, options=options, **kwargs)
+        super(SolveAudio, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, language=lang, options=options, **kwargs)
 
     async def solve_by_audio(self):
         """Go through procedures to solve audio"""
