@@ -4,6 +4,9 @@
 .. image:: https://img.shields.io/pypi/pyversions/goodbyecaptcha.svg
     :alt: PyPI - Python Version
     :target: https://pypi.org/project/goodbyecaptcha/
+.. image:: https://img.shields.io/sourceforge/dt/goodbyecatpcha.svg
+    :alt: SourceForge - Downloads
+    :target: https://sourceforge.net/projects/goodbyecatpcha/files/latest/download
 .. image:: https://img.shields.io/pypi/l/goodbyecaptcha.svg
     :alt: PyPI - License
     :target: https://pypi.org/project/goodbyecaptcha/
