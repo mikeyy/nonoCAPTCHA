@@ -20,11 +20,13 @@ class SolveImage(Base):
     download = None
     cur_image_path = None
 
-    def __init__(self, page, image_frame, loop=None, proxy=None, proxy_auth=None, options=None, lang='en-US', **kwargs):
+    def __init__(self, page, image_frame, loop=None, proxy=None, proxy_auth=None, options=None, lang='en-US',
+                 chromePath=None, **kwargs):
         self.page = page
         self.image_frame = image_frame
 
-        super(SolveImage, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, options=options, language=lang, **kwargs)
+        super(SolveImage, self).__init__(loop=loop, proxy=proxy, proxy_auth=proxy_auth, options=options, language=lang,
+                                         chromePath=chromePath, **kwargs)
 
     async def get_start_data(self):
         """Detect pieces and get title image"""

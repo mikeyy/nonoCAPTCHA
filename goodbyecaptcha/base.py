@@ -32,7 +32,7 @@ try:
     with open("goodbyecaptcha.yaml") as f:
         settings = yaml.load(f)
 except FileNotFoundError:
-    print(
+    logging.error(
         "Solver can't run without a configuration file!\n"
         "An example (goodbyecaptcha.example.yaml) has been copied to your folder."
     )
@@ -68,12 +68,13 @@ class Base:
     jquery_data = os.path.join(package_dir, settings["data"]["jquery_js"])
     pictures = os.path.join(package_dir, settings['data']['pictures'])
 
-    def __init__(self, loop=None, proxy=None, proxy_auth=None, options=None, language='en-US', **kwargs):
+    def __init__(self, loop=None, proxy=None, proxy_auth=None, options=None, language='en-US', chromePath=None, **kwargs):
         self.options = merge_dict({} if options is None else options, kwargs)
         self.loop = loop or get_event_loop()
         self.proxy = proxy
         self.proxy_auth = proxy_auth
         self.language = language
+        self.chromePath = chromePath
 
         patch_pyppeteer()  # Patch Pyppeter (Fix InvalidStateError and Download Chrome)
 
@@ -193,9 +194,9 @@ class Base:
         while True:
             try:
                 await self.loop.create_task(self.page.goto(
-                    url,
-                    timeout=self.page_load_timeout * 1000,
-                    waitUntil=["networkidle0", "domcontentloaded"]))
+                    url, timeout=self.page_load_timeout * 1000,
+                    waitUntil=["networkidle0", "domcontentloaded"]
+                ))
                 break
             except asyncio.TimeoutError as ex:
                 traceback.print_exc(file=sys.stdout)
@@ -263,6 +264,10 @@ class Base:
             "args": args,
             #  Silence Pyppeteer logs
             "logLevel": "CRITICAL"})
+        if self.chromePath:
+            self.options.update({
+                "executablePath": self.chromePath,
+            })
         self.launcher = Launcher(self.options, handleSIGINT=False, handleSIGTERM=False, handleSIGHUP=False)
         browser = await self.launcher.launch()
         # Set user-agent to all pages
