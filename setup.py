@@ -30,17 +30,32 @@ setup(
     platforms="all",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        'Environment :: Console',
+        'Environment :: Web Environment',
+        'Environment :: Plugins',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Education',
+        'Intended Audience :: System Administrators',
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Information Technology',
+        'License :: OSI Approved :: MIT License',
         "Natural Language :: English",
         "Operating System :: OS Independent",
+        "Operating System :: Unix",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: JavaScript",
         "Topic :: Scientific/Engineering",
+        'Topic :: Scientific/Engineering :: Image Recognition',
+        'Topic :: Scientific/Engineering :: Information Analysis',
         "Topic :: Software Development :: Libraries",
+        'Topic :: Software Development :: Libraries :: Python Modules',
         "Topic :: Utilities"
     ],
+    keywords=(
+        'captcha, recaptcha, Python3, google, cloudflare, mitm,'
+        'solver captcha, automate solver, web scraping, botting'
+        'goodbyecaptcha, solver recaptcha, image recognition'
+    ),
     package_data={'data': ['*.*'], 'models': ['*.*']},
     include_package_data=True,
     packages=find_packages(),

@@ -222,7 +222,7 @@ class Base:
 
     async def get_new_browser(self):
         """Get a new browser, set proxy and arguments"""
-        agent = UserAgent().random
+        agent = UserAgent(verify_ssl=False).random
         args = [
             '--cryptauth-http-host ""',
             '--disable-accelerated-2d-canvas',
@@ -247,6 +247,7 @@ class Base:
             '--metrics-recording-only',
             '--no-first-run',
             '--safebrowsing-disable-auto-update',
+            '--no-sandbox',
             # Automation arguments
             '--enable-automation',
             '--password-store=basic',
