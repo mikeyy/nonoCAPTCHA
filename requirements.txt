@@ -1,6 +1,6 @@
 aiobotocore==0.9.3
 aiofiles==0.3.2
-aiohttp==3.3.2
+aiohttp==3.7.4
 async-timeout==3.0.0
 peewee==3.6.4
 pillow==6.2.0
