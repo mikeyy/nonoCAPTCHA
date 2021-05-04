@@ -19,7 +19,7 @@ jmespath==0.9.4
 mccabe==0.6.1
 multidict==4.6.1
 numpy==1.17.4
-opencv-python==4.1.2.30
+opencv-python>=4.1.2.30
 peewee==3.11.2
 Pillow==6.2.1
 pocketsphinx==0.1.15
