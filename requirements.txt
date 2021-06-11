@@ -11,5 +11,5 @@ pyppeteer==0.0.25
 pyyaml>=4.2b1
 requests==2.20.0
 user-agent==0.1.9
-websockets==6.0
+websockets==9.1
 flake8==3.5.0
